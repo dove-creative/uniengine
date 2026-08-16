@@ -1,0 +1,16 @@
+# .NET build output
+**/bin/
+**/obj/
+
+# Visual Studio user state
+**/.vs/
+*.user
+*.suo
+
+# Obsidian local workspace state
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Operating system files
+.DS_Store
+Thumbs.db
