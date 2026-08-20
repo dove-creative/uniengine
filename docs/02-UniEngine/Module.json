@@ -1,0 +1,27 @@
+{
+  "Class": "Composition.Module",
+  "Name": "02-UniEngine",
+  "Id": "d3359016940d4d19a408fedb2afb1feb",
+  "Thumbnail": "",
+  "Content": {
+    "Overview": {
+      "Summary": "개발자의 아이디어를 시뮬레이션 프로그램으로 구현하도록 지원하는 개발 환경과 도구이다.",
+      "Purpose": "참여자가 시스템을 쉽게 이해하고 유지·보수·확장할 수 있는 지속 가능한 개발 환경을 제공한다.",
+      "Implementation": "Infrastructure, UniEngineCore, UniEngineSurface와 Services를 책임과 의존 방향에 따라 계층화한다.",
+      "Description": "객체 지향과 최소 구현 범위를 개발 원칙으로 삼고 문서화와 품질 확보를 통해 기능의 의도와 동작을 지속적으로 검증한다."
+    },
+    "Feature": {
+      "Api": "",
+      "Specification": "",
+      "Characteristics": "각 계층은 앞선 기반 계층의 책임을 사용해 더 구체적인 기능을 구성한다."
+    }
+  },
+  "ChildType": "Module",
+  "Children": [
+    "5e6ff4d1c5914123834b6aae04923b7c",
+    "5c91dc10a0824083b2f4c5742b23ddfc",
+    "86ad655c64f943469a5118d9e0cf270b",
+    "a08a160ee3c34c20912aaba7ca0438e0"
+  ],
+  "Dependencies": []
+}

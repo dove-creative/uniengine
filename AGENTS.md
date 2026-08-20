@@ -5,6 +5,7 @@
 - 한국어 대화에서 대화에 존댓말을 사용한다.
 - 프로젝트 문서는 `docs` 폴더에 존재한다. 작업 시작 전, 관련 문서가 존재하는지 확인하고, 존재할 경우 해당 내용을 숙지한 후 작업을 시작한다.
 - 공통 컨벤션과 작업 지침은 `guidelines/blackthunder-conventions`에 존재한다. 해당 경로가 없거나 비어 있다면 서브모듈이 초기화되지 않았을 수 있으므로 사용자에게 알린다.
+- Twin Turbo 자료구조 또는 Composition 관련 작업을 시작하기 전, `references/twin-turbo-data-structures`의 관련 문서와 샘플을 확인한다. 해당 경로가 없거나 비어 있다면 서브모듈이 초기화되지 않았을 수 있으므로 사용자에게 알린다.
 
 ## 컨벤션
 
@@ -15,6 +16,10 @@
 - 작업 유형에 해당하는 구체적인 지침이 `guidelines/blackthunder-conventions/instructions`에 존재한다면 해당 지침을 따른다.
 - 코드 내 주석은 영어를 사용한다.
 - Git Commit 시 제목은 영어를 사용한다.
+
+## 지침
+
+`twin-turbo-data-structures` 관련 작업 시, 썸네일 이미지를 새로 생성하지 않는다.
 
 ## 정보
 

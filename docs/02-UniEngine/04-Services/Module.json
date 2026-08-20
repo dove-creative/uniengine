@@ -1,0 +1,27 @@
+{
+  "Class": "Composition.Module",
+  "Name": "04-Services",
+  "Id": "a08a160ee3c34c20912aaba7ca0438e0",
+  "Thumbnail": "",
+  "Content": {
+    "Overview": {
+      "Summary": "UniEngine을 조합하여 특정 문제 영역을 해결하는 응용 프레임워크 계층이다.",
+      "Purpose": "상태 기계, 재생기, 편집 시스템과 같은 문제 영역별 서비스를 제공한다.",
+      "Implementation": "UniEngineSurface가 제공하는 기능을 기반으로 독립적인 서비스 Module을 구성한다.",
+      "Description": "세부 Module과 Unit은 각 서비스가 구현되고 문서화될 때 추가한다."
+    },
+    "Feature": {
+      "Api": "",
+      "Specification": "",
+      "Characteristics": ""
+    }
+  },
+  "ChildType": "None",
+  "Children": [],
+  "Dependencies": [
+    {
+      "Id": "86ad655c64f943469a5118d9e0cf270b",
+      "Type": "Strict"
+    }
+  ]
+}

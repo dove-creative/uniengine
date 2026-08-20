@@ -1,0 +1,84 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "3c6f3666140045cc88c8e7d996833918",
+  "Content": {
+    "Name": "Initialize",
+    "Thumbnail": "",
+    "Summary": "Application ID로 프로그램별 프로젝트 경로를 한 번 초기화한다.",
+    "Solution": "전용 lock 안에서 중복 초기화와 입력을 검사하고 경로를 구성한 뒤 폴더를 준비하여 _projectPath에 게시한다.",
+    "Description": "동시에 여러 호출이 들어와도 하나만 완료되며 성공한 초기화 결과는 이후 변경되지 않는다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [
+    {
+      "Id": "06c28a5262b74c858a3cc8aa7a2112ba",
+      "Content": {
+        "Name": "ThrowIfAlreadyInitialized",
+        "Thumbnail": "",
+        "Description": "_projectPath가 이미 설정되었으면 중복 초기화를 거부한다."
+      },
+      "Material": "3cd78b4feb0a4398a67ec89dbe7c7356"
+    },
+    {
+      "Id": "4020518b338641008cc3db45fcdfa321",
+      "Content": {
+        "Name": "ValidateApplicationId",
+        "Thumbnail": "",
+        "Description": "Application ID가 비어 있지 않고 유효한 폴더 이름인지 검사한다."
+      },
+      "Material": "21ceda4b76be4bb3a904d5a0f84ca8b6"
+    },
+    {
+      "Id": "e720bfae09fe43b59d4ecb89703f9218",
+      "Content": {
+        "Name": "Initialize",
+        "Thumbnail": "",
+        "Description": "Documents/GoldenHind/Projects 아래에 Application ID를 결합하여 프로젝트 경로를 구성하고 초기화 흐름을 조정한다."
+      },
+      "Material": "f704abd9cbb24e10aab85c20a9943742"
+    },
+    {
+      "Id": "c7f465345e0448e4b6bf0e0976128611",
+      "Content": {
+        "Name": "ValidatePath",
+        "Thumbnail": "",
+        "Description": "결정된 프로젝트 경로의 폴더가 없으면 생성한다."
+      },
+      "Material": "c58f2b1f7f5f4988b10ad90720749ebb"
+    }
+  ],
+  "Materials": [
+    {
+      "Id": "3cd78b4feb0a4398a67ec89dbe7c7356",
+      "ContentSource": "06c28a5262b74c858a3cc8aa7a2112ba",
+      "Detail": {
+        "Type": "Complete",
+        "Content": "저장된 초기화 상태를 검사하는 것으로 중복 호출 차단 책임이 완성된다."
+      }
+    },
+    {
+      "Id": "21ceda4b76be4bb3a904d5a0f84ca8b6",
+      "ContentSource": "4020518b338641008cc3db45fcdfa321",
+      "Detail": {
+        "Type": "Complete",
+        "Content": "빈 값과 사용할 수 없는 폴더 이름을 거부하는 것으로 입력 검증 책임이 완성된다."
+      }
+    },
+    {
+      "Id": "f704abd9cbb24e10aab85c20a9943742",
+      "ContentSource": "e720bfae09fe43b59d4ecb89703f9218",
+      "Detail": {
+        "Type": "Complete",
+        "Content": "프로그램별 경로 구성과 초기화 결과 게시를 조정하는 것으로 동작 책임이 완성된다."
+      }
+    },
+    {
+      "Id": "c58f2b1f7f5f4988b10ad90720749ebb",
+      "ContentSource": "c7f465345e0448e4b6bf0e0976128611",
+      "Detail": {
+        "Type": "Complete",
+        "Content": "대상 폴더의 존재를 보장하는 것으로 경로 준비 책임이 완성된다."
+      }
+    }
+  ]
+}

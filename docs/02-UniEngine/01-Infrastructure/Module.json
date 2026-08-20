@@ -1,0 +1,24 @@
+{
+  "Class": "Composition.Module",
+  "Name": "01-Infrastructure",
+  "Id": "5e6ff4d1c5914123834b6aae04923b7c",
+  "Thumbnail": "",
+  "Content": {
+    "Overview": {
+      "Summary": "UniEngine의 실행 기반과 공통 환경을 제공하는 계층이다.",
+      "Purpose": "상위 기능이 공통으로 사용하는 설정과 기반 책임을 제공한다.",
+      "Implementation": "서로 독립적으로 사용할 수 있는 기반 기능을 하위 Module로 소유한다.",
+      "Description": "현재 구성에는 프로그램별 프로젝트 경로를 준비하고 제공하는 Configuration Module이 포함된다."
+    },
+    "Feature": {
+      "Api": "",
+      "Specification": "",
+      "Characteristics": ""
+    }
+  },
+  "ChildType": "Module",
+  "Children": [
+    "adbe0213a68040dd8b0d21d235d5c1df"
+  ],
+  "Dependencies": []
+}

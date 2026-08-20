@@ -1,0 +1,27 @@
+{
+  "Class": "Composition.Module",
+  "Name": "02-UniEngineCore",
+  "Id": "5c91dc10a0824083b2f4c5742b23ddfc",
+  "Thumbnail": "",
+  "Content": {
+    "Overview": {
+      "Summary": "객체 제어, 이벤트 전파, 데이터 표현과 공통 계약을 제공하는 UniEngine의 핵심 계층이다.",
+      "Purpose": "상위 계층이 공통으로 사용하는 핵심 기능과 계약을 제공한다.",
+      "Implementation": "Infrastructure를 기반으로 독립적인 핵심 기능을 구성한다.",
+      "Description": "세부 Module과 Unit은 각 핵심 기능이 구현되고 문서화될 때 추가한다."
+    },
+    "Feature": {
+      "Api": "",
+      "Specification": "",
+      "Characteristics": ""
+    }
+  },
+  "ChildType": "None",
+  "Children": [],
+  "Dependencies": [
+    {
+      "Id": "5e6ff4d1c5914123834b6aae04923b7c",
+      "Type": "Strict"
+    }
+  ]
+}
