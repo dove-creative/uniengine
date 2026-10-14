@@ -1,0 +1,962 @@
+{
+  "Class": "Composition.DisplayLayout",
+  "ModuleId": "33f63f764b274d46bc4221405f734752",
+  "ModelLinesInitialized": true,
+  "ModelLines": [],
+  "EditorLayout": {
+    "Version": 7,
+    "Views": {
+      "1": {
+        "Objects": {
+          "root": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 192
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 192
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/af5319bf359a47f2bf34fbac95044890": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 160
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          }
+        }
+      },
+      "2": {
+        "Objects": {
+          "root": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": -64
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/48358e72c7b1419398f03635dda3796f": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/a1318596a0a24d62ae9489487e0c9d55": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/59680822bdeb4ff198a52871a5dd2ea6": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 448
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/2f9788ddf04144a0aab6cd2a3abb08b2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/af5319bf359a47f2bf34fbac95044890": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "module/2111f5ed9c1e422a95d11205ef2988b8": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 448
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0/strictFloors/0/guideFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0/strictFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/1/strictFloors/0/guideFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/1/strictFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/0/strictFloors/0/guideFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/0/strictFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/1/strictFloors/0/guideFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/1/strictFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          }
+        }
+      },
+      "3": {
+        "Objects": {
+          "root": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": -256
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/48358e72c7b1419398f03635dda3796f": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/a1318596a0a24d62ae9489487e0c9d55": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/59680822bdeb4ff198a52871a5dd2ea6": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/2/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 1024
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "module/2f9788ddf04144a0aab6cd2a3abb08b2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "module/af5319bf359a47f2bf34fbac95044890": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/1/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "module/2111f5ed9c1e422a95d11205ef2988b8": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 1024
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/2": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Unified": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0/strictFloors/0/guideFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0/categories/0/strictFloors/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0/guideLevels/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1/strictLevels/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          },
+          "subModules/Unified/stages/1": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": true
+          }
+        }
+      }
+    },
+    "LastViewDepth": 1
+  }
+}

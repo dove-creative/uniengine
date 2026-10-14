@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "1c922274d9eb4f7b802c4cec619fdca4",
+  "Type": "Method",
+  "Content": {
+    "Name": "WriteCollection",
+    "Thumbnail": "",
+    "Summary": "컬렉션을 간단하거나 상세한 형식으로 기록한다.",
+    "Solution": "Utilities의 ToDisplayString으로 컬렉션을 표현한 뒤 Write와 같은 누적·출력 경로를 사용한다.",
+    "Description": "요소 선택 함수와 상세 형식 여부를 지원하고 표현한 메시지를 반환한다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}

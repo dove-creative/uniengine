@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "7b893186ebf8455a9049c4731aa54012",
+  "Type": "Method",
+  "Content": {
+    "Name": "AppendLine",
+    "Thumbnail": "",
+    "Summary": "누적 로그에 구분용 빈 줄을 추가한다.",
+    "Solution": "내부 기록 버퍼에 개행을 추가한다.",
+    "Description": ""
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}

@@ -1,0 +1,80 @@
+{
+  "Class": "Composition.Module",
+  "Id": "59680822bdeb4ff198a52871a5dd2ea6",
+  "Type": "Undefined",
+  "CompositionMode": "PropertyFunction",
+  "Content": {
+    "Name": "Utilities",
+    "Thumbnail": "",
+    "Overview": {
+      "Summary": "값의 문자열 표현과 JSON 변환을 제공하는 공통 도구 모음이다.",
+      "Purpose": "여러 모듈에서 반복되는 데이터 표현과 직렬화 처리를 재사용한다.",
+      "Implementation": "DataFormattingExtensions와 System.Text.Json 기반 변환기·등록 확장 기능으로 구성한다.",
+      "Description": ""
+    },
+    "Feature": {
+      "Specification": "",
+      "Characteristics": "숫자와 값 객체의 표현 형식을 통일하고 컬렉션의 간단·상세 표현을 제공한다."
+    }
+  },
+  "Dependencies": [],
+  "SubModules": {
+    "Property": {
+      "Stages": [
+        {
+          "Content": {
+            "Name": "",
+            "Summary": ""
+          },
+          "StrictLevels": [
+            [
+              "GuideLevels",
+              [
+                "Categories",
+                {
+                  "Name": "",
+                  "StrictFloors": [
+                    [
+                      "GuideFloors",
+                      []
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    "Function": {
+      "Stages": [
+        {
+          "Content": {
+            "Name": "",
+            "Summary": "데이터를 표시용 문자열이나 JSON으로 변환하는 공통 동작을 제공한다."
+          },
+          "StrictLevels": [
+            [
+              "GuideLevels",
+              [
+                "Categories",
+                {
+                  "Name": "",
+                  "StrictFloors": [
+                    [
+                      "GuideFloors",
+                      [
+                        "40c2724428d44aaeaba29cadbe220e63",
+                        "b58acbd7f46d49a48d64b11f736c576c"
+                      ]
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  }
+}

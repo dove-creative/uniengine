@@ -1,0 +1,134 @@
+{
+  "Class": "Composition.DisplayLayout",
+  "ModuleId": "a1318596a0a24d62ae9489487e0c9d55",
+  "EditorLayout": {
+    "Version": 7,
+    "Views": {
+      "1": {
+        "Objects": {}
+      },
+      "2": {
+        "Objects": {
+          "subModules/Property": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Property/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Function": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Function/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          }
+        }
+      },
+      "3": {
+        "Objects": {
+          "subModules/Property": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Property/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Function": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          },
+          "subModules/Function/stages/0/strictLevels/0/guideLevels/0/categories/0": {
+            "anchor": {
+              "x": 0
+            },
+            "pivot": {
+              "x": 0
+            },
+            "position": {
+              "x": 0
+            },
+            "size": {},
+            "extent": {},
+            "overflow": false
+          }
+        }
+      }
+    }
+  },
+  "ModelLinesInitialized": true,
+  "ModelLines": []
+}
