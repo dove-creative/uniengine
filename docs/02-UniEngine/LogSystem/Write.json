@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "96c7a6bbf3584e1ab86538c208c4a888",
+  "Type": "Method",
+  "Content": {
+    "Name": "Write",
+    "Thumbnail": "",
+    "Summary": "값을 메시지로 표현하여 누적하고 출력한다.",
+    "Solution": "로그 수준과 메시지를 버퍼에 기록한 뒤 설정한 로거를 잠금 밖에서 호출한다. 문자열을 제외한 컬렉션은 기본적으로 WriteCollection으로 표현한다.",
+    "Description": "표현한 메시지를 반환하며 null 값은 문자열 null로 표현한다. 외부 로거의 예외는 호출자에게 전달하되 이미 누적한 기록은 유지한다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}

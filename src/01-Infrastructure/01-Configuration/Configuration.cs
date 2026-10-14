@@ -32,7 +32,8 @@ namespace BlackThunder.UniEngine.Infrastructure
 
                 string projectPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "GoldenHind",
+                    "BlackThunder",
+                    "UniEngine",
                     "Projects",
                     applicationId);
 

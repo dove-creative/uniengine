@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "46b02b2a6dcf46ac81896035f5c93678",
+  "Type": "Property",
+  "Content": {
+    "Name": "Rotation",
+    "Thumbnail": "",
+    "Summary": "공간상의 회전 상태이다.",
+    "Solution": "Transform2D는 라디안 단위의 float, Transform3D는 System.Numerics.Quaternion으로 회전을 보관한다.",
+    "Description": "Identity의 회전은 각각 0과 Quaternion.Identity이다."
+  },
+  "ComponentArrangeType": "Horizontal",
+  "Components": [],
+  "Materials": []
+}

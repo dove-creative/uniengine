@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "eeb0b4754bae448dbedba2b39fac3dc3",
+  "Type": "Property",
+  "Content": {
+    "Name": "Handler",
+    "Thumbnail": "",
+    "Summary": "보고된 예외의 처리를 맡길 외부 처리기 상태이다.",
+    "Solution": "SetHandler에서 지정한 Action<Exception>을 보관하고 Report에서 사용한다.",
+    "Description": "처리기 미등록 상태를 허용한다. 내부 등록 상태를 설명하는 카드이며 공개 속성을 요구하지 않는다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}

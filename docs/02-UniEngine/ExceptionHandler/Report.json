@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "a5b1d1d0b53046ca893a0874b67b026e",
+  "Type": "Method",
+  "Content": {
+    "Name": "Report",
+    "Thumbnail": "",
+    "Summary": "예외를 등록된 처리기에 전달한다.",
+    "Solution": "처리기가 있으면 호출하고, 없으면 ExceptionDispatchInfo로 원래 예외의 스택 정보를 유지해 재전파한다.",
+    "Description": "처리기 자체에서 발생한 예외도 호출자에게 전달된다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}

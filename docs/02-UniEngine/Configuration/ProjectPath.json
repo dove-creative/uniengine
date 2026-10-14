@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "a2ec1a503094411f9c2497eab976dce3",
+  "Type": "Property",
+  "Content": {
+    "Name": "ProjectPath",
+    "Thumbnail": "",
+    "Summary": "프로젝트 파일을 저장하는 기준 디렉터리 경로이다.",
+    "Solution": "Initialize에서 준비한 경로를 읽기 전용으로 제공한다.",
+    "Description": "사용자 문서 폴더 아래 BlackThunder/UniEngine/Projects/<applicationId>를 사용하며, 초기화 전 접근 시 InvalidOperationException이 발생한다."
+  },
+  "ComponentArrangeType": "Horizontal",
+  "Components": [],
+  "Materials": []
+}

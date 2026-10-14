@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "ec4723ddf09847099c12789a1a5e3887",
+  "Type": "Property",
+  "Content": {
+    "Name": "DebugFilePath",
+    "Thumbnail": "",
+    "Summary": "마지막으로 로그 저장에 성공한 파일의 경로이다.",
+    "Solution": "Print가 파일 저장을 완료한 뒤 경로를 갱신하며 Initialize에서 빈 문자열로 초기화한다.",
+    "Description": "첫 저장 전에는 빈 문자열이며 Reset이나 저장 실패 시에는 마지막 성공 경로를 유지한다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}

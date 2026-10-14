@@ -1,0 +1,15 @@
+{
+  "Class": "Composition.Unit",
+  "Id": "a7996d168eff49b38d8c2990ef7389fc",
+  "Type": "Property",
+  "Content": {
+    "Name": "Logger",
+    "Thumbnail": "",
+    "Summary": "메시지와 로그 수준을 전달할 출력 대상이다.",
+    "Solution": "Initialize에서 Action<string, LogLevel>을 주입받으며 초기화 전이나 미지정 시 Console.WriteLine으로 메시지를 출력한다.",
+    "Description": "자체 LogLevel은 Log, Warning, Error, Exception, Assert로 구성한다. 내부 출력 대상의 책임을 설명하는 카드이며 공개 속성을 요구하지 않는다."
+  },
+  "ComponentArrangeType": "Vertical",
+  "Components": [],
+  "Materials": []
+}
