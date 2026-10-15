@@ -4,7 +4,6 @@
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <DefaultItemExcludes>$(DefaultItemExcludes);00-SupportiveFrameworks/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="01-Infrastructure\02-Utilities\**" />
@@ -13,6 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="00-SupportiveFrameworks/blackbox-system/src/BlackThunder.BlackboxSystem/BlackThunder.BlackboxSystem.csproj" />
+    <PackageReference Include="BlackThunder.BlackboxSystem" Version="[0.1.2]" />
   </ItemGroup>
 </Project>
