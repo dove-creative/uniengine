@@ -7,6 +7,8 @@
 - 공통 컨벤션과 작업 지침은 `guidelines/blackthunder-conventions`에 존재한다. 해당 경로가 없거나 비어 있다면 서브모듈이 초기화되지 않았을 수 있으므로 사용자에게 알린다.
 - Twin Turbo 자료구조 또는 Composition 관련 작업을 시작하기 전, Golden Hind와 같은 상위 폴더의 `../twin-turbo-data-structures`에서 관련 문서와 샘플을 확인한다. 해당 경로가 없거나 비어 있다면 독립 TTDS 저장소를 준비해야 함을 사용자에게 알린다.
 - Golden Hind는 Composition 문서를 `docs/02-UniEngine`에 보관하고 외부 TTDS 에디터로 연다. TTDS 자체의 개발은 독립 저장소에서 진행하며, 개발과 경로 이전 안내는 `../twin-turbo-data-structures/docs/development.md`를 따른다.
+- BlackboxSystem과 UniTest는 각각 `../blackbox-system`, `../unitest`의 독립 저장소에서 개발한다. Golden Hind는 검증된 BlackboxSystem 패키지를 사용하며, UniTest는 실제 테스트 프로젝트를 추가할 때 연결한다.
+- 안정 패키지는 `packages`에 보관하고 정확한 버전으로 참조한다. 버전 갱신 시 원본 커밋·SHA-256과 검증 결과를 함께 기록하며, 같은 버전의 패키지를 덮어쓰지 않는다.
 
 ## 컨벤션
 
