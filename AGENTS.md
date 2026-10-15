@@ -5,8 +5,8 @@
 - 한국어 대화에서 대화에 존댓말을 사용한다.
 - 프로젝트 문서는 `docs` 폴더에 존재한다. 작업 시작 전, 관련 문서가 존재하는지 확인하고, 존재할 경우 해당 내용을 숙지한 후 작업을 시작한다.
 - 공통 컨벤션과 작업 지침은 `guidelines/blackthunder-conventions`에 존재한다. 해당 경로가 없거나 비어 있다면 서브모듈이 초기화되지 않았을 수 있으므로 사용자에게 알린다.
-- Twin Turbo 자료구조 또는 Composition 관련 작업을 시작하기 전, `references/twin-turbo-data-structures`의 관련 문서와 샘플을 확인한다. 해당 경로가 없거나 비어 있다면 서브모듈이 초기화되지 않았을 수 있으므로 사용자에게 알린다.
-- TTDS 자체의 개발은 Golden Hind와 같은 상위 폴더의 `../twin-turbo-data-structures`에서 진행한다. `references/twin-turbo-data-structures`는 참조용이며 직접 개발하지 않는다. 독립 저장소에서 검증·커밋·푸시한 원격 커밋으로 수동 갱신하고, 변경된 서브모듈 포인터를 Golden Hind에 커밋한다. 절차는 참조 저장소의 `docs/development.md`를 따른다.
+- Twin Turbo 자료구조 또는 Composition 관련 작업을 시작하기 전, Golden Hind와 같은 상위 폴더의 `../twin-turbo-data-structures`에서 관련 문서와 샘플을 확인한다. 해당 경로가 없거나 비어 있다면 독립 TTDS 저장소를 준비해야 함을 사용자에게 알린다.
+- Golden Hind는 Composition 문서를 `docs/02-UniEngine`에 보관하고 외부 TTDS 에디터로 연다. TTDS 자체의 개발은 독립 저장소에서 진행하며, 개발과 경로 이전 안내는 `../twin-turbo-data-structures/docs/development.md`를 따른다.
 
 ## 컨벤션
 
