@@ -35,8 +35,9 @@ namespace Blackthunder.UniEngine.Core
                 _order.OnUpdate += args =>
                 {
                     if (!filter(args) || onUpdate == null) return;
-                    foreach (Action<TEventArgs> callback in onUpdate.GetInvocationList())
+                    foreach (var entry in onUpdate.GetInvocationList())
                     {
+                        var callback = (Action<TEventArgs>)entry;
                         if (_order.Hub._pendingDispose || !_order.IsConnected) return;
                         callback(args);
                     }
@@ -49,8 +50,9 @@ namespace Blackthunder.UniEngine.Core
                 _order.OnUpdate += args =>
                 {
                     if (!fliter(args) || onUpdated == null) return;
-                    foreach (Action callback in onUpdated.GetInvocationList())
+                    foreach (var entry in onUpdated.GetInvocationList())
                     {
+                        var callback = (Action)entry;
                         if (_order.Hub._pendingDispose || !_order.IsConnected) return;
                         callback();
                     }

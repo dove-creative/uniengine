@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public class AdaptiveDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>, IDictionary
+    public class AdaptiveDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>, IDictionary,
+        IEnumerationSource<KeyValuePair<TKey, TValue>>
     {
         // Front
         public int Count => _isIterating
@@ -54,7 +55,10 @@ namespace Blackthunder.UniEngine.Core
 
         private readonly Dictionary<TKey, TValue> _pendingItems = new();
         private readonly HashSet<TKey> _removingKeys = new();
+        private readonly Dictionary<TKey, TValue> _iterationItems = new();
 
+        private Dictionary<TKey, TValue>.Enumerator _enumerator;
+        private long _enumerationId;
         private bool _isIterating;
         private bool _iterationStopped;
 
@@ -68,65 +72,84 @@ namespace Blackthunder.UniEngine.Core
         }
 
         #region Iteration
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        public ValueEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new(this);
+        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        long IEnumerationSource<KeyValuePair<TKey, TValue>>.BeginEnumeration()
         {
             if (_isIterating) throw new InvalidOperationException("AdaptiveDictionary is already being iterated. Nested iterations are not allowed.");
+
+            _enumerationId = checked(_enumerationId + 1);
+            _enumerator = _items.GetEnumerator();
             _isIterating = true;
             _iterationStopped = false;
+            return _enumerationId;
+        }
+
+        bool IEnumerationSource<KeyValuePair<TKey, TValue>>.TryMoveNext(long enumerationId, out KeyValuePair<TKey, TValue> current)
+        {
+            if (!_isIterating || enumerationId != _enumerationId)
+                throw new InvalidOperationException("The enumeration is no longer active.");
+
+            while (!_iterationStopped)
+            {
+                while (!_iterationStopped && _enumerator.MoveNext())
+                {
+                    var item = _enumerator.Current;
+                    // Skip the lookup when nothing is marked, so clean passes never hash keys.
+                    if (_removingKeys.Count != 0 && _removingKeys.Contains(item.Key)) continue;
+
+                    current = item;
+                    return true;
+                }
+
+                if (_iterationStopped || DeferredUpdate || _pendingItems.Count == 0) break;
+
+                _enumerator.Dispose();
+                _iterationItems.Clear();
+                foreach (var item in _pendingItems)
+                    _iterationItems.Add(item.Key, item.Value);
+
+                ApplyChanges();
+                _enumerator = _iterationItems.GetEnumerator();
+            }
+
+            current = default;
+            return false;
+        }
+
+        void IEnumerationSource<KeyValuePair<TKey, TValue>>.EndEnumeration(long enumerationId)
+        {
+            if (!_isIterating || enumerationId != _enumerationId) return;
 
             try
             {
-                var items = _items;
-
-                while (!_iterationStopped)
-                {
-                    using var enumerator = items.GetEnumerator();
-
-                    while (!_iterationStopped && enumerator.MoveNext())
-                    {
-                        var item = enumerator.Current;
-                        if (_removingKeys.Contains(item.Key))
-                            continue;
-
-                        yield return item;
-                    }
-
-                    if (_iterationStopped || DeferredUpdate || _pendingItems.Count == 0)
-                        break;
-
-                    items = new Dictionary<TKey, TValue>(_pendingItems);
-                    ApplyChanges();
-                }
+                _enumerator.Dispose();
+                ApplyChanges();
             }
             finally
             {
-                try
-                {
-                    ApplyChanges();
-                }
-                finally
-                {
-                    _removingKeys.Clear();
-                    _pendingItems.Clear();
-                    _isIterating = false;
-                    _iterationStopped = false;
-                }
-            }
-
-
-            void ApplyChanges()
-            {
-                foreach (var key in _removingKeys)
-                    _items.Remove(key);
-
-                foreach (var item in _pendingItems)
-                    _items[item.Key] = item.Value;
-
+                _enumerator = default;
+                _iterationItems.Clear();
                 _removingKeys.Clear();
                 _pendingItems.Clear();
+                _isIterating = false;
+                _iterationStopped = false;
             }
         }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private void ApplyChanges()
+        {
+            foreach (var key in _removingKeys)
+                _items.Remove(key);
+
+            foreach (var item in _pendingItems)
+                _items[item.Key] = item.Value;
+
+            _removingKeys.Clear();
+            _pendingItems.Clear();
+        }
 
 
         public void ForEach(Action<KeyValuePair<TKey, TValue>> selector)
@@ -215,6 +238,7 @@ namespace Blackthunder.UniEngine.Core
             _items.Clear();
             _removingKeys.Clear();
             _pendingItems.Clear();
+            _iterationItems.Clear();
 
             if (_isIterating) _iterationStopped = true;
         }

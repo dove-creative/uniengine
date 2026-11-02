@@ -43,8 +43,11 @@ namespace Blackthunder.UniEngine.Core
         {
             if (onUpdated == null) return OnUpdated((Action<TEventArgs>)null);
             Action<TEventArgs> typedAction = null;
-            foreach (Action<object> callback in onUpdated.GetInvocationList())
+            foreach (var entry in onUpdated.GetInvocationList())
+            {
+                var callback = (Action<object>)entry;
                 typedAction += args => callback(args);
+            }
             return OnUpdated(typedAction);
         }
         IEventHubBuilder IEventHubBuilder.OnUpdated(object target, Action<object> onUpdated)
@@ -58,8 +61,11 @@ namespace Blackthunder.UniEngine.Core
 
             if (onUpdated == null) return OnUpdated(typedTarget, (Action<TEventArgs>)null);
             Action<TEventArgs> typedAction = null;
-            foreach (Action<object> callback in onUpdated.GetInvocationList())
+            foreach (var entry in onUpdated.GetInvocationList())
+            {
+                var callback = (Action<object>)entry;
                 typedAction += args => callback(args);
+            }
             return OnUpdated(typedTarget, typedAction);
         }
         IEventHubBuilder IEventHubBuilder.OnUpdated(object target, Action onUpdated)
@@ -80,8 +86,11 @@ namespace Blackthunder.UniEngine.Core
 
             if (onUpdated == null) return OnUpdated(typedFilter, (Action<TEventArgs>)null);
             Action<TEventArgs> typedAction = null;
-            foreach (Action<object> callback in onUpdated.GetInvocationList())
+            foreach (var entry in onUpdated.GetInvocationList())
+            {
+                var callback = (Action<object>)entry;
                 typedAction += args => callback(args);
+            }
             return OnUpdated(typedFilter, typedAction);
         }
         IEventHubBuilder IEventHubBuilder.OnUpdated(Func<object, bool> filter, Action onUpdated)

@@ -1,0 +1,18 @@
+# Infrastructure Objects 테스트 계획
+
+## 목차
+
+1. 실행 구성
+2. 검증 기준
+
+## 실행 구성
+
+단일 GoldenHind.Tests 프로젝트의 InfrastructureObjectTests가 O1–O4를 검증한다. 테스트는 공개 API를 호출하고 내부 구현에 직접 접근하지 않는다.
+
+## 검증 기준
+
+- 각 값 형식의 생성·복사와 동등성·해시 계약을 구분하여 검사한다.
+- Transform은 위치와 회전의 각 성분을 개별 변경하여 비교 누락을 검출한다.
+- 문화권 사례는 병렬 실행을 막고 finally에서 원래 CurrentCulture를 복원한다.
+- 해시 값 자체나 Dictionary의 내부 배치는 고정하지 않는다.
+- 전체 실행과 함께 해당 테스트 클래스의 단독 실행 결과를 확인한다.

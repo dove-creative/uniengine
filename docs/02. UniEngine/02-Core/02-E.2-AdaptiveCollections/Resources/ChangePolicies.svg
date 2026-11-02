@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="590" viewBox="0 0 1120 590" role="img" aria-labelledby="title description">
+  <title id="title">순회 중 변경을 반영하는 정책</title>
+  <desc id="description">추가 예시: 초기 [A, B]의 첫 순회에서 A가 Add(C)를 한 번만 호출한다.</desc>
+  <rect x="0" y="0" width="1120" height="590" fill="white" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52647a" />
+    </marker>
+  </defs>
+  <text x="32" y="48.52" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="28" font-weight="700" text-anchor="start">
+    <tspan x="32" y="48.52">순회 중 변경을 반영하는 정책</tspan>
+  </text>
+  <text x="32" y="84.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="84.78">추가 예시: 초기 [A, B]의 첫 순회에서 A가 Add(C)를 한 번만 호출한다.</tspan>
+  </text>
+  <rect x="32" y="110" width="516" height="300" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="149.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="start">
+    <tspan x="52" y="149.48">지연 추가 · 기본값</tspan>
+  </text>
+  <text x="56" y="200.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="200.8">현재 순회</tspan>
+  </text>
+  <rect x="234" y="170" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="266.0" y="201.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="266.0" y="201.48">A</tspan>
+  </text>
+  <rect x="308" y="170" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="340.0" y="201.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="340.0" y="201.48">B</tspan>
+  </text>
+  <text x="56" y="277.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="277.8">C의 방문 시점</tspan>
+  </text>
+  <rect x="234" y="243" width="280" height="56" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="374.0" y="277.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="middle">
+    <tspan x="374.0" y="277.12">다음 순회부터 방문</tspan>
+  </text>
+  <text x="56" y="354.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="354.8">다음 순회</tspan>
+  </text>
+  <rect x="234" y="324" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="266.0" y="355.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="266.0" y="355.48">A</tspan>
+  </text>
+  <rect x="308" y="324" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="340.0" y="355.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="340.0" y="355.48">B</tspan>
+  </text>
+  <rect x="382" y="324" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="414.0" y="355.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="414.0" y="355.48">C</tspan>
+  </text>
+  <rect x="572" y="110" width="516" height="300" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="592" y="149.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="start">
+    <tspan x="592" y="149.48">즉시 추가 · 선택 사항</tspan>
+  </text>
+  <text x="596" y="200.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="596" y="200.8">현재 순회</tspan>
+  </text>
+  <rect x="774" y="170" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="806.0" y="201.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="806.0" y="201.48">A</tspan>
+  </text>
+  <rect x="848" y="170" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="880.0" y="201.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="880.0" y="201.48">B</tspan>
+  </text>
+  <rect x="922" y="170" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="954.0" y="201.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="954.0" y="201.48">C</tspan>
+  </text>
+  <text x="596" y="277.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="596" y="277.8">C의 방문 시점</tspan>
+  </text>
+  <rect x="774" y="243" width="280" height="56" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="914.0" y="277.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="middle">
+    <tspan x="914.0" y="277.12">같은 순회에서 이어서 방문</tspan>
+  </text>
+  <text x="596" y="354.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="596" y="354.8">다음 순회</tspan>
+  </text>
+  <rect x="774" y="324" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="806.0" y="355.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="806.0" y="355.48">A</tspan>
+  </text>
+  <rect x="848" y="324" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="880.0" y="355.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="880.0" y="355.48">B</tspan>
+  </text>
+  <rect x="922" y="324" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="954.0" y="355.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="954.0" y="355.48">C</tspan>
+  </text>
+  <rect x="32" y="436" width="1056" height="94" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="468.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="start">
+    <tspan x="52" y="468.8">삭제 예시 · 초기 [A, B]에서 A의 본문이 Remove(B)를 호출한다.</tspan>
+  </text>
+  <text x="52" y="507.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="52" y="507.46">두 모드 모두 이후 방문에서 B를 제외하므로 현재 순회는 A에서 끝난다.</tspan>
+  </text>
+  <text x="32" y="567.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="567.78">추가와 삭제는 각각 별도의 예시이다. 즉시 반영은 방문 시점에 대한 정책이다.</tspan>
+  </text>
+</svg>

@@ -9,7 +9,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
         public static void ReadSingleComponents(
             ref Utf8JsonReader reader,
             string[] componentNames,
-            scoped Span<float> components)
+            Span<float> components)
         {
             ValidateArguments(reader, componentNames, components.Length);
             Span<bool> encounteredComponents = stackalloc bool[componentNames.Length];
@@ -52,7 +52,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
         public static void ReadInt32Components(
             ref Utf8JsonReader reader,
             string[] componentNames,
-            scoped Span<int> components)
+            Span<int> components)
         {
             ValidateArguments(reader, componentNames, components.Length);
             Span<bool> encounteredComponents = stackalloc bool[componentNames.Length];
@@ -136,7 +136,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
 
         private static void ValidateRequiredComponents(
             string[] componentNames,
-            scoped ReadOnlySpan<bool> encounteredComponents)
+            ReadOnlySpan<bool> encounteredComponents)
         {
             for (int index = 0; index < componentNames.Length; index++)
             {

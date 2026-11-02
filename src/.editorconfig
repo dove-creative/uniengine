@@ -11,3 +11,6 @@ dotnet_diagnostic.IDE0021.severity = none
 
 # IDE0290: 기본 생성자 사용
 dotnet_diagnostic.IDE0290.severity = none
+
+# IDE0016: throw' 식 사용
+dotnet_diagnostic.IDE0016.severity = none

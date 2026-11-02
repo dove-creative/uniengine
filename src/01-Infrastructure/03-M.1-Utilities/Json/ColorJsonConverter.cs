@@ -8,7 +8,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
     public class ColorJsonConverter : JsonConverter<Color>
     {
         // Internal
-        private static readonly string[] _componentNames = ["R", "G", "B", "A"];
+        private static readonly string[] _componentNames = { "R", "G", "B", "A" };
 
 
         // Content
@@ -17,7 +17,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             Type typeToConvert,
             JsonSerializerOptions options)
         {
-            Span<float> components = stackalloc float[_componentNames.Length];
+            var components = new float[_componentNames.Length];
             JsonComponentSerializer.ReadSingleComponents(ref reader, _componentNames, components);
 
             for (int index = 0; index < components.Length; index++)

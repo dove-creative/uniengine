@@ -21,7 +21,6 @@ namespace Blackthunder.UniEngine.Core
 
         // Content
         public Token() { }
-        public Token(Action action)
-            : base(action) { }
+        public Token(Action action) : base(action) { }
     }
 }

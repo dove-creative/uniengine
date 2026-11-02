@@ -46,7 +46,12 @@ namespace Blackthunder.UniEngine.Core.EventStreamCore
             ThrowIfDisposed();
             if (!Enabled) return;
 
-            if (_skipCount-- > 0) return;
+            if (_skipCount > 0)
+            {
+                _skipCount--;
+                return;
+            }
+
             base.OnNext(args);
         }
     }
@@ -237,8 +242,9 @@ namespace Blackthunder.UniEngine.Core.EventStreamCore
             {
                 foreach (var stream in upstreams)
                 {
-                    if (stream != null && !stream.IsDisposed)
+                    if (stream != null)
                     {
+                        EventStream<TEventArgs>.ThrowIfDisposed(stream);
                         stream.Connect(this, out _);
                         _remainingUpstreams++;
                     }

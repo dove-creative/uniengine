@@ -1,0 +1,36 @@
+# EventHubBuilder
+
+EventHub에 등록한 수신자 하나의 콜백을 구성하는 객체이다.
+
+## 목차
+
+1. 역할과 구성
+2. 동작 흐름
+3. 설계 기준과 고려사항
+4. 구현 연결
+
+## 역할과 구성
+
+- 책임: 한 수신자 연결의 갱신 조건과 생애주기 콜백을 모아 구성한다.
+- 보유 정보: EventHub&lt;TEventArgs&gt;.Builder는 특정 연결의 Order 참조를 보관한다.
+
+| 제공 서비스 | 제공 이유 |
+| --- | --- |
+| OnUpdated | 일반·대상 일치·조건 필터 콜백을 같은 연결에 누적하여 수신자의 관심 조건을 표현한다. |
+| OnDisposing·OnDisposed | 소유자의 폐기 단계에 맞춰 정리와 완료 반응을 나누어 등록한다. |
+
+## 동작 흐름
+
+Connect가 Order와 Builder를 만들고 Builder 호출이 해당 Order의 콜백을 누적한다. 대상 지정은 EqualityComparer&lt;TEventArgs&gt;.Default 비교로 변환한다.
+
+## 설계 기준과 고려사항
+
+Order 하나를 구성 대상으로 고정하여 콜백이 어느 연결에 속하는지 유지한다. 필터는 호출을 감싸되 연결 해제 상태도 확인하여 필터 안에서 이미 끝난 연결을 다시 실행하지 않게 한다.
+
+- 다른 수신자의 설정에 재사용하는 Builder가 아니다.
+- 필터가 있는 멀티캐스트 콜백도 연결 해제·폐기 요청을 각 호출 사이에 확인한다.
+- object 인자 계약에서 형식 있는 계약으로 연결할 때 값 형식 페이로드는 박싱될 수 있다.
+
+## 구현 연결
+
+[EventHubBuilder.cs](../../../../src/02-Core/03-E-EventHub/EventHubBuilder.cs) · [ILifecycleAndEventHubBuilder.cs](../../../../src/02-Core/03-E-EventHub/ILifecycleAndEventHubBuilder.cs) · [모듈 구성](README.md)

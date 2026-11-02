@@ -1,0 +1,21 @@
+# Infrastructure Objects 검증 결과
+
+## 목차
+
+1. 실행 결과
+2. 확인한 범위
+
+## 실행 결과
+
+2026-11-02에 .NET SDK 10.0.403·Release 구성으로 실행한 결과이다.
+
+| 검증 | 결과 |
+| --- | --- |
+| InfrastructureObjectTests | 10개 통과, 실패 0개, 건너뜀 0개 |
+| 검증 결과 파일 | tests/bin/TestResults/Infrastructure-Full.trx |
+
+결과 파일은 전체 실행에서 이 모듈의 테스트 ID를 추출하여 확인한 근거이며 버전 관리에는 포함하지 않는다.
+
+## 확인한 범위
+
+InfrastructureObjectTests는 값 형식 4종의 생성·기본값·복사 독립성·동등성·해시 키와 두 문화권의 문자열 계약을 검증한다. 제품 코드는 수정하지 않는다.

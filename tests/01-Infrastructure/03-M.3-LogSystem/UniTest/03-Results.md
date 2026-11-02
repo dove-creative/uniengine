@@ -1,0 +1,22 @@
+# Log 검증 결과
+
+## 목차
+
+1. 결과
+2. 실행 근거
+
+## 결과
+
+2026-11-02, .NET SDK 10.0.403·Release 기준이다.
+
+| 검증 | 결과 |
+| --- | --- |
+| NUnit 직접 사례 | 11개 통과 |
+| UniTest 수명·복구 상태 전이 | 2개 통과 |
+| 전체 모듈 | 13개 통과, 실패·건너뜀 0개 |
+
+정상 저장, 빈 버퍼, 출력기 실패·재진입, 저장 경로 차단과 복구를 검증했다. 확인한 제품 결함은 없다. I/O 실패는 IOException 파생 형식도 포함하여 검사한다.
+
+## 실행 근거
+
+전체 테스트 결과는 tests/bin/TestResults/Infrastructure-Full.trx에 기록한다. 정적 상태 관련 독립 재실행은 Infrastructure-Static-Isolation.trx에 기록한다. 공통 실행 방법과 전체 결과는 [Infrastructure 테스트](../../README.md)를 따른다.

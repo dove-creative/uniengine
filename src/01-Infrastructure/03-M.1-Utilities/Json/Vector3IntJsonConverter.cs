@@ -17,7 +17,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             Type typeToConvert,
             JsonSerializerOptions options)
         {
-            Span<int> components = stackalloc int[_componentNames.Length];
+            var components = new int[_componentNames.Length];
             JsonComponentSerializer.ReadInt32Components(ref reader, _componentNames, components);
             return new Vector3Int(components[0], components[1], components[2]);
         }

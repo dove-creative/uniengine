@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public class AdaptiveHashSet<T> : ICollection<T>
+    public class AdaptiveHashSet<T> : ICollection<T>, IEnumerationSource<T>
     {
         // Front
         public int Count => _isIterating
@@ -18,7 +18,10 @@ namespace Blackthunder.UniEngine.Core
         private readonly HashSet<T> _items = new();
         private readonly HashSet<T> _pendingItems = new();
         private readonly HashSet<T> _removingItems = new();
+        private readonly HashSet<T> _iterationItems = new();
 
+        private HashSet<T>.Enumerator _enumerator;
+        private long _enumerationId;
         private bool _isIterating;
         private bool _iterationStopped;
 
@@ -30,63 +33,81 @@ namespace Blackthunder.UniEngine.Core
         public AdaptiveHashSet(bool deferredUpdate) => DeferredUpdate = deferredUpdate;
 
         // Iteration
-        public IEnumerator<T> GetEnumerator()
+        public ValueEnumerator<T> GetEnumerator() => new(this);
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        long IEnumerationSource<T>.BeginEnumeration()
         {
             if (_isIterating)
                 throw new InvalidOperationException("AdaptiveHashSet is already being iterated. Nested iterations are not allowed.");
 
+            _enumerationId = checked(_enumerationId + 1);
+            _enumerator = _items.GetEnumerator();
             _isIterating = true;
             _iterationStopped = false;
+            return _enumerationId;
+        }
+
+        bool IEnumerationSource<T>.TryMoveNext(long enumerationId, out T current)
+        {
+            if (!_isIterating || enumerationId != _enumerationId)
+                throw new InvalidOperationException("The enumeration is no longer active.");
+
+            while (!_iterationStopped)
+            {
+                while (_enumerator.MoveNext())
+                {
+                    var item = _enumerator.Current;
+                    // Skip the lookup when nothing is marked, so clean passes never hash items.
+                    if (_removingItems.Count != 0 && _removingItems.Contains(item)) continue;
+
+                    current = item;
+                    return true;
+                }
+
+                _enumerator.Dispose();
+                if (DeferredUpdate || _pendingItems.Count == 0) break;
+
+                // Keep a stable batch while callbacks record the next pending changes.
+                _iterationItems.Clear();
+                foreach (var item in _pendingItems) _iterationItems.Add(item);
+                ApplyChanges();
+                _enumerator = _iterationItems.GetEnumerator();
+            }
+
+            current = default;
+            return false;
+        }
+
+        void IEnumerationSource<T>.EndEnumeration(long enumerationId)
+        {
+            if (!_isIterating || enumerationId != _enumerationId) return;
 
             try
             {
-                var items = _items;
-
-                while (!_iterationStopped)
-                {
-                    using var enumerator = items.GetEnumerator();
-
-                    while (!_iterationStopped && enumerator.MoveNext())
-                    {
-                        var item = enumerator.Current;
-                        if (_removingItems.Contains(item))
-                            continue;
-
-                        yield return item;
-                    }
-
-                    if (_iterationStopped || DeferredUpdate || _pendingItems.Count == 0)
-                        break;
-
-                    items = new HashSet<T>(_pendingItems);
-                    ApplyChanges();
-                }
+                _enumerator.Dispose();
+                ApplyChanges();
             }
             finally
             {
-                try
-                {
-                    ApplyChanges();
-                }
-                finally
-                {
-                    _removingItems.Clear();
-                    _pendingItems.Clear();
-                    _isIterating = false;
-                    _iterationStopped = false;
-                }
-            }
-
-            void ApplyChanges()
-            {
-                _items.ExceptWith(_removingItems);
-                _items.UnionWith(_pendingItems);
-
+                _enumerator = default;
+                _iterationItems.Clear();
                 _removingItems.Clear();
                 _pendingItems.Clear();
+                _isIterating = false;
+                _iterationStopped = false;
             }
         }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private void ApplyChanges()
+        {
+            foreach (var item in _removingItems) _items.Remove(item);
+            foreach (var item in _pendingItems) _items.Add(item);
+
+            _removingItems.Clear();
+            _pendingItems.Clear();
+        }
 
         public void ForEach(Action<T> selector)
         {
@@ -141,6 +162,7 @@ namespace Blackthunder.UniEngine.Core
             _items.Clear();
             _removingItems.Clear();
             _pendingItems.Clear();
+            _iterationItems.Clear();
 
             if (_isIterating) _iterationStopped = true;
         }

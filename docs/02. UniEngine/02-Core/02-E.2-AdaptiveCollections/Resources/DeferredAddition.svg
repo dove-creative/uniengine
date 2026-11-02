@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="444" viewBox="0 0 1120 444" role="img" aria-labelledby="title description">
+  <title id="title">지연 추가와 종료 시 반영</title>
+  <desc id="description">순회 중에는 새 항목을 대기 목록에 보관하고, 종료할 때 저장 목록 뒤에 합친다.</desc>
+  <rect x="0" y="0" width="1120" height="444" fill="white" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52647a" />
+    </marker>
+  </defs>
+  <text x="32" y="48.52" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="28" font-weight="700" text-anchor="start">
+    <tspan x="32" y="48.52">지연 추가와 종료 시 반영</tspan>
+  </text>
+  <text x="32" y="84.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="84.78">순회 중에는 새 항목을 대기 목록에 보관하고, 종료할 때 저장 목록 뒤에 합친다.</tspan>
+  </text>
+  <rect x="32" y="112" width="440" height="262" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="151.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="start">
+    <tspan x="52" y="151.48">순회 중</tspan>
+  </text>
+  <text x="56" y="204.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="204.8">저장 목록</tspan>
+  </text>
+  <rect x="200" y="174" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="232.0" y="205.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="232.0" y="205.48">A</tspan>
+  </text>
+  <rect x="274" y="174" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="306.0" y="205.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="306.0" y="205.48">B</tspan>
+  </text>
+  <text x="56" y="293.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="56" y="293.46">대기 목록</tspan>
+  </text>
+  <rect x="200" y="263" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="232.0" y="294.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="232.0" y="294.48">C</tspan>
+  </text>
+  <rect x="274" y="263" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="306.0" y="294.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="306.0" y="294.48">D</tspan>
+  </text>
+  <polyline points="488,241 632,241" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="560.0" y="211.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="middle">
+    <tspan x="560.0" y="211.8">순회 종료</tspan>
+  </text>
+  <rect x="648" y="112" width="440" height="262" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="668" y="151.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="start">
+    <tspan x="668" y="151.48">반영 후</tspan>
+  </text>
+  <text x="672" y="204.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="672" y="204.8">저장 목록</tspan>
+  </text>
+  <rect x="780" y="174" width="58" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="809.0" y="205.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="809.0" y="205.48">A</tspan>
+  </text>
+  <rect x="848" y="174" width="58" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="877.0" y="205.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="877.0" y="205.48">B</tspan>
+  </text>
+  <rect x="916" y="174" width="58" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="945.0" y="205.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="945.0" y="205.48">C</tspan>
+  </text>
+  <rect x="984" y="174" width="58" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="1013.0" y="205.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="1013.0" y="205.48">D</tspan>
+  </text>
+  <text x="672" y="293.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="672" y="293.46">대기 목록</tspan>
+  </text>
+  <text x="790" y="293.8" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="790" y="293.8">비어 있음</tspan>
+  </text>
+  <text x="32" y="416.12" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="32" y="416.12">C·D는 순회 중 조회에 이미 포함되지만, 방문은 다음 순회부터 시작한다.</tspan>
+  </text>
+</svg>

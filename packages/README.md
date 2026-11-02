@@ -31,9 +31,15 @@ C# 구현의 `netstandard2.1` DLL만 포함하며, TypeScript 구현과 런타�
 | SHA-256 | `F978A9E221098D9F6FAA25A619FB30D710EEEA5499ED604BAF8891EFD8E79F8E` |
 | 소비 검증 | 빈 패키지 캐시에서 로컬 피드 복원, C# 9 소비 예제의 Counter 실행·JSON 보고서 검증 통과 |
 
-`netstandard2.1`의 `BlackThunder.UniTest.dll`을 제공하며 런타임 패키지 의존성은 없다. 현재 Golden Hind 전용 테스트 프로젝트는 없으며, 실제 테스트를 추가할 때 준비된 패키지를 테스트 프로젝트에 연결한다.
+`netstandard2.1`의 `BlackThunder.UniTest.dll`을 제공하며 런타임 패키지 의존성은 없다. `tests/GoldenHind.Tests.csproj`가 이 로컬 패키지를 정확한 버전 `[0.4.0]`으로 참조한다. 실행 방법은 [테스트 안내](../tests/README.md)를 따른다.
 
 각 패키지는 현재 채택한 버전만 보관한다. 새 버전으로 참조를 갱신하고 검증을 마치면, 더 이상 참조하지 않는 이전 버전의 `.nupkg`를 삭제한다.
+
+## UniTest 작업 지침
+
+2026-11-02에 원격 최신 커밋 [c7c5907](https://github.com/dove-creative/unitest/commit/c7c5907155a1003cb0433359694a9f7ab53861f0)의 소스 아카이브를 다운로드하여 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/c7c5907155a1003cb0433359694a9f7ab53861f0/docs/Workflow.ko/01-Test-Authoring-Workflow.md)를 확인했다. 이 지침에 따라 테스트 코드와 문서 폴더 이름을 `UniTest`로 통일한다.
+
+원격 프로젝트의 패키지 버전은 여전히 0.4.0이며 GitHub 릴리스에 새 배포 패키지는 없다. 현재 안정 패키지와 비교한 런타임 소스 변경은 주석 정리뿐이므로 검증된 0.4.0 패키지·참조·원본 커밋과 SHA-256을 유지한다. 같은 버전의 패키지를 다시 포장하거나 덮어쓰지 않는다. 다운로드한 소스 아카이브는 비추적 검증 산출물인 `tests/obj/UniTestConventionUpdate`에 보관하며 프로젝트 참조에는 사용하지 않는다.
 
 ## 갱신 절차
 

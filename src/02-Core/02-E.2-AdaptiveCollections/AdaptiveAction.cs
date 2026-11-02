@@ -16,8 +16,9 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (Action callback in action.GetInvocationList())
+                foreach (var entry in InvocationListCache<Action>.Get(action))
                 {
+                    var callback = (Action)entry;
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -32,6 +33,11 @@ namespace Blackthunder.UniEngine.Core
                     }
                 }
             }
+        }
+
+        protected override void OnItemAdded(Action item)
+        {
+            if (item != null) InvocationListCache<Action>.Get(item);
         }
     }
 
@@ -48,8 +54,9 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (Action<T> callback in action.GetInvocationList())
+                foreach (var entry in InvocationListCache<Action<T>>.Get(action))
                 {
+                    var callback = (Action<T>)entry;
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -64,6 +71,11 @@ namespace Blackthunder.UniEngine.Core
                     }
                 }
             }
+        }
+
+        protected override void OnItemAdded(Action<T> item)
+        {
+            if (item != null) InvocationListCache<Action<T>>.Get(item);
         }
     }
 
@@ -80,8 +92,9 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (Action<T, U> callback in action.GetInvocationList())
+                foreach (var entry in InvocationListCache<Action<T, U>>.Get(action))
                 {
+                    var callback = (Action<T, U>)entry;
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -96,6 +109,11 @@ namespace Blackthunder.UniEngine.Core
                     }
                 }
             }
+        }
+
+        protected override void OnItemAdded(Action<T, U> item)
+        {
+            if (item != null) InvocationListCache<Action<T, U>>.Get(item);
         }
     }
 
@@ -112,8 +130,9 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (Action<T, U, V> callback in action.GetInvocationList())
+                foreach (var entry in InvocationListCache<Action<T, U, V>>.Get(action))
                 {
+                    var callback = (Action<T, U, V>)entry;
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -128,6 +147,11 @@ namespace Blackthunder.UniEngine.Core
                     }
                 }
             }
+        }
+
+        protected override void OnItemAdded(Action<T, U, V> item)
+        {
+            if (item != null) InvocationListCache<Action<T, U, V>>.Get(item);
         }
     }
 }

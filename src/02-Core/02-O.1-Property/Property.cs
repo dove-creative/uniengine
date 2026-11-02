@@ -23,7 +23,7 @@ namespace Blackthunder.UniEngine.Core
         bool ICollection<KeyValuePair<object, object>>.IsReadOnly { get; } = false;
 
         // Internal
-        private readonly Dictionary<object, object> _properties = [];
+        private readonly Dictionary<object, object> _properties = new();
 
 
         // Content

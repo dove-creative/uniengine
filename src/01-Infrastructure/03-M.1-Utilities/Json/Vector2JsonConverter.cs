@@ -17,7 +17,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             Type typeToConvert,
             JsonSerializerOptions options)
         {
-            Span<float> components = stackalloc float[_componentNames.Length];
+            var components = new float[_componentNames.Length];
             JsonComponentSerializer.ReadSingleComponents(ref reader, _componentNames, components);
             return new Vector2(components[0], components[1]);
         }

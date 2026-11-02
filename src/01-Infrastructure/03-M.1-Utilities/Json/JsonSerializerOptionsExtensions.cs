@@ -27,7 +27,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             JsonSerializerOptions options,
             JsonConverter<T> converter)
         {
-            foreach (JsonConverter registeredConverter in options.Converters)
+            foreach (var registeredConverter in options.Converters)
             {
                 if (registeredConverter.CanConvert(typeof(T)))
                     return;

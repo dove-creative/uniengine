@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="548" viewBox="0 0 1120 548" role="img" aria-labelledby="title description">
+  <title id="title">콜백 자기 제거와 남은 호출</title>
+  <desc id="description">중복 등록이 없는 예시: actionA = callback1 + callback2, actionB = callback3</desc>
+  <rect x="0" y="0" width="1120" height="548" fill="white" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52647a" />
+    </marker>
+  </defs>
+  <text x="32" y="48.52" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="28" font-weight="700" text-anchor="start">
+    <tspan x="32" y="48.52">콜백 자기 제거와 남은 호출</tspan>
+  </text>
+  <text x="32" y="84.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="84.78">중복 등록이 없는 예시: actionA = callback1 + callback2, actionB = callback3</tspan>
+  </text>
+  <rect x="32" y="112" width="516" height="110" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="151.14" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="700" text-anchor="start">
+    <tspan x="52" y="151.14">등록 항목 actionA</tspan>
+  </text>
+  <rect x="290" y="145" width="110" height="48" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="345.0" y="175.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="middle">
+    <tspan x="345.0" y="175.12">callback1</tspan>
+  </text>
+  <rect x="414" y="145" width="110" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="469.0" y="175.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="middle">
+    <tspan x="469.0" y="175.12">callback2</tspan>
+  </text>
+  <rect x="572" y="112" width="516" height="110" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="592" y="151.14" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="700" text-anchor="start">
+    <tspan x="592" y="151.14">등록 항목 actionB</tspan>
+  </text>
+  <rect x="932" y="145" width="130" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="997.0" y="175.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="middle">
+    <tspan x="997.0" y="175.12">callback3</tspan>
+  </text>
+  <rect x="32" y="278" width="280" height="132" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="172.0" y="322.78999999999996" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="400" text-anchor="middle">
+    <tspan x="172.0" y="322.78999999999996">callback1 실행</tspan>
+    <tspan x="172.0" y="351.14">Remove(actionA)</tspan>
+    <tspan x="172.0" y="379.48999999999995">본문은 계속 실행</tspan>
+  </text>
+  <polyline points="324,344 408,344" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <rect x="420" y="278" width="280" height="132" rx="8" fill="#fff0e3" stroke="#aa5b20" stroke-width="1.5" />
+  <text x="560.0" y="336.965" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="400" text-anchor="middle">
+    <tspan x="560.0" y="336.965">callback1 반환</tspan>
+    <tspan x="560.0" y="365.315">callback2 생략</tspan>
+  </text>
+  <polyline points="712,344 796,344" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <rect x="808" y="278" width="280" height="132" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="948.0" y="336.965" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="400" text-anchor="middle">
+    <tspan x="948.0" y="336.965">다음 등록 항목</tspan>
+    <tspan x="948.0" y="365.315">callback3 실행</tspan>
+  </text>
+  <text x="32" y="466.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="32" y="466.46">Remove 대상은 callback1 단독이 아니라 현재 등록된 actionA 대리자이다.</tspan>
+  </text>
+  <text x="32" y="517.12" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="32" y="517.12">Clear를 호출했다면 callback1 반환 후 다른 등록 항목의 호출도 중단한다.</tspan>
+  </text>
+</svg>

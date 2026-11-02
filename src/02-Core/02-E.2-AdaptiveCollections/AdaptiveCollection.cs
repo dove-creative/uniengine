@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public class AdaptiveCollection<T> : ICollection<T>
+    public class AdaptiveCollection<T> : ICollection<T>, IEnumerationSource<T>
     {
         // Front
         public int Count => DeferredUpdate && _isIterating
@@ -19,6 +19,7 @@ namespace Blackthunder.UniEngine.Core
         private readonly List<T> _pendingItems;
 
         private int _index = -1;
+        private long _enumerationId;
         private bool _isIterating;
         private bool _iterationStopped;
         private bool _currentItemRemoved;
@@ -37,41 +38,57 @@ namespace Blackthunder.UniEngine.Core
         }
 
         // Iteration
-        public IEnumerator<T> GetEnumerator()
+        public ValueEnumerator<T> GetEnumerator() => new(this);
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        long IEnumerationSource<T>.BeginEnumeration()
         {
             if (_isIterating)
                 throw new InvalidOperationException("Collection is already being iterated. Nested iterations are not allowed.");
 
+            _enumerationId = checked(_enumerationId + 1);
             _isIterating = true;
             _iterationStopped = false;
+            _currentItemRemoved = false;
             _index = -1;
+            return _enumerationId;
+        }
+
+        bool IEnumerationSource<T>.TryMoveNext(long enumerationId, out T current)
+        {
+            if (!_isIterating || enumerationId != _enumerationId)
+                throw new InvalidOperationException("The enumeration is no longer active.");
+
+            if (!_iterationStopped && ++_index < _items.Count)
+            {
+                _currentItemRemoved = false;
+                current = _items[_index];
+                return true;
+            }
+
+            current = default;
+            return false;
+        }
+
+        void IEnumerationSource<T>.EndEnumeration(long enumerationId)
+        {
+            if (!_isIterating || enumerationId != _enumerationId) return;
 
             try
             {
-                while (!_iterationStopped && ++_index < _items.Count)
-                {
-                    _currentItemRemoved = false;
-                    yield return _items[_index];
-                }
+                if (DeferredUpdate)
+                    _items.AddRange(_pendingItems);
             }
             finally
             {
-                try
-                {
-                    if (DeferredUpdate)
-                        _items.AddRange(_pendingItems);
-                }
-                finally
-                {
-                    _pendingItems?.Clear();
-                    _isIterating = false;
-                    _iterationStopped = false;
-                    _currentItemRemoved = false;
-                    _index = -1;
-                }
+                _pendingItems?.Clear();
+                _isIterating = false;
+                _iterationStopped = false;
+                _currentItemRemoved = false;
+                _index = -1;
             }
         }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public void ForEach(Action<T> selector)
         {
@@ -86,14 +103,38 @@ namespace Blackthunder.UniEngine.Core
                 _pendingItems.Add(item);
             else
                 _items.Add(item);
+
+            OnItemAdded(item);
         }
         public void AddRange(IEnumerable<T> items)
         {
-            if (DeferredUpdate && _isIterating)
-                _pendingItems.AddRange(items);
-            else
-                _items.AddRange(items);
+            var destination = DeferredUpdate && _isIterating ? _pendingItems : _items;
+            if (items != null && items is not ICollection<T>)
+            {
+                // Prepare each streamed item before the source can run more user code.
+                foreach (var item in items)
+                {
+                    destination.Add(item);
+                    OnItemAdded(item);
+                }
+                return;
+            }
+
+            var previousCount = destination.Count;
+            try
+            {
+                destination.AddRange(items);
+            }
+            finally
+            {
+                // An enumerable can fail after appending some of its items.
+                var count = destination.Count;
+                for (var index = previousCount; index < count; index++)
+                    OnItemAdded(destination[index]);
+            }
         }
+
+        protected virtual void OnItemAdded(T item) { }
 
         public bool Remove(T item)
         {

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="490" viewBox="0 0 1120 490" role="img" aria-labelledby="title description">
+  <title id="title">열거자와 컬렉션의 역할</title>
+  <desc id="description">ValueEnumerator는 공통 계약을 호출하고, 저장 구조와 순회 위치는 컬렉션이 관리한다.</desc>
+  <rect x="0" y="0" width="1120" height="490" fill="white" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52647a" />
+    </marker>
+  </defs>
+  <text x="32" y="48.52" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="28" font-weight="700" text-anchor="start">
+    <tspan x="32" y="48.52">열거자와 컬렉션의 역할</tspan>
+  </text>
+  <text x="32" y="84.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="84.78">ValueEnumerator는 공통 계약을 호출하고, 저장 구조와 순회 위치는 컬렉션이 관리한다.</tspan>
+  </text>
+  <rect x="32" y="132" width="280" height="210" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="170.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="start">
+    <tspan x="52" y="170.8">ValueEnumerator&lt;T&gt;</tspan>
+  </text>
+  <text x="52" y="210.12" fill="#3565a8" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="52" y="210.12">값 형식 열거자</tspan>
+  </text>
+  <text x="52" y="261.635" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="52" y="261.635">현재 값 · 순회 식별자</tspan>
+    <tspan x="52" y="287.28499999999997">시작·종료 상태</tspan>
+  </text>
+  <rect x="400" y="132" width="300" height="210" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="420" y="170.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="700" text-anchor="start">
+    <tspan x="420" y="170.46">IEnumerationSource&lt;T&gt;</tspan>
+  </text>
+  <text x="420" y="227.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="420" y="227.8">BeginEnumeration</tspan>
+    <tspan x="420" y="254.8">TryMoveNext</tspan>
+    <tspan x="420" y="281.8">EndEnumeration</tspan>
+  </text>
+  <rect x="788" y="132" width="300" height="210" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="808" y="164" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="700" text-anchor="start">
+    <tspan x="808" y="164">AdaptiveCollection&lt;T&gt;</tspan>
+    <tspan x="808" y="187">AdaptiveDictionary&lt;K, V&gt;</tspan>
+    <tspan x="808" y="210">AdaptiveHashSet&lt;T&gt;</tspan>
+  </text>
+  <text x="808" y="244" fill="#3565a8" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="808" y="244">저장·변경 정책의 소유자</tspan>
+  </text>
+  <text x="808" y="282" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="808" y="282">저장 구조 · 순회 위치</tspan>
+    <tspan x="808" y="307">변경 기록 · 순회 식별자</tspan>
+  </text>
+  <polyline points="316,244 392,244" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="354.0" y="223.78" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="middle">
+    <tspan x="354.0" y="223.78">호출</tspan>
+  </text>
+  <polyline points="780,244 708,244" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5" />
+  <text x="746.0" y="223.78" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="middle">
+    <tspan x="746.0" y="223.78">구현</tspan>
+  </text>
+  <rect x="32" y="372" width="1056" height="66" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="560.0" y="411.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="middle">
+    <tspan x="560.0" y="411.46">첫 MoveNext → BeginEnumeration → TryMoveNext 반복 → 종료 시 EndEnumeration</tspan>
+  </text>
+  <text x="32" y="471.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="471.78">같은 컬렉션에서 동시에 활성화되는 순회는 하나이다. 열거자 값은 미리 여러 개 만들 수 있다.</tspan>
+  </text>
+</svg>

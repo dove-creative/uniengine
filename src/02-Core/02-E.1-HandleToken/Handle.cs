@@ -32,8 +32,10 @@ namespace Blackthunder.UniEngine.Core
                 var callbacks = Disposed?.GetInvocationList();
                 if (callbacks == null) return;
 
-                foreach (Action callback in callbacks)
+                foreach (var entry in callbacks)
                 {
+                    var callback = (Action)entry;
+
                     try
                     {
                         callback();

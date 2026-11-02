@@ -20,7 +20,8 @@ namespace BlackThunder.UniEngine.Infrastructure
 
         public static void Report(Exception exception)
         {
-            ArgumentNullException.ThrowIfNull(exception);
+            if (exception == null)
+                throw new ArgumentNullException(nameof(exception));
 
             Action<Exception> handler;
             lock (_safetyLock)

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="704" viewBox="0 0 1120 704" role="img" aria-labelledby="title description">
+  <title id="title">사전·집합의 변경 기록과 후속 순회</title>
+  <desc id="description">A·B·C·D는 사전의 항목 또는 집합의 값을 나타낸다. A를 먼저 방문하는 예시이다.</desc>
+  <rect x="0" y="0" width="1120" height="704" fill="white" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52647a" />
+    </marker>
+  </defs>
+  <text x="32" y="48.52" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="28" font-weight="700" text-anchor="start">
+    <tspan x="32" y="48.52">사전·집합의 변경 기록과 후속 순회</tspan>
+  </text>
+  <text x="32" y="84.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="84.78">A·B·C·D는 사전의 항목 또는 집합의 값을 나타낸다. A를 먼저 방문하는 예시이다.</tspan>
+  </text>
+  <rect x="32" y="110" width="1056" height="58" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="560.0" y="146.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="560.0" y="146.48">A의 본문에서 Remove(B)와 Add(D) 요청</tspan>
+  </text>
+  <rect x="32" y="196" width="470" height="308" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="235.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="start">
+    <tspan x="52" y="235.48">1. 변경 기록</tspan>
+  </text>
+  <text x="56" y="286.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="286.8">본 사전·집합</tspan>
+  </text>
+  <text x="56" y="360.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="360.8">추가 대기</tspan>
+  </text>
+  <text x="56" y="434.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="56" y="434.8">제거 표시</tspan>
+  </text>
+  <rect x="224" y="256" width="64" height="48" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="256.0" y="287.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="256.0" y="287.48">A</tspan>
+  </text>
+  <rect x="298" y="256" width="64" height="48" rx="8" fill="#fff0e3" stroke="#aa5b20" stroke-width="1.5" />
+  <text x="330.0" y="287.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="330.0" y="287.48">B</tspan>
+  </text>
+  <rect x="372" y="256" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="404.0" y="287.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="404.0" y="287.48">C</tspan>
+  </text>
+  <rect x="224" y="330" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="256.0" y="361.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="256.0" y="361.48">D</tspan>
+  </text>
+  <rect x="224" y="404" width="64" height="48" rx="8" fill="#fff0e3" stroke="#aa5b20" stroke-width="1.5" />
+  <text x="256.0" y="435.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="256.0" y="435.48">B</tspan>
+  </text>
+  <text x="56" y="484.78" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="56" y="484.78">논리 상태: A, C, D · 현재 묶음: A, C</tspan>
+  </text>
+  <polyline points="514,358 606,358" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="560.0" y="277.355" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="middle">
+    <tspan x="560.0" y="277.355">묶음 종료 뒤</tspan>
+    <tspan x="560.0" y="300.305">D 복사 후</tspan>
+    <tspan x="560.0" y="323.25499999999994">변경 반영</tspan>
+  </text>
+  <rect x="618" y="196" width="470" height="308" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="638" y="235.14" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="700" text-anchor="start">
+    <tspan x="638" y="235.14">2. 반영 후 · 즉시 모드</tspan>
+  </text>
+  <text x="642" y="286.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="642" y="286.8">본 사전·집합</tspan>
+  </text>
+  <rect x="800" y="256" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="832.0" y="287.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="832.0" y="287.48">A</tspan>
+  </text>
+  <rect x="874" y="256" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="906.0" y="287.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="906.0" y="287.48">C</tspan>
+  </text>
+  <rect x="948" y="256" width="64" height="48" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="980.0" y="287.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="980.0" y="287.48">D</tspan>
+  </text>
+  <text x="642" y="360.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="642" y="360.8">추가 대기</tspan>
+  </text>
+  <text x="820" y="360.46" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="820" y="360.46">비어 있음</tspan>
+  </text>
+  <text x="642" y="434.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="start">
+    <tspan x="642" y="434.8">제거 표시</tspan>
+  </text>
+  <text x="820" y="434.46" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="820" y="434.46">비어 있음</tspan>
+  </text>
+  <text x="642" y="484.78" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="642" y="484.78">후속 순회는 D만 담은 복사본을 방문</tspan>
+  </text>
+  <rect x="32" y="530" width="1056" height="104" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="563.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="52" y="563.46">지연 모드: 종료 시 반영하고, 다음 순회에서 유효 항목 전체를 방문한다.</tspan>
+  </text>
+  <text x="52" y="606.46" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="19" font-weight="400" text-anchor="start">
+    <tspan x="52" y="606.46">즉시 모드: D를 후속 묶음으로 방문한다. 새 추가가 생기면 같은 과정을 반복한다.</tspan>
+  </text>
+  <text x="32" y="668.305" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="668.305">방문 순서는 예시이며 보장하지 않는다.</tspan>
+    <tspan x="32" y="691.255">Clear로 현재 순회를 중단하면 후속 묶음도 방문하지 않는다.</tspan>
+  </text>
+</svg>

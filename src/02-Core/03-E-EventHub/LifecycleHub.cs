@@ -71,8 +71,10 @@ namespace Blackthunder.UniEngine.Core
                 foreach (var client in clients)
                 {
                     if (client.Value == null) continue;
-                    foreach (Action callback in client.Value.GetInvocationList())
+                    foreach (var entry in client.Value.GetInvocationList())
                     {
+                        var callback = (Action)entry;
+
                         try
                         {
                             callback();

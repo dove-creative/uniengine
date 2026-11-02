@@ -36,10 +36,10 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities
         public static string ToDisplayString(this TimeSpan value)
         {
             bool isNegative = value < TimeSpan.Zero;
-            double totalSeconds = Math.Abs(value.TotalSeconds);
-            long totalHours = (long)(totalSeconds / 3600d);
-            int minutes = (int)(totalSeconds / 60d) % 60;
-            int seconds = (int)totalSeconds % 60;
+            // Divide before taking the magnitude so TimeSpan.MinValue cannot overflow.
+            long totalHours = Math.Abs(value.Ticks / TimeSpan.TicksPerHour);
+            int minutes = Math.Abs(value.Minutes);
+            int seconds = Math.Abs(value.Seconds);
             string sign = isNegative ? "-" : string.Empty;
 
             if (totalHours > 0)
@@ -86,7 +86,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities
             if (collection == null)
                 return "null";
 
-            var items = collection as IList<T> ?? [.. collection];
+            var items = collection as IList<T> ?? new List<T>(collection);
 
             if (!detailedFormat)
                 return FormatSimpleCollection(items, selector);

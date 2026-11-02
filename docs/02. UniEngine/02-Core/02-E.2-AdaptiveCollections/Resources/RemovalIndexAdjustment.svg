@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="716" viewBox="0 0 1120 716" role="img" aria-labelledby="title description">
+  <title id="title">삭제 위치에 따른 인덱스 보정</title>
+  <desc id="description">각 행은 초기 목록 [A, B, C, D]에서 B를 방문 중인 독립적인 예시이다.</desc>
+  <rect x="0" y="0" width="1120" height="716" fill="white" />
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52647a" />
+    </marker>
+  </defs>
+  <text x="32" y="48.52" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="28" font-weight="700" text-anchor="start">
+    <tspan x="32" y="48.52">삭제 위치에 따른 인덱스 보정</tspan>
+  </text>
+  <text x="32" y="84.78" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="84.78">각 행은 초기 목록 [A, B, C, D]에서 B를 방문 중인 독립적인 예시이다.</tspan>
+  </text>
+  <rect x="32" y="112" width="1056" height="108" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="52" y="150.8" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="start">
+    <tspan x="52" y="150.8">공통 시작 상태</tspan>
+  </text>
+  <rect x="330" y="142" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="362.0" y="173.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="362.0" y="173.48">A</tspan>
+  </text>
+  <rect x="404" y="142" width="64" height="48" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="436.0" y="173.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="436.0" y="173.48">B</tspan>
+  </text>
+  <rect x="478" y="142" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="510.0" y="173.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="510.0" y="173.48">C</tspan>
+  </text>
+  <rect x="552" y="142" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="584.0" y="173.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="584.0" y="173.48">D</tspan>
+  </text>
+  <text x="690" y="174.14" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="21" font-weight="700" text-anchor="start">
+    <tspan x="690" y="174.14">현재 B · index = 1</tspan>
+  </text>
+  <rect x="32" y="246" width="1056" height="118" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="56" y="296.3" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="start">
+    <tspan x="56" y="296.3">이전 항목 삭제</tspan>
+    <tspan x="56" y="323.3">Remove(A)</tspan>
+  </text>
+  <rect x="330" y="260" width="64" height="48" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="362.0" y="291.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="362.0" y="291.48">B</tspan>
+  </text>
+  <rect x="404" y="260" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="436.0" y="291.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="436.0" y="291.48">C</tspan>
+  </text>
+  <rect x="478" y="260" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="510.0" y="291.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="510.0" y="291.48">D</tspan>
+  </text>
+  <text x="330" y="339.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="330" y="339.12">보정 후 index = 0</tspan>
+  </text>
+  <polyline points="660,303 770,303" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <rect x="792" y="265" width="264" height="80" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="924.0" y="298.3" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="middle">
+    <tspan x="924.0" y="298.3">다음 MoveNext</tspan>
+    <tspan x="924.0" y="325.3">C 방문</tspan>
+  </text>
+  <rect x="32" y="384" width="1056" height="118" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="56" y="434.3" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="start">
+    <tspan x="56" y="434.3">현재 항목 삭제</tspan>
+    <tspan x="56" y="461.3">Remove(B)</tspan>
+  </text>
+  <rect x="330" y="398" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="362.0" y="429.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="362.0" y="429.48">A</tspan>
+  </text>
+  <rect x="404" y="398" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="436.0" y="429.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="436.0" y="429.48">C</tspan>
+  </text>
+  <rect x="478" y="398" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="510.0" y="429.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="510.0" y="429.48">D</tspan>
+  </text>
+  <text x="330" y="477.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="330" y="477.12">보정 후 index = 0</tspan>
+  </text>
+  <polyline points="660,441 770,441" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <rect x="792" y="403" width="264" height="80" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="924.0" y="436.3" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="middle">
+    <tspan x="924.0" y="436.3">다음 MoveNext</tspan>
+    <tspan x="924.0" y="463.3">C 방문</tspan>
+  </text>
+  <rect x="32" y="522" width="1056" height="118" rx="8" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="56" y="572.3" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="start">
+    <tspan x="56" y="572.3">다음 항목 삭제</tspan>
+    <tspan x="56" y="599.3">Remove(C)</tspan>
+  </text>
+  <rect x="330" y="536" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="362.0" y="567.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="362.0" y="567.48">A</tspan>
+  </text>
+  <rect x="404" y="536" width="64" height="48" rx="8" fill="#e8f0fc" stroke="#3565a8" stroke-width="1.5" />
+  <text x="436.0" y="567.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="436.0" y="567.48">B</tspan>
+  </text>
+  <rect x="478" y="536" width="64" height="48" rx="8" fill="white" stroke="#cbd5e1" stroke-width="1.5" />
+  <text x="510.0" y="567.48" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="22" font-weight="700" text-anchor="middle">
+    <tspan x="510.0" y="567.48">D</tspan>
+  </text>
+  <text x="330" y="615.12" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="18" font-weight="400" text-anchor="start">
+    <tspan x="330" y="615.12">보정 후 index = 1</tspan>
+  </text>
+  <polyline points="660,579 770,579" fill="none" stroke="#52647a" stroke-width="2" marker-end="url(#arrow)" />
+  <rect x="792" y="541" width="264" height="80" rx="8" fill="#e3f3e8" stroke="#35734b" stroke-width="1.5" />
+  <text x="924.0" y="574.3" fill="#172b4d" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="20" font-weight="400" text-anchor="middle">
+    <tspan x="924.0" y="574.3">다음 MoveNext</tspan>
+    <tspan x="924.0" y="601.3">D 방문</tspan>
+  </text>
+  <text x="32" y="676.305" fill="#52647a" font-family="Malgun Gothic, Noto Sans KR, sans-serif" font-size="17" font-weight="400" text-anchor="start">
+    <tspan x="32" y="676.305">현재 항목을 지운 경우 index는 다음 이동을 위한 위치이다.</tspan>
+    <tspan x="32" y="699.255">뒤 항목을 실제로 당겨 배치하므로 삭제된 칸이 목록에 남지 않는다.</tspan>
+  </text>
+</svg>
