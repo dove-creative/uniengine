@@ -40,6 +40,7 @@ namespace Blackthunder.UniEngine.Core
 
         private static readonly Action _emptyCompleted = () => { };
         private static readonly Action<Exception> _emptyErrored = _ => { };
+        private static readonly Action<Action<TEventArgs>, TEventArgs> _invokeUpdated = static (action, args) => action(args);
 
         protected AdaptiveAction<TEventArgs> Updated { get; } = new(true);
         protected AdaptiveAction Completed { get; } = new(true);
@@ -48,17 +49,21 @@ namespace Blackthunder.UniEngine.Core
         private readonly List<IDisposable> _handles = new();
         private readonly HashSet<IDisposable> _connections = new();
         private readonly Dictionary<Delegate, Handle> _subscriptionHandles = new();
-        private readonly Dictionary<Delegate, Delegate> _subscriptionCallbacks = new();
+        private readonly Dictionary<Delegate, Delegate[]> _subscriptionCallbacks = new();
 
 
         // Content --------------------
+        // Construction
+        // Prepare shared delegates before the first instance can publish.
+        static EventStream() { }
+
         // Propagation
         public virtual void OnNext(TEventArgs args)
         {
             ThrowIfDisposed();
             if (!Enabled) return;
 
-            Dispatch(Updated, action => action(args));
+            Dispatch(Updated, args, _invokeUpdated);
         }
 
         public void OnCompleted() =>
@@ -79,24 +84,37 @@ namespace Blackthunder.UniEngine.Core
             Func<TAction, bool> filter = null)
             where TAction : Delegate
         {
+            Dispatch(
+                actions, (Invoke: invoke, Filter: filter),
+                static (action, state) => state.Invoke(action),
+                static (action, state) => state.Filter == null || state.Filter(action));
+        }
+
+        protected void Dispatch<TAction, TState>(
+            AdaptiveCollection<TAction> actions,
+            TState state,
+            Action<TAction, TState> invoke,
+            Func<TAction, TState, bool> filter = null)
+            where TAction : Delegate
+        {
             foreach (var action in actions)
             {
                 if (IsDisposing) break;
-                if (action is null || (filter != null && !filter(action))) continue;
+                if (action is null || (filter != null && !filter(action, state))) continue;
 
                 _subscriptionHandles.TryGetValue(action, out var handle);
                 var callbacks = _subscriptionCallbacks.TryGetValue(action, out var original)
-                    ? original : action;
+                    ? original : InvocationListCache<TAction>.Get(action);
                 if (callbacks == null) continue;
 
-                foreach (var callback in callbacks.GetInvocationList())
+                foreach (var callback in callbacks)
                 {
                     if (IsDisposing || !actions.IsCurrentItemActive || (handle?.IsDisposed ?? false))
                         break;
 
                     try
                     {
-                        invoke((TAction)callback);
+                        invoke((TAction)callback, state);
                     }
                     catch (Exception exception)
                     {
@@ -184,14 +202,18 @@ namespace Blackthunder.UniEngine.Core
         {
             ThrowIfDisposed();
 
+            var updatedCallbacks = updated == null ? null : InvocationListCache<Action<TEventArgs>>.Get(updated);
+            var completedCallbacks = completed == null ? null : InvocationListCache<Action>.Get(completed);
+            var erroredCallbacks = errored == null ? null : InvocationListCache<Action<Exception>>.Get(errored);
+
             registeredUpdated = args => updated?.Invoke(args);
             Action registeredCompleted = () => completed?.Invoke();
             Action<Exception> registeredErrored = exception => errored?.Invoke(exception);
             var handle = CreateSubscriptionHandle(registeredUpdated, registeredCompleted, registeredErrored);
 
-            _subscriptionCallbacks[registeredUpdated] = updated;
-            _subscriptionCallbacks[registeredCompleted] = completed;
-            _subscriptionCallbacks[registeredErrored] = errored;
+            _subscriptionCallbacks[registeredUpdated] = updatedCallbacks;
+            _subscriptionCallbacks[registeredCompleted] = completedCallbacks;
+            _subscriptionCallbacks[registeredErrored] = erroredCallbacks;
 
             if (completed != null) Completed.Add(registeredCompleted);
             if (errored != null) Errored.Add(registeredErrored);

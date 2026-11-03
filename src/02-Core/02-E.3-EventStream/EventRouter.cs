@@ -7,12 +7,19 @@ namespace Blackthunder.UniEngine.Core
     public class EventRouter<TEventArgs> : EventStream<TEventArgs>
     {
         // Internal
+        private static readonly Action<Action<TEventArgs>, (EventRouter<TEventArgs> Router, TEventArgs Args, uint Mask)> _invokeUpdated
+            = static (action, state) => action(state.Args);
+        private static readonly Func<Action<TEventArgs>, (EventRouter<TEventArgs> Router, TEventArgs Args, uint Mask), bool> _matches
+            = static (action, state) => !state.Router._maskMap.TryGetValue(action, out var targetMask) || state.Mask.HasAny(targetMask);
         private readonly Func<TEventArgs, uint> _toMask;
         private readonly AdaptiveDictionary<Action<TEventArgs>, uint> _maskMap = new();
 
 
         // Content --------------------
         // Construction
+        // Prepare routing delegates before the first instance can publish.
+        static EventRouter() { }
+
         public EventRouter() { }
         public EventRouter(Func<TEventArgs, uint> toMask) => _toMask = toMask;
 
@@ -25,10 +32,7 @@ namespace Blackthunder.UniEngine.Core
             var mask = ToMask(args);
             if (IsDisposing) return;
 
-            Dispatch(
-                Updated,
-                action => action(args),
-                action => !_maskMap.TryGetValue(action, out var targetMask) || mask.HasAny(targetMask));
+            Dispatch(Updated, (Router: this, Args: args, Mask: mask), _invokeUpdated, _matches);
         }
 
         // Subscriptions

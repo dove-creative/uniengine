@@ -13,6 +13,7 @@ namespace Blackthunder.UniEngine.Core
 
 
         // Internal
+        private static readonly Action<Action<TEventArgs>, TEventArgs> _invokeUpdated = static (action, args) => action(args);
         private readonly List<TOrder> _orders = new();
         private readonly Dictionary<TOrder, AdaptiveAction<TEventArgs>> _updatesByOrder = new();
         private readonly List<(AdaptiveAction<TEventArgs> Updates, Action<TEventArgs> Action)> _pendingUpdates = new();
@@ -21,6 +22,9 @@ namespace Blackthunder.UniEngine.Core
 
         // Content --------------------
         // Construction
+        // Prepare the invocation delegate before the first instance can publish.
+        static OrderedEventStream() { }
+
         public OrderedEventStream()
             : this(GetDefaultOrder(), GetEnumOrders()) { }
 
@@ -67,7 +71,7 @@ namespace Blackthunder.UniEngine.Core
             try
             {
                 for (int i = 0, count = _orders.Count; i < count && !IsDisposing; i++)
-                    Dispatch(_updatesByOrder[_orders[i]], action => action(args));
+                    Dispatch(_updatesByOrder[_orders[i]], args, _invokeUpdated);
             }
             finally
             {
