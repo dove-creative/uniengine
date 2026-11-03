@@ -146,7 +146,7 @@ namespace BlackThunder.UniEngine.Tests
             Verify(() =>
             {
                 var counter = new Counter();
-                EventStream<int> stream = kind switch
+                IEventStream<int> stream = kind switch
                 {
                     "Ordered" => new OrderedEventStream<int, UpdateOrder>(),
                     "Router" => new EventRouter<int>(value =>

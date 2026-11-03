@@ -51,7 +51,7 @@ out 연결 핸들은 반환값과 별개로, 그 연결 하나를 끊을 권한�
 
 | 형태 | 정의 위치 | 호출 방법 |
 | --- | --- | --- |
-| Observer와 out 핸들을 받는 Chain·Connect | 구체 EventStream | 어떤 형식의 변수로도 호출할 수 있다. |
+| Observer와 out 핸들을 받는 Chain·Connect | 구현 형식 | 어떤 형식의 변수로도 호출할 수 있다. |
 | out을 생략한 Chain·Connect | IEventStream 기본 구현 | IEventStream 형식으로 호출한다. |
 | Observer를 새로 만드는 `Chain<TObserver>()`·`Connect<TObserver>()` | IEventStream 기본 구현 | IEventStream 형식으로 호출한다. |
 
@@ -69,6 +69,6 @@ out 연결 핸들은 반환값과 별개로, 그 연결 하나를 끊을 권한�
 
 ## 구현 연결
 
-[EventStream](EventStream.md)은 두 계약을 함께 구현하여 이벤트 전달과 연결 수명을 관리한다. [사용 예제](Usage.md)는 구독 핸들 해제와 연산자 체인의 정리 흐름을 보여준다.
+[EventStream](EventStream.md)은 두 계약을 함께 구현하여 이벤트 전달과 연결 수명을 관리한다. [EventRouter](EventRouter.md)는 IEventStream에 대상 구독을 더한 IEventRouter를 공개하고, 두 계약의 구현은 감싼 EventStream에 맡긴다. [사용 예제](Usage.md)는 구독 핸들 해제와 연산자 체인의 정리 흐름을 보여준다.
 
 [모듈 구성](README.md)

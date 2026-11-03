@@ -292,7 +292,7 @@ namespace Blackthunder.UniEngine.Core
             return observer;
         }
 
-        protected void BindConnection<TObserver>(TObserver observer, IDisposable connection)
+        protected internal static void BindConnection<TObserver>(TObserver observer, IDisposable connection)
             where TObserver : IObserver<TEventArgs>
         {
             if (observer is not IPassiveObserver passiveObserver) return;

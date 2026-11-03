@@ -8,16 +8,16 @@
 
 ## 실행 결과
 
-2026-11-03에 .NET SDK 10.0.403으로 GoldenHind.Tests의 EventStream 모듈을 Release 구성에서 실행했다. NUnit 어댑터가 발견한 101개 사례가 모두 통과했다. 실패와 건너뜀은 각각 0개이다.
+2026-11-03에 .NET SDK 10.0.403으로 GoldenHind.Tests의 EventStream 모듈을 Release 구성에서 실행했다. NUnit 어댑터가 발견한 103개 사례가 모두 통과했다. 실패와 건너뜀은 각각 0개이다.
 
 | 테스트 클래스 | 구분 | 통과 |
 | --- | --- | ---: |
 | EventStreamTests | 기존 기본·연산자 동작 | 21 |
-| EventStreamPropagationTests | 기존 전파 동작 | 26 |
+| EventStreamPropagationTests | 기존 전파 동작과 라우터 중첩 전파 | 27 |
 | EventStreamAllocationTests | 기존 전파 할당량 | 25 |
 | EventStreamContractTests | 신규 공통 계약 C1–C5 | 21 |
 | EventStreamOperatorTests | 신규 연산자 O1–O4 | 6 |
-| EventStreamCompositionTests | 신규 라우터와 순서 그룹 조합 I1 | 1 |
+| EventStreamCompositionTests | 신규 라우터 조합 I1·I2 | 2 |
 | EventStreamStateProjectTests | 신규 UniTest 상태 전이 U1·U2 | 1 |
 
 ## 상태 전이 결과

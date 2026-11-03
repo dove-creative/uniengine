@@ -193,7 +193,7 @@ PreUpdate, Update 2, PostUpdate
 
 ## 대상 라우팅
 
-EventRouter는 값을 비트 마스크로 바꾸어, 구독 마스크와 겹치는 수신자에게만 전달한다. 아래 예제는 바뀐 항목을 [Flags] 열거형으로 알리고, 각 화면 요소가 자신과 관련된 변경만 받게 한다. 대상 없이 구독한 Log는 모든 값을 받는다.
+EventRouter는 값을 비트 마스크로 바꾸어, 구독 마스크와 겹치는 수신자에게만 전달한다. 라우터는 EventRouterExtensions.Route로 만들고, 기존 스트림 뒤에 이을 때는 source.Route를 사용한다. 아래 예제는 바뀐 항목을 [Flags] 열거형으로 알리고, 각 화면 요소가 자신과 관련된 변경만 받게 한다. 대상 없이 구독한 Log는 모든 값을 받는다.
 
 ```csharp
 using System;
@@ -211,7 +211,7 @@ public static class Program
 
     public static void Main()
     {
-        using var router = new EventRouter<Changes>(changes => (uint)changes);
+        using var router = EventRouterExtensions.Route<Changes>(changes => (uint)changes);
         using var statusBar = router.Subscribe(
             new[] { Changes.Health, Changes.Mana }, changes => Console.WriteLine($"StatusBar: {changes}"));
         using var inventoryPanel = router.Subscribe(

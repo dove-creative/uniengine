@@ -99,7 +99,7 @@ namespace BlackThunder.UniEngine.Tests
         [Test]
         public void RoutedPublicationKeepsMaskFilteringAndDeferredSubscriptionChanges()
         {
-            using var router = new EventRouter<int>(value => (uint)value);
+            using var router = EventRouterExtensions.Route<int>(value => (uint)value);
             var calls = new List<string>();
             var removed = (IDisposable)null;
             using var first = router.Subscribe(1, value =>
@@ -116,6 +116,24 @@ namespace BlackThunder.UniEngine.Tests
             router.OnNext(2);
 
             Assert.That(calls, Is.EqualTo(new[] { "first:3", "ordinary:3", "ordinary:2", "late:2" }));
+        }
+
+        [Test]
+        public void NestedRoutedPublicationKeepsTheOuterMaskForRemainingSubscribers()
+        {
+            var reported = new List<Exception>();
+            ExceptionHandler.SetHandler(reported.Add);
+            using var router = EventRouterExtensions.Route<int>(value => (uint)value);
+            var calls = new List<string>();
+            using var nested = router.Subscribe(1, _ => router.OnNext(2));
+            using var matched = router.Subscribe(1, value => calls.Add($"matched:{value}"));
+            using var other = router.Subscribe(2, value => calls.Add($"other:{value}"));
+
+            router.OnNext(1);
+
+            Assert.That(calls, Is.EqualTo(new[] { "matched:1" }));
+            Assert.That(reported, Has.Count.EqualTo(1));
+            Assert.That(reported[0], Is.TypeOf<InvalidOperationException>());
         }
 
         // Failure and termination
@@ -272,12 +290,12 @@ namespace BlackThunder.UniEngine.Tests
             public void OnError(Exception exception) => Value++;
         }
 
-        private static EventStream<int> CreateStream(int kind) =>
+        private static IEventStream<int> CreateStream(int kind) =>
             kind switch
             {
                 0 => new EventStream<int>(),
                 1 => new OrderedEventStream<int, Order>(),
-                2 => new EventRouter<int>(value => (uint)value),
+                2 => EventRouterExtensions.Route<int>(value => (uint)value),
                 3 => new LegacyStream(),
                 _ => throw new ArgumentOutOfRangeException(nameof(kind)),
             };

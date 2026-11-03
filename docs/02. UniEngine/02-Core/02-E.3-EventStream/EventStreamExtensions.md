@@ -45,6 +45,6 @@ Merge는 생성자가 각 상위의 폐기 여부를 확인하고 Connect로 자
 
 ## 구현 연결
 
-개별 연산자의 상태와 처리 흐름은 [EventStream 연산자](EventStreamOperators.md)에서 설명한다. [사용 예제](Usage.md)의 필터 조합과 병합 절은 반환된 하위 스트림을 구독하고 정리하는 흐름을 보여준다.
+개별 연산자의 상태와 처리 흐름은 [EventStream 연산자](EventStreamOperators.md)에서 설명한다. 라우터를 만들고 대상을 지정해 연결하는 확장은 별도의 EventRouterExtensions가 제공하며, [EventRouter](EventRouter.md)에서 설명한다. [사용 예제](Usage.md)의 필터 조합과 병합 절은 반환된 하위 스트림을 구독하고 정리하는 흐름을 보여준다.
 
 [모듈 구성](README.md)

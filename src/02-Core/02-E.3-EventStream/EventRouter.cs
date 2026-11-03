@@ -1,71 +1,107 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Blackthunder.UniEngine.Core.EventStreamCore;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public class EventRouter<TEventArgs> : EventStream<TEventArgs>
+    public interface IEventRouter<TEventArgs> : IEventStream<TEventArgs>
     {
+        IDisposable Subscribe(TEventArgs target, Action<TEventArgs> updated);
+        IDisposable Subscribe(IEnumerable<TEventArgs> targets, Action<TEventArgs> updated);
+        IDisposable Subscribe(TEventArgs target, Action<TEventArgs> updated, Action completed, Action<Exception> errored);
+        IDisposable Subscribe(IEnumerable<TEventArgs> targets, Action<TEventArgs> updated, Action completed, Action<Exception> errored);
+        IDisposable Subscribe(TEventArgs target, IObserver<TEventArgs> observer);
+        IDisposable Subscribe(IEnumerable<TEventArgs> targets, IObserver<TEventArgs> observer);
+    }
+
+    internal class EventRouter<TEventArgs> : IEventRouter<TEventArgs>, IPassiveObserver
+    {
+        // Front
+        public bool Enabled
+        {
+            get => _stream.Enabled;
+            set => _stream.Enabled = value;
+        }
+
+        public TerminationMode TerminationMode
+        {
+            get => _stream.TerminationMode;
+            set => _stream.TerminationMode = value;
+        }
+
+        public bool IsDisposed => _stream.IsDisposed;
+
+
         // Internal
-        private static readonly Action<Action<TEventArgs>, (EventRouter<TEventArgs> Router, TEventArgs Args, uint Mask)> _invokeUpdated
-            = static (action, state) => action(state.Args);
-        private static readonly Func<Action<TEventArgs>, (EventRouter<TEventArgs> Router, TEventArgs Args, uint Mask), bool> _matches
-            = static (action, state) => !state.Router._maskMap.TryGetValue(action, out var targetMask) || state.Mask.HasAny(targetMask);
+        // The wrapped stream owns subscriptions, connections, failures, and termination.
+        private readonly EventStream<TEventArgs> _stream = new();
         private readonly Func<TEventArgs, uint> _toMask;
-        private readonly AdaptiveDictionary<Action<TEventArgs>, uint> _maskMap = new();
+        // Targeted callbacks compare their own mask with the mask of the value being published.
+        private uint _mask;
 
 
         // Content --------------------
         // Construction
-        // Prepare routing delegates before the first instance can publish.
-        static EventRouter() { }
-
         public EventRouter() { }
         public EventRouter(Func<TEventArgs, uint> toMask) => _toMask = toMask;
 
         // Propagation
-        public override void OnNext(TEventArgs args)
+        public void OnNext(TEventArgs args)
         {
             ThrowIfDisposed();
             if (!Enabled) return;
 
             var mask = ToMask(args);
-            if (IsDisposing) return;
+            if (IsDisposed) return;
 
-            Dispatch(Updated, (Router: this, Args: args, Mask: mask), _invokeUpdated, _matches);
+            // A rejected nested publication must not change the mask seen by the remaining callbacks.
+            var outerMask = _mask;
+            _mask = mask;
+            try
+            {
+                _stream.OnNext(args);
+            }
+            finally
+            {
+                _mask = outerMask;
+            }
+        }
+
+        public void OnCompleted() => _stream.OnCompleted();
+        public void OnError(Exception exception) => _stream.OnError(exception);
+
+        public IEventStream<TEventArgs> With(TerminationMode terminationMode)
+        {
+            TerminationMode = terminationMode;
+            return this;
         }
 
         // Subscriptions
-        public IDisposable Subscribe(TEventArgs target, Action<TEventArgs> updated)
-        {
-            ThrowIfDisposed();
-            if (updated == null) return base.Subscribe(updated);
+        public IDisposable Subscribe(Action<TEventArgs> updated) => _stream.Subscribe(updated);
+        public IDisposable Subscribe(Action<TEventArgs> updated, Action completed, Action<Exception> errored) =>
+            _stream.Subscribe(updated, completed, errored);
+        public IDisposable Subscribe(IObserver<TEventArgs> observer) => _stream.Subscribe(observer);
 
-            return SubscribeRouted(ToMask(target), updated, null, null);
-        }
-
-        public IDisposable Subscribe(IEnumerable<TEventArgs> targets, Action<TEventArgs> updated)
-        {
-            ThrowIfDisposed();
-            if (updated == null) return base.Subscribe(updated);
-
-            return SubscribeRouted(FlagExtensions.Combine(targets.Select(ToMask)), updated, null, null);
-        }
+        public IDisposable Subscribe(TEventArgs target, Action<TEventArgs> updated) =>
+            Subscribe(target, updated, null, null);
+        public IDisposable Subscribe(IEnumerable<TEventArgs> targets, Action<TEventArgs> updated) =>
+            Subscribe(targets, updated, null, null);
 
         public IDisposable Subscribe(TEventArgs target, Action<TEventArgs> updated, Action completed, Action<Exception> errored)
         {
             ThrowIfDisposed();
-            if (updated == null) return base.Subscribe(updated, completed, errored);
+            if (updated == null) return _stream.Subscribe(null, completed, errored);
 
-            return SubscribeRouted(ToMask(target), updated, completed, errored);
+            return _stream.Subscribe(CreateRoutedCallback(ToMask(target), updated), completed, errored);
         }
 
         public IDisposable Subscribe(IEnumerable<TEventArgs> targets, Action<TEventArgs> updated, Action completed, Action<Exception> errored)
         {
             ThrowIfDisposed();
-            if (updated == null) return base.Subscribe(updated, completed, errored);
+            if (updated == null) return _stream.Subscribe(null, completed, errored);
 
-            return SubscribeRouted(FlagExtensions.Combine(targets.Select(ToMask)), updated, completed, errored);
+            return _stream.Subscribe(CreateRoutedCallback(CombineMasks(targets), updated), completed, errored);
         }
 
         public IDisposable Subscribe(TEventArgs target, IObserver<TEventArgs> observer)
@@ -74,7 +110,8 @@ namespace Blackthunder.UniEngine.Core
             if (observer == null)
                 throw new ArgumentNullException(nameof(observer));
 
-            return SubscribeRouted(ToMask(target), observer.OnNext, observer.OnCompleted, observer.OnError);
+            return _stream.Subscribe(
+                CreateRoutedCallback(ToMask(target), observer.OnNext), observer.OnCompleted, observer.OnError);
         }
 
         public IDisposable Subscribe(IEnumerable<TEventArgs> targets, IObserver<TEventArgs> observer)
@@ -83,82 +120,53 @@ namespace Blackthunder.UniEngine.Core
             if (observer == null)
                 throw new ArgumentNullException(nameof(observer));
 
-            return SubscribeRouted(
-                FlagExtensions.Combine(targets.Select(ToMask)),
-                observer.OnNext, observer.OnCompleted, observer.OnError);
+            return _stream.Subscribe(
+                CreateRoutedCallback(CombineMasks(targets), observer.OnNext), observer.OnCompleted, observer.OnError);
         }
 
-        private IDisposable SubscribeRouted(
-            uint mask, Action<TEventArgs> updated, Action completed, Action<Exception> errored)
+        private Action<TEventArgs> CreateRoutedCallback(uint mask, Action<TEventArgs> updated)
         {
-            var handle = CreateSubscription(updated, completed, errored, out var registeredUpdated);
-            _maskMap[registeredUpdated] = mask;
-            Updated.Add(registeredUpdated);
-            return handle;
-        }
+            // Wrap each entry so the stream still stops a multicast tail after its subscription is released.
+            Action<TEventArgs> routed = null;
+            foreach (var entry in updated.GetInvocationList())
+            {
+                var callback = (Action<TEventArgs>)entry;
+                routed += args =>
+                {
+                    if (_mask.HasAny(mask)) callback(args);
+                };
+            }
 
-        // Connections
-        public TObserver Chain<TObserver>(TEventArgs target, TObserver observer, out IDisposable connection)
-            where TObserver : IObserver<TEventArgs>
-        {
-            ThrowIfDisposed();
-            if (observer == null)
-                throw new ArgumentNullException(nameof(observer));
-            if (ReferenceEquals(observer, this))
-                throw new ArgumentException("A stream cannot chain itself.", nameof(observer));
-
-            connection = Subscribe(target, observer);
-            BindConnection(observer, connection);
-            return observer;
-        }
-
-        public TObserver Chain<TObserver>(IEnumerable<TEventArgs> targets, TObserver observer, out IDisposable connection)
-            where TObserver : IObserver<TEventArgs>
-        {
-            ThrowIfDisposed();
-            if (observer == null)
-                throw new ArgumentNullException(nameof(observer));
-            if (ReferenceEquals(observer, this))
-                throw new ArgumentException("A stream cannot chain itself.", nameof(observer));
-
-            connection = Subscribe(targets, observer);
-            BindConnection(observer, connection);
-            return observer;
-        }
-
-        public IEventStream<TEventArgs> Connect<TObserver>(TEventArgs target, TObserver observer, out IDisposable connection)
-            where TObserver : IObserver<TEventArgs>
-        {
-            Chain(target, observer, out connection);
-            return this;
-        }
-
-        public IEventStream<TEventArgs> Connect<TObserver>(IEnumerable<TEventArgs> targets, TObserver observer, out IDisposable connection)
-            where TObserver : IObserver<TEventArgs>
-        {
-            Chain(targets, observer, out connection);
-            return this;
-        }
-
-        protected override void RemoveConnection(Action<TEventArgs> updated, Action completed, Action<Exception> errored)
-        {
-            if (updated != null) _maskMap.Remove(updated);
-            base.RemoveConnection(updated, completed, errored);
+            return routed;
         }
 
         private uint ToMask(TEventArgs args) => _toMask?.Invoke(args) ?? uint.MaxValue;
+        private uint CombineMasks(IEnumerable<TEventArgs> targets) => FlagExtensions.Combine(targets.Select(ToMask));
+
+        // Connections
+        void IPassiveObserver.TakeConnection(IDisposable connection) =>
+            ((IPassiveObserver)_stream).TakeConnection(connection);
+
+        public TObserver Chain<TObserver>(TObserver observer, out IDisposable connection)
+            where TObserver : IObserver<TEventArgs>
+        {
+            ThrowIfDisposed();
+            if (ReferenceEquals(observer, this))
+                throw new ArgumentException("A stream cannot chain itself.", nameof(observer));
+
+            return _stream.Chain(observer, out connection);
+        }
+
+        public IEventStream<TEventArgs> Connect<TObserver>(TObserver observer, out IDisposable connection)
+            where TObserver : IObserver<TEventArgs>
+        {
+            Chain(observer, out connection);
+            return this;
+        }
 
         // Disposal
-        public override void Dispose()
-        {
-            try
-            {
-                base.Dispose();
-            }
-            finally
-            {
-                _maskMap.Clear();
-            }
-        }
+        private void ThrowIfDisposed() => EventStream<TEventArgs>.ThrowIfDisposed(_stream);
+
+        public void Dispose() => _stream.Dispose();
     }
 }

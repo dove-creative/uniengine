@@ -14,7 +14,7 @@
 | --- | --- | --- |
 | C1–C5 | [공통 계약](../EventStreamContractTests.cs) | 세 스트림에 같은 계약을 적용하여 핸들 소유권, 인계 실패, 비활성 전달과 종료를 비교한다. |
 | O1–O4 | [연산자](../EventStreamOperatorTests.cs) | 조건 평가 시점, Take의 잔여 횟수, TakeWhile의 완료와 Append 분기의 수명을 확인한다. |
-| I1 | [라우터와 순서 그룹 조합](../EventStreamCompositionTests.cs) | 대상 마스크 결합, 실행 그룹 순서, 명시적 연결 해제를 한 전달 경로에서 검증한다. |
+| I1–I2 | [라우터 조합](../EventStreamCompositionTests.cs) | 대상 마스크 결합, 실행 그룹 순서, 명시적 연결 해제와 원본 뒤에 이은 라우터의 정리를 검증한다. |
 
 ## UniTest 실행 경로
 

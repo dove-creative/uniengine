@@ -20,7 +20,7 @@
 | --- | --- |
 | 개요 | 구독과 연결로 구성하는 이벤트 전달 경로이다. |
 | 목적 | 발신자가 수신자 목록과 연결 정리를 직접 구현하지 않고도 이벤트 경로를 조합하게 한다. |
-| 구현 | 수신자 목록을 [AdaptiveAction](../02-E.2-AdaptiveCollections/AdaptiveAction.md)의 지연 추가 모드로 관리하고 구독마다 해제 핸들을 발급한다. 필터·병합·순서·라우팅은 각각 별도 스트림으로 구성한다. |
+| 구현 | 수신자 목록을 [AdaptiveAction](../02-E.2-AdaptiveCollections/AdaptiveAction.md)의 지연 추가 모드로 관리하고 구독마다 해제 핸들을 발급한다. 필터·병합·순서는 각각 별도 스트림으로, 라우팅은 기본 스트림을 감싼 라우터로 구성한다. |
 
 - 스트림은 이벤트를 받는 쪽이면서 보내는 쪽이다. 따라서 여러 스트림을 이어 하나의 경로를 만들 수 있다.
 - 모든 전달은 입력을 호출한 흐름 안에서 동기적으로 일어난다. 스케줄러나 스레드 간 동시 접근은 보장하지 않는다.
@@ -31,7 +31,7 @@
 
 | 용어 | 뜻 |
 | --- | --- |
-| 스트림 | 이벤트를 받아 등록된 수신자에게 다시 전달하는 객체이다. EventStream과 그 파생 형식을 가리킨다. |
+| 스트림 | 이벤트를 받아 등록된 수신자에게 다시 전달하는 객체이다. IEventStream을 구현하는 EventStream과 그 파생 형식, EventRouter를 가리킨다. |
 | 구독 | 스트림에 콜백이나 Observer를 등록하는 일이다. Subscribe가 수행하며 해제 핸들을 반환한다. |
 | 연결 | 한 스트림의 출력을 다른 Observer의 입력으로 잇는 구독이다. Chain·Connect가 만든다. |
 | 상위·하위 | 연결에서 이벤트를 보내는 쪽이 상위, 받는 쪽이 하위이다. |
@@ -138,6 +138,8 @@ Chain과 Connect는 반환값만 다르다. 둘 다 out 매개변수로 그 연�
 
 [EventRouter](EventRouter.md)는 실행 순서 대신 값을 받을 수신자를 고른다. 이벤트를 비트 마스크로 바꾸고, 구독 마스크와 겹치는 비트가 하나라도 있는 수신자에게만 값을 전달한다. 대상을 지정하지 않은 일반 구독은 모든 값을 받는다.
 
+라우터는 EventStream을 상속하지 않고 기본 스트림을 감싼다. 구현 형식은 공개하지 않으며, EventRouterExtensions의 Route로 독립된 라우터를 만들거나 원본 뒤에 연결한다. 구독 수명과 실패 처리는 감싼 기본 스트림의 규칙을 그대로 따른다.
+
 ## 상세 문서
 
 | 문서 | 내용 |
@@ -148,7 +150,7 @@ Chain과 Connect는 반환값만 다르다. 둘 다 out 매개변수로 그 연�
 | [EventStream 연산자](EventStreamOperators.md) | Debug·Skip·SkipWhile·Where·Take·TakeWhile·Merge의 상태와 동작 |
 | [EventStreamExtensions](EventStreamExtensions.md) | 연산자 생성과 연결을 한 번에 하는 확장 메서드 |
 | [OrderedEventStream](OrderedEventStream.md) | 순서 그룹별로 수신자를 호출하는 스트림 |
-| [EventRouter](EventRouter.md) | 비트 마스크가 겹치는 수신자에게만 값을 전달하는 스트림 |
+| [EventRouter](EventRouter.md) | 기본 스트림을 감싸 비트 마스크가 겹치는 수신자에게만 값을 전달하는 라우터와 그 진입점 |
 | [사용 예제](Usage.md) | 구독과 해제, 필터 조합, 병합, 순서 그룹, 대상 라우팅 예제 |
 
 [Core 구성](../README.md)
