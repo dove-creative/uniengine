@@ -7,7 +7,6 @@ EventHub에 등록한 수신자 하나의 콜백을 구성하는 객체이다.
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준과 고려사항
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -31,6 +30,4 @@ Order 하나를 구성 대상으로 고정하여 콜백이 어느 연결에 속�
 - 필터가 있는 멀티캐스트 콜백도 연결 해제·폐기 요청을 각 호출 사이에 확인한다.
 - object 인자 계약에서 형식 있는 계약으로 연결할 때 값 형식 페이로드는 박싱될 수 있다.
 
-## 구현 연결
-
-[EventHubBuilder.cs](../../../../src/02-Core/03-E-EventHub/EventHubBuilder.cs) · [ILifecycleAndEventHubBuilder.cs](../../../../src/02-Core/03-E-EventHub/ILifecycleAndEventHubBuilder.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

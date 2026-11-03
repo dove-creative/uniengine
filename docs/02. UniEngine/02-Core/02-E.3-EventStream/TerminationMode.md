@@ -47,4 +47,4 @@
 
 [사용 예제](Usage.md)의 구독과 해제·필터 조합 절은 두 정책의 차이를 보여준다.
 
-[소스](../../../../src/02-Core/02-E.3-EventStream/TerminationMode.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

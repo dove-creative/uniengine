@@ -21,6 +21,8 @@
 | 02-E.3-EventStream/EventStreamTests.cs | R2 | 실제 EventStream 공개 API를 통해 전파 경로의 회귀 동작을 검증한다. |
 | 02-E.2-AdaptiveCollections/UniTest/CollectionStateProjectTests.cs | U1 | UniTest Inline 프로젝트로 세 단계 상태 전이를 두 반영 모드에서 실행한다. |
 
+R2는 순회 소비자로서의 EventStream 회귀만 다룬다. EventStream 자체의 계약·연산자·할당 검증은 [EventStream 테스트 계획](../../02-E.3-EventStream/UniTest/02-Plans.md)에서 관리한다.
+
 ## 검증 기준
 
 - 공개 API 변경이므로 추가한 테스트 전체를 Release로 실행한다.

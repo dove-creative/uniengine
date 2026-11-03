@@ -71,4 +71,4 @@ out 연결 핸들은 반환값과 별개로, 그 연결 하나를 끊을 권한�
 
 [EventStream](EventStream.md)은 두 계약을 함께 구현하여 이벤트 전달과 연결 수명을 관리한다. [사용 예제](Usage.md)는 구독 핸들 해제와 연산자 체인의 정리 흐름을 보여준다.
 
-[소스](../../../../src/02-Core/02-E.3-EventStream/IEventStream.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

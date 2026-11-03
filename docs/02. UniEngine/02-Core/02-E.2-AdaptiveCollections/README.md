@@ -8,7 +8,7 @@
 2. 변경 정책과 설계 원칙
 3. 구성과 역할
 4. 대표 흐름
-5. 구현과 검증 범위
+5. 구현 기준
 6. 상세 문서
 
 ## 소개
@@ -51,11 +51,11 @@ AdaptiveCollection은 목록의 순회 인덱스를 직접 관리하여 추가·
 
 1. GetEnumerator는 열거자 값만 만든다. 첫 MoveNext에서 컬렉션이 순회를 시작하고 순회 식별자를 발급한다.
 2. 이동마다 컬렉션이 현재 방문 대상과 변경 상태를 관리한다. 삭제한 항목은 이후 방문에서 제외하며, 추가는 선택한 모드에 따라 현재 또는 다음 순회에 반영한다.
-3. 끝에 도달하거나 열거자를 폐기하면 종료 계약에서 남은 변경의 반영을 시도하고 finally에서 순회 상태를 복구한다. foreach의 break·return·본문 예외도 열거자 폐기로 이어지며, 직접 열거자를 다루는 호출자는 조기 종료 시 폐기해야 한다.
+3. 끝에 도달하거나 열거자를 폐기하면 종료 계약에서 남은 변경의 반영을 시도하고, 반영이 실패하더라도 순회 상태를 복구한다. foreach의 break·return·본문 예외도 열거자 폐기로 이어지며, 직접 열거자를 다루는 호출자는 조기 종료 시 폐기해야 한다.
 
-## 구현과 검증 범위
+## 구현 기준
 
-모든 컬렉션의 직접 순회는 ValueEnumerator를 사용한다. AdaptiveDictionary·AdaptiveHashSet은 즉시 모드의 후속 방문 버퍼를 재사용하며, AdaptiveAction은 등록 시 준비한 호출 목록을 재사용한다. 초기화·등록과 필요한 용량 확보 이후에는 직접 순회와 콜백 호출을 위한 반복 할당이 없다. 인터페이스 순회의 박싱, 용량 확장, 사용자 콜백·비교·해시 코드와 예외 생성은 별도이다.
+모든 컬렉션의 직접 순회는 ValueEnumerator를 사용한다. 초기화·등록과 필요한 용량 확보 이후에는 직접 순회와 콜백 호출을 위한 반복 할당이 없다. 인터페이스 순회의 박싱, 용량 확장, 사용자 콜백·비교·해시 코드와 예외 생성은 별도이다.
 
 순회 수명은 세 컬렉션에 공통으로 다음 규칙을 따른다.
 
@@ -69,8 +69,6 @@ AdaptiveCollection은 목록의 순회 인덱스를 직접 관리하여 추가·
 시작 전 폐기, 기본값 열거자, Current·Reset과 정리 예외의 동작은 [ValueEnumerator](../01-O.3-Objects/ValueEnumerator.md)의 수명 규칙을 따른다. 스레드 간 동시 순회·변경을 보장하지 않는다.
 
 공개 GetEnumerator 반환형은 ValueEnumerator&lt;T&gt;이므로, IEnumerator&lt;T&gt;를 반환하던 이전 바이너리 소비자는 다시 빌드해야 한다. IEnumerable·IEnumerable&lt;T&gt; 경로는 표준 소비 코드와의 호환성을 위해 유지한다. 순회 계약·열거자·컬렉션 구현은 본체 프로젝트의 대상인 C# 9와 .NET Standard 2.1에서 지원하는 기능만 사용한다.
-
-[상태·동작 표](../../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/01-Tables.md), [테스트 계획](../../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/02-Plans.md), [검증 결과](../../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/03-Results.md)는 공통 순회 수명, 각 컬렉션의 대표 변경 동작과 반복 할당 검증을 기록한다.
 
 ## 상세 문서
 

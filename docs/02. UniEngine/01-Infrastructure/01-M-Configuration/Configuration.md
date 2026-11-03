@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -34,6 +33,4 @@
 - 경로는 소스 저장소 위치가 아니라 실행 중 생성하는 애플리케이션 데이터 위치이다.
 - 초기화 전 경로 조회와 성공한 초기화의 재호출은 InvalidOperationException이다. 폴더 준비에 실패한 경우에는 경로를 확정하지 않는다.
 
-## 구현 연결
-
-[소스](../../../../src/01-Infrastructure/01-M-Configuration/Configuration.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

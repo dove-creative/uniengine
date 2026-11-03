@@ -7,7 +7,6 @@ System.Drawing.Color를 정규화된 RGBA JSON 성분으로 저장하는 변환�
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -28,6 +27,4 @@ System.Drawing.Color를 정규화된 RGBA JSON 성분으로 저장하는 변환�
 - 범위 검사는 색상 변환기가 담당하고 공통 도구는 성분 존재 여부와 숫자 형식만 담당한다. 이를 통해 다른 숫자 기반 변환기에 색상 범위를 강제하지 않는다.
 - 네 성분이 모두 필요하다. 임의 실수 입력은 byte 정밀도로 양자화되므로 같은 실수값으로 완전히 왕복하지 않을 수 있다.
 
-## 구현 연결
-
-[소스](../../../../../src/01-Infrastructure/03-M.1-Utilities/Json/ColorJsonConverter.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

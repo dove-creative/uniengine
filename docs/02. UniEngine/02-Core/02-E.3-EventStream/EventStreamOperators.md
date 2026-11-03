@@ -119,4 +119,4 @@ count의 기본값은 1이다. 0 이하로 만들면 첫 입력부터 전달한�
 
 [사용 예제](Usage.md)의 필터 조합 절은 Where와 Take로 원본 구독을 유지하면서 하위 경로를 완료하는 흐름을 보여준다. 여러 입력의 병합 절은 같은 두 소스에 All과 Any를 연결하여 결과를 비교한다.
 
-[소스](../../../../src/02-Core/02-E.3-EventStream/EventStreamOperators.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

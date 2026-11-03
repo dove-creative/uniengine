@@ -51,7 +51,17 @@ tests/
    │     ├─ 02-Plans.md
    │     └─ 03-Results.md
    └─ 02-E.3-EventStream/
-      └─ EventStreamTests.cs
+      ├─ EventStreamTests.cs
+      ├─ EventStreamAllocationTests.cs
+      ├─ EventStreamPropagationTests.cs
+      ├─ EventStreamContractTests.cs
+      ├─ EventStreamOperatorTests.cs
+      ├─ EventStreamCompositionTests.cs
+      └─ UniTest/
+         ├─ EventStreamStateProjectTests.cs
+         ├─ 01-Tables.md
+         ├─ 02-Plans.md
+         └─ 03-Results.md
 ```
 
 계층이나 모듈의 테스트를 추가할 때는 대응 폴더에 파일을 두며, 별도 프로젝트를 만들지 않는다. NUnit 직접 테스트는 모듈 폴더에 두고, UniTest 상태 전이 구현은 해당 모듈의 UniTest 폴더에 상태·동작 표, 테스트 계획, 결과 기록과 함께 둔다. Infrastructure의 JSON 변환 문서는 Utilities/Json/UniTest에서 소유한다. 모든 하위 폴더의 테스트는 같은 테스트 어셈블리에 포함하며 빌드 산출물은 공통 `tests/bin`·`tests/obj`에 생성한다.
@@ -95,6 +105,9 @@ dotnet test tests/GoldenHind.Tests.csproj -c Release
 - 공통 ValueEnumerator의 순회 수명과 실패 처리
 - AdaptiveCollection·AdaptiveDictionary·AdaptiveHashSet의 순회 중 변경·중단·복사본 처리
 - AdaptiveAction과 EventStream의 순회 소비 회귀 검증
+- EventStream·OrderedEventStream·EventRouter·필터 체인·Merge의 구독 후 첫 값 전달과 반복 전달 할당량 검증
+- EventStream의 멀티캐스트 해제·순서·라우팅·기존 Dispatch 호환성과 해제한 콜백의 참조 정리 검증
+- EventStream 공통 연결 계약, 연산자 경계값, 라우터와 순서 그룹의 조합, Where 구독 수명에 대한 UniTest 상태 전이 검증
 - 직접 순회·사전과 집합의 반복 변경·Action의 등록 후 첫 호출과 반복 호출 할당량 검증
 - 호출 목록 캐시의 등록 경로와 약한 참조 수명 검증
 - UniTest 상태 전이 실행과 재실행
@@ -103,3 +116,5 @@ dotnet test tests/GoldenHind.Tests.csproj -c Release
 - ExceptionHandler의 보고 정책과 SafeInvoke 전체 오버로드
 
 Core 순회 범위의 상태와 동작 기준은 [테스트 표](02-Core/02-E.2-AdaptiveCollections/UniTest/01-Tables.md), 실행 구성은 [테스트 계획](02-Core/02-E.2-AdaptiveCollections/UniTest/02-Plans.md), 검증 결과는 [결과 기록](02-Core/02-E.2-AdaptiveCollections/UniTest/03-Results.md)을 따른다. 전체 실행 기록과 Infrastructure 모듈별 결과는 [Infrastructure 테스트](01-Infrastructure/README.md)를 따른다.
+
+EventStream 모듈의 [상태·동작 표](02-Core/02-E.3-EventStream/UniTest/01-Tables.md), [테스트 계획](02-Core/02-E.3-EventStream/UniTest/02-Plans.md), [실행 결과](02-Core/02-E.3-EventStream/UniTest/03-Results.md)는 해당 모듈의 UniTest 폴더에서 관리한다.

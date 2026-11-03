@@ -7,7 +7,6 @@ UniEngine 값 형식의 JSON 변환기를 JsonSerializerOptions에 연결하는 
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -27,6 +26,4 @@ UniEngine 값 형식의 JSON 변환기를 JsonSerializerOptions에 연결하는 
 - 기존 변환기를 우선하여 애플리케이션의 형식별 사용자 설정을 보존한다. null 옵션은 거부한다.
 - Transform 변환기는 자신의 내부 성분 변환기를 사용하므로, 최상위 옵션에 등록한 별도 벡터 변환기를 내부에서도 자동 선택하지는 않는다.
 
-## 구현 연결
-
-[소스](../../../../../src/01-Infrastructure/03-M.1-Utilities/Json/JsonSerializerOptionsExtensions.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

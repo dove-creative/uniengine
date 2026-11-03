@@ -7,7 +7,6 @@ System.Numerics.Quaternion과 성분별 JSON 객체 사이를 변환하는 변�
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -28,6 +27,4 @@ System.Numerics.Quaternion과 성분별 JSON 객체 사이를 변환하는 변�
 - 성분 누락·중복·알 수 없는 속성은 JsonException이다. 읽는 이름의 대소문자는 구분하지 않지만 출력에는 정의된 성분 이름을 사용한다.
 - 쿼터니언의 성분을 보존하는 변환이며 자동 정규화는 수행하지 않는다.
 
-## 구현 연결
-
-[소스](../../../../../src/01-Infrastructure/03-M.1-Utilities/Json/QuaternionJsonConverter.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

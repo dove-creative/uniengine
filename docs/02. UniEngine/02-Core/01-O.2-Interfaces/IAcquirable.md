@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준과 고려사항
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -30,6 +29,4 @@
 - AlreadyAcquiredException은 중복 획득을 표현하는 InvalidOperationException 파생 형식이다.
 - 실제 획득·해제와 동시 접근 정책은 이 인터페이스 안에 구현되어 있지 않다.
 
-## 구현 연결
-
-[소스](../../../../src/02-Core/01-O.2-Interfaces/IAcquirable.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

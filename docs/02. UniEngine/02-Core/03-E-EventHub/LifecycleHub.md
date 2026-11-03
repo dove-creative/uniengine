@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준과 고려사항
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -22,7 +21,7 @@
 
 ## 동작 흐름
 
-Dispose는 IsDisposed를 먼저 true로 바꾸고 연결별 콜백의 스냅샷을 실행한 뒤 직접 OnDisposed 구독을 호출한다. 실패한 연결을 제거하고 ExceptionHandler에 보고하며 finally에서 전체 참조를 비운다.
+Dispose는 IsDisposed를 먼저 true로 바꾸고 연결별 콜백의 스냅샷을 실행한 뒤 직접 OnDisposed 구독을 호출한다. 실패한 연결을 제거하고 ExceptionHandler에 보고하며, 정상 종료든 예외로 중단되든 전체 참조를 비운다.
 
 ## 설계 기준과 고려사항
 
@@ -32,6 +31,4 @@ Dispose는 IsDisposed를 먼저 true로 바꾸고 연결별 콜백의 스냅샷�
 - 폐기 중·완료 후 Disconnect는 무시하므로 통지 중 다른 연결의 스냅샷을 취소하는 용도로 사용할 수 없다.
 - 공개 Dispose 메서드는 있지만 현재 형식 선언에 IDisposable 구현은 없다.
 
-## 구현 연결
-
-[LifecycleHub.cs](../../../../src/02-Core/03-E-EventHub/LifecycleHub.cs) · [LifecycleHubBuilder.cs](../../../../src/02-Core/03-E-EventHub/LifecycleHubBuilder.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

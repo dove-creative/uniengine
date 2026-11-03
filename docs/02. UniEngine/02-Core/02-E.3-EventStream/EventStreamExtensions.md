@@ -47,4 +47,4 @@ Merge는 생성자가 각 상위의 폐기 여부를 확인하고 Connect로 자
 
 개별 연산자의 상태와 처리 흐름은 [EventStream 연산자](EventStreamOperators.md)에서 설명한다. [사용 예제](Usage.md)의 필터 조합과 병합 절은 반환된 하위 스트림을 구독하고 정리하는 흐름을 보여준다.
 
-[소스](../../../../src/02-Core/02-E.3-EventStream/EventStreamExtensions.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)
