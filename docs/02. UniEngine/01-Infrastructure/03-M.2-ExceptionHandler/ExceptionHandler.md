@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -33,6 +32,4 @@
 - 처리기 호출 자체를 잠금에 가두지 않으므로 외부 처리기의 동작과 설정 잠금을 분리한다.
 - SafeInvoke는 호출만 분리하며 구독을 제거하지 않는다. 실패한 수신자의 제거는 AdaptiveAction·EventStream 등 구독 소유자가 담당한다.
 
-## 구현 연결
-
-[소스](../../../../src/01-Infrastructure/03-M.2-ExceptionHandler/ExceptionHandler.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

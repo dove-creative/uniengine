@@ -6,7 +6,6 @@
 
 1. 역할과 구성
 2. 협력 흐름과 기준
-3. 구현 연결
 
 ## 역할과 구성
 
@@ -19,6 +18,4 @@
 
 여기서 유효함은 null이 아니라는 뜻이다. Token의 IsDisposed와 값 동등성은 검사하지 않는다.
 
-## 구현 연결
-
-[소스](../../../../src/02-Core/01-O.1-Utilities/ObjectTokenExtensions.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

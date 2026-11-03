@@ -73,4 +73,4 @@ Enum.GetValues는 소스 코드의 선언 순서가 아니라 값의 크기순�
 
 [사용 예제](Usage.md)의 순서 그룹 호출 절은 PreUpdate·Update·PostUpdate와 기본 그룹 구독을 구성한다.
 
-[소스](../../../../src/02-Core/02-E.3-EventStream/OrderedEventStream.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

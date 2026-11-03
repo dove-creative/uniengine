@@ -8,7 +8,6 @@
 2. 구성과 책임
 3. 연결과 전파
 4. 실패와 폐기
-5. 검증 범위
 
 ## 소개
 
@@ -45,10 +44,6 @@ EventHub는 연결 수신자와 직접 Updated 구독자를 내부 스트림의 
 
 각 객체의 알림 시점은 별도로 확인해야 한다. Handle은 콜백 전에 IsDisposed를 전환한다. EventHub는 Disposing과 Disposed 사이에 전환한다. LifecycleHub는 완료 상태를 먼저 전환하고 스냅샷을 통지한다. 생애주기 콜백 도중 예외가 재전파되면 뒤의 통지가 생략될 수 있다.
 
-설계 원칙은 [이벤트](../../01.%20Concepts/04.%20이벤트.md)와 [객체 활동과 연결 원칙](../../01.%20Concepts/03.%20객체%20활동과%20연결%20원칙.md)을 따른다. 재진입 정책은 객체별로 다르며, AdaptiveCollection·OrderedEventStream은 중첩 순회를 거부하고 EventHub.Update는 재진입 호출을 생략한다.
-
-## 검증 범위
-
-[순회 검증 결과](../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/03-Results.md)는 ValueEnumerator·AdaptiveCollection, AdaptiveAction과 기본 EventStream의 대표 경로를 다룬다. 모든 허브·라우터·연산자의 검증을 의미하지 않는다.
+설계 원칙은 [이벤트](../../01.%20Concepts/04.%20이벤트.md)와 [객체 활동과 연결 원칙](../../01.%20Concepts/03.%20객체%20활동과%20연결%20원칙.md)을 따른다. 재진입 정책은 객체별로 다르며, AdaptiveCollection과 이를 사용하는 EventStream 계열은 중첩 순회를 거부하고 EventHub.Update는 재진입 호출을 생략한다.
 
 [Core 구성](README.md)

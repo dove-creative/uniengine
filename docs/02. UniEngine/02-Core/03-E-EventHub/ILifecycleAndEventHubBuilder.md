@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준과 고려사항
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -32,6 +31,4 @@ Connect의 반환 계약에서 콜백을 등록하고 같은 구성기를 반환
 - 연결 제거는 허브의 Disconnect로 요청한다.
 - LifecycleHub와 EventHub의 중복 설정 방식은 각각의 구현 설명을 따른다.
 
-## 구현 연결
-
-[소스](../../../../src/02-Core/03-E-EventHub/ILifecycleAndEventHubBuilder.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

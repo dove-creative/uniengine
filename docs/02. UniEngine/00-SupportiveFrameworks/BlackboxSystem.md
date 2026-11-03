@@ -24,4 +24,4 @@ Golden Hind에서 실행 흐름을 추적하기 위해 사용하는 외부 보�
 
 ## 참조
 
-[패키지 출처와 갱신 절차](../../../packages/README.md) · [본체 프로젝트](../../../src/GoldenHind.csproj) · [보조 프레임워크](README.md)
+[패키지 출처와 갱신 절차](../../../packages/README.md) · [보조 프레임워크](README.md)

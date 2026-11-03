@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준과 고려사항
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -62,6 +61,4 @@ EventHub는 이 흐름을 Sleep 해제 신호로 사용한다. Token에 깨어�
 - 폐기 상태는 상속한 IsDisposed로 확인하며, bool로의 암시적 변환은 제공하지 않는다.
 - CancellationToken과 별개의 타입이다.
 
-## 구현 연결
-
-[소스](../../../../src/02-Core/02-E.1-HandleToken/Token.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

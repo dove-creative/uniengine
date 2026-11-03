@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -38,6 +37,4 @@
 - 파일명 충돌 시 번호를 붙여 기존 파일을 덮어쓰지 않는다.
 - Initialize 재호출은 버퍼와 마지막 저장 경로를 초기화한다. 파일 저장에는 초기화로 확보한 경로가 필요하며, 빈 버퍼의 Print는 파일을 만들지 않는다.
 
-## 구현 연결
-
-[Log.cs](../../../../src/01-Infrastructure/03-M.3-LogSystem/Log.cs) · [Log.Write.cs](../../../../src/01-Infrastructure/03-M.3-LogSystem/Log.Write.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

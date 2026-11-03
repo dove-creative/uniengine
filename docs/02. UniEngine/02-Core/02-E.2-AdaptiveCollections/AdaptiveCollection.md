@@ -7,7 +7,6 @@
 1. 역할과 구성
 2. 순회와 변경 반영
 3. 등록 확장
-4. 검증과 구현 연결
 
 ## 역할과 구성
 
@@ -62,8 +61,4 @@ Add와 AddRange는 저장한 항목에 OnItemAdded를 호출하여 파생 클래
 
 AddRange는 기존 목록의 일괄 추가 동작을 유지하며, 입력 열거 도중 실패해 일부 항목만 저장된 경우에도 해당 항목의 등록 처리를 수행한다.
 
-## 검증과 구현 연결
-
-[상태·동작 표](../../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/01-Tables.md), [테스트 계획](../../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/02-Plans.md), [검증 결과](../../../../tests/02-Core/02-E.2-AdaptiveCollections/UniTest/03-Results.md)에 순회와 대표 소비 경로의 검증을 기록한다.
-
-[소스](../../../../src/02-Core/02-E.2-AdaptiveCollections/AdaptiveCollection.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

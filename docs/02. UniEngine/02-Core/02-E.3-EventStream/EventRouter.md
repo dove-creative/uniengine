@@ -52,4 +52,4 @@ OrderedEventStream이 실행 단계를 정하는 것과 달리, 라우터는 한
 
 [사용 예제](Usage.md)의 대상 라우팅 절은 위 Changes 예시를 실제 구독으로 구성한다.
 
-[소스](../../../../src/02-Core/02-E.3-EventStream/EventRouter.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)

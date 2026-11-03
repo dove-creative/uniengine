@@ -7,7 +7,6 @@ JSON 성분의 이름·필수 여부·숫자 범위를 검증하는 내부 공�
 1. 역할과 구성
 2. 동작 흐름
 3. 설계 기준
-4. 구현 연결
 
 ## 역할과 구성
 
@@ -31,8 +30,4 @@ JSON 성분의 이름·필수 여부·숫자 범위를 검증하는 내부 공�
 
 - 일부 값만 읽힌 객체를 정상 값으로 취급하지 않도록 누락·중복·알 수 없는 이름을 거부한다.
 - float의 NaN·무한대는 허용하지 않으며 정수는 Int32 범위를 따른다. 이 도구는 내부 부품이고 공개 등록 경로는 JsonSerializerOptionsExtensions이다.
-- 변환기는 임시 값 공간으로 성분 수만큼의 작은 배열을 만들어 넘긴다. C# 9의 참조 안전 규칙에서는 stackalloc으로 만든 Span을 ref Utf8JsonReader와 같은 호출에 넘길 수 없기 때문이다.
-
-## 구현 연결
-
-[소스](../../../../../src/01-Infrastructure/03-M.1-Utilities/Json/JsonComponentSerializer.cs) · [모듈 구성](README.md)
+[모듈 구성](README.md)
