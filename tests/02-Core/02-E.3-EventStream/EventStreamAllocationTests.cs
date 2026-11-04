@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using Blackthunder.UniEngine.Core;
-using Blackthunder.UniEngine.Core.EventStreamCore;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
@@ -92,16 +91,15 @@ namespace BlackThunder.UniEngine.Tests
             });
         }
 
-        [TestCase(Merge<int>.CompletionMode.All)]
-        [TestCase(Merge<int>.CompletionMode.Any)]
-        public void FirstAndRepeatedMergedPublicationsAllocateNoManagedMemory(Merge<int>.CompletionMode completionMode)
+        [Test]
+        public void FirstAndRepeatedMergedPublicationsAllocateNoManagedMemory()
         {
             Verify(() =>
             {
                 var counter = new Counter();
-                var left = new EventSource<int>();
-                var right = new EventSource<int>();
-                var merged = new Merge<int>(completionMode, left, right);
+                var left = new EventStream<int>();
+                var right = new EventStream<int>();
+                var merged = left.Merge(right);
                 merged.Subscribe(counter.Record);
                 return new Publication(counter, () =>
                 {
@@ -134,7 +132,7 @@ namespace BlackThunder.UniEngine.Tests
             int registration, T payload, Action<Counter, T> record, object expectedReference = null)
         {
             var counter = new Counter();
-            var stream = new EventSource<T>();
+            var stream = new EventStream<T>();
             Action<T> callback = value => record(counter, value);
             var expectedCalls = registration == 0 ? 0 : registration == 1 ? 1 : 3;
             switch (registration)

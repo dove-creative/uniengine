@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using BlackThunder.UniEngine.Infrastructure;
 
@@ -9,16 +10,14 @@ namespace Blackthunder.UniEngine.Core
         // Front
         public bool Enabled
         {
-            get => !IsDisposed && ((_source as IEventSource<T>)?.Enabled ?? (_source as EventStream<T>)?.Enabled ?? _branchEnabled);
+            get => !IsDisposed && _isEnabled;
             set
             {
-                RequireOwnership();
                 if (value) ThrowIfDisposed();
-                if (_ownedSource != null) _ownedSource.Enabled = value;
-                else _branchEnabled = value;
+                _isEnabled = value;
             }
         }
-        public bool IsDisposed => _disposed || (_pendingParent?.IsDisposed ?? false);
+        public bool IsDisposed => _isDisposed || HaveUpstreamsEnded();
 
         // Internal
         internal int NodeCount => _graph.NodeCount;
@@ -27,62 +26,31 @@ namespace Blackthunder.UniEngine.Core
 
         private const int MaximumDepth = 256;
         private readonly EventGraph<T> _graph;
-        private readonly bool _ownsSource;
-        private EventSource<T> _ownedSource;
-        private IObservable<T> _source;
-        private IDisposable _connection;
-        private Handle _parentConnection;
-        private EventStream<T> _pendingParent;
-        private EventPath<T> _pendingPath;
-        private bool _branchEnabled = true;
-        private bool _disposed;
+        private readonly bool _isRelation;
+        private Upstream<T>[] _pendingUpstreams;
+        private Input[] _inputs;
+        private int _openInputs;
+        private bool _isEnabled = true;
+        private bool _isDisposed;
         private bool _isTerminating;
 
 
         // Content --------------------
         // Construction
-        public EventStream()
-            : this(new EventSource<T>(), true) { }
+        public EventStream() => _graph = new EventGraph<T>(null);
 
         public EventStream(IObservable<T> source)
-            : this(source, false) { }
-
-        private EventStream(IObservable<T> source, bool owned)
+            : this()
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            _ownsSource = owned;
-            _ownedSource = owned ? (EventSource<T>)source : null;
-            _graph = new EventGraph<T>(null);
-            if (_ownedSource?.IsDisposed == true) Dispose();
-            else Connect(source);
-        }
-
-        private EventStream(EventStream<T> parent, EventPath<T> path)
-        {
-            UpstreamDepth = (path?.Depth ?? parent.UpstreamDepth) + 1;
-            CheckDepth(UpstreamDepth);
-            _pendingParent = parent;
-            _pendingPath = path;
-            _ownsSource = true;
-            _graph = new EventGraph<T>(Dispose);
-        }
-
-        public static EventStream<T> Merge(params IEventSource<T>[] upstreams) =>
-            new(new EventStreamCore.Merge<T>(EventStreamCore.Merge<T>.CompletionMode.All, upstreams), true);
-
-        private void Connect(IObservable<T> source)
-        {
-            _source = source;
+            var input = new Input(this);
+            _inputs = new[] { input };
+            _openInputs = 1;
             try
             {
-                var connection = source.Subscribe(new SourceObserver(this));
-                // An observable may terminate before returning its connection.
-                if (IsDisposed)
-                    connection?.Dispose();
-                else
-                    _connection = connection;
+                input.Keep(source.Subscribe(input));
             }
             catch
             {
@@ -91,34 +59,101 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
+        // A relation connects to its inputs with its first subscription and ends with its last one.
+        internal EventStream(params Upstream<T>[] upstreams)
+        {
+            foreach (var upstream in upstreams)
+                UpstreamDepth = Math.Max(UpstreamDepth, upstream.Depth + 1);
+
+            CheckDepth(UpstreamDepth);
+            _isRelation = true;
+            _pendingUpstreams = upstreams;
+            _graph = new EventGraph<T>(Dispose);
+        }
+
+        internal IDisposable ConnectInput(EventPath<T> path, IGraphObserver<T> input)
+        {
+            PrepareSubscription();
+            return _graph.Connect(path, input);
+        }
+
+        private void PrepareSubscription()
+        {
+            ThrowIfDisposed();
+            if (_pendingUpstreams == null) return;
+
+            var upstreams = _pendingUpstreams;
+            _pendingUpstreams = null;
+            var inputs = new Input[upstreams.Length];
+            _inputs = inputs;
+            _openInputs = upstreams.Length;
+            try
+            {
+                for (int i = 0; i < upstreams.Length && !_isDisposed; i++)
+                {
+                    // An upstream can end before a pending relation connects to it.
+                    if (upstreams[i].IsDisposed)
+                    {
+                        _openInputs--;
+                        continue;
+                    }
+
+                    inputs[i] = new Input(this);
+                    inputs[i].Keep(upstreams[i].Connect(inputs[i]));
+                }
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
+        }
+
+        private bool HaveUpstreamsEnded()
+        {
+            if (_pendingUpstreams == null) return false;
+
+            foreach (var upstream in _pendingUpstreams)
+            {
+                if (!upstream.IsDisposed) return false;
+            }
+            return true;
+        }
+
         // Propagation
         public void OnNext(T value)
         {
-            RequireOwnership();
             if (_graph.IsPublishing || (_isTerminating && !IsDisposed))
                 throw new InvalidOperationException("A stream cannot publish another value during propagation.");
             ThrowIfDisposed();
-            _ownedSource?.OnNext(value);
+            if (_isEnabled) Publish(value);
         }
-        public void OnCompleted()
-        {
-            RequireOwnership();
-            if (_ownedSource != null) _ownedSource.OnCompleted();
-            else Terminate(null, true);
-        }
-        public void OnError(Exception exception)
-        {
-            RequireOwnership();
-            if (_ownedSource != null) _ownedSource.OnError(exception);
-            else Terminate(exception, false);
-        }
+        public void OnCompleted() => Terminate(null, true);
+        public void OnError(Exception exception) => Terminate(exception, false);
 
-        internal void CompleteFromParent() => Terminate(null, true);
-        internal void ErrorFromParent(Exception error) => Terminate(error, false);
+        internal virtual void Publish(T value) => _graph.OnNext(value);
 
-        private void RequireOwnership()
+        // A failed condition releases the relation without a terminal notification.
+        internal bool TryEvaluate(Filter<T> filter, T value, out bool matches)
         {
-            if (!_ownsSource) throw new InvalidOperationException("The stream does not own its source.");
+            try
+            {
+                matches = filter.Predicate(value);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                matches = false;
+                try
+                {
+                    Dispose();
+                }
+                finally
+                {
+                    ExceptionHandler.Report(exception);
+                }
+                return false;
+            }
         }
 
         private void Terminate(Exception error, bool completed)
@@ -135,8 +170,24 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
+        private void CompleteInput()
+        {
+            if (--_openInputs <= 0) Terminate(null, true);
+        }
+
+        private void LoseInput()
+        {
+            if (--_openInputs <= 0 && _isRelation) Dispose();
+        }
+
         // Paths and subscriptions
         internal EventPath<T> CreateGroupPath(int order) => new(this, null, PathOperation.Group, order);
+
+        internal Upstream<T> CreateUpstream(EventPath<T> path)
+        {
+            ThrowIfDisposed();
+            return new Upstream<T>(this, path);
+        }
 
         internal static void CheckDepth(int depth)
         {
@@ -145,10 +196,6 @@ namespace Blackthunder.UniEngine.Core
         }
 
         public EventPath<T> Where(Filter<T> filter) => new(this, DefaultPath, PathOperation.Where, filter: filter);
-        public EventPath<T> Take(int count = 1) => new(this, DefaultPath, PathOperation.Take, count);
-        public EventPath<T> Skip(int count = 1) => new(this, DefaultPath, PathOperation.Skip, count);
-        public EventPath<T> SkipWhile(Filter<T> filter) => new(this, DefaultPath, PathOperation.SkipWhile, filter: filter);
-        public EventPath<T> TakeWhile(Filter<T> filter) => new(this, DefaultPath, PathOperation.TakeWhile, filter: filter);
         public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
             new(this, DefaultPath, PathOperation.Debug, message: message, logType: logType);
 
@@ -163,7 +210,7 @@ namespace Blackthunder.UniEngine.Core
                 throw new ArgumentNullException(nameof(observer));
 
             PrepareSubscription();
-            return _graph.Subscribe(path, observer.OnNext, observer.OnCompleted, observer.OnError, observer is IGraphObserver<T>);
+            return _graph.Subscribe(path, observer.OnNext, observer.OnCompleted, observer.OnError, observer as IGraphObserver<T>);
         }
         internal IDisposable Subscribe(EventPath<T> path, Action<T> updated, Action completed, Action<Exception> errored)
         {
@@ -171,32 +218,24 @@ namespace Blackthunder.UniEngine.Core
             return _graph.Subscribe(path, updated, completed, errored);
         }
 
-        public EventStream<T> Branch() => Branch(DefaultPath);
-        internal EventStream<T> Branch(EventPath<T> path)
-        {
-            ThrowIfDisposed();
-            return new EventStream<T>(this, path);
-        }
+        // Relations
+        public EventStream<T> Take(int count = 1) => new TakeStream<T>(CreateUpstream(DefaultPath), count);
+        public EventStream<T> TakeWhile(Filter<T> filter) => new TakeWhileStream<T>(CreateUpstream(DefaultPath), filter);
+        public EventStream<T> Skip(int count = 1) => new SkipStream<T>(CreateUpstream(DefaultPath), count);
+        public EventStream<T> SkipWhile(Filter<T> filter) => new SkipWhileStream<T>(CreateUpstream(DefaultPath), filter);
+        public EventStream<T> Branch() => new(CreateUpstream(DefaultPath));
 
-        private void PrepareSubscription()
+        public EventStream<T> Merge(params EventStream<T>[] others)
         {
-            ThrowIfDisposed();
-            if (_pendingParent == null) return;
-
-            _pendingParent.PrepareSubscription();
-            _ownedSource = new EventSource<T> { Enabled = _branchEnabled };
-            try
+            var upstreams = new List<Upstream<T>> { CreateUpstream(DefaultPath) };
+            if (others != null)
             {
-                Connect(_ownedSource);
-                _parentConnection = _pendingParent._graph.ConnectBranch(_pendingPath, this);
-                _pendingParent = null;
-                _pendingPath = null;
+                foreach (var other in others)
+                {
+                    if (other != null) upstreams.Add(other.CreateUpstream(other.DefaultPath));
+                }
             }
-            catch
-            {
-                Dispose();
-                throw;
-            }
+            return new EventStream<T>(upstreams.ToArray());
         }
 
         // Disposal
@@ -208,20 +247,18 @@ namespace Blackthunder.UniEngine.Core
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
+            if (_isDisposed) return;
+            _isDisposed = true;
 
             ExceptionDispatchInfo failure = null;
             DisposeConnection(_graph, ref failure);
-            DisposeConnection(_parentConnection, ref failure);
-            DisposeConnection(_connection, ref failure);
-            DisposeConnection(_ownedSource, ref failure);
-            _parentConnection = null;
-            _connection = null;
-            _source = null;
-            _ownedSource = null;
-            _pendingParent = null;
-            _pendingPath = null;
+            if (_inputs != null)
+            {
+                foreach (var input in _inputs)
+                    DisposeConnection(input, ref failure);
+            }
+            _inputs = null;
+            _pendingUpstreams = null;
             failure?.Throw();
         }
 
@@ -237,19 +274,74 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
-        private sealed class SourceObserver : IGraphObserver<T>
+        private sealed class Input : IGraphObserver<T>, IDisposable
         {
             private readonly EventStream<T> _stream;
+            private IDisposable _connection;
+            private bool _finished;
 
-            internal SourceObserver(EventStream<T> stream) => _stream = stream;
+            internal Input(EventStream<T> stream) => _stream = stream;
+
+            // A source can end before returning its connection.
+            internal void Keep(IDisposable connection)
+            {
+                if (_finished) connection?.Dispose();
+                else _connection = connection;
+            }
 
             public void OnNext(T value)
             {
-                if (!_stream.IsDisposed && !_stream._isTerminating)
-                    _stream._graph.OnNext(value);
+                if (!_finished && !_stream._isTerminating) _stream.OnNext(value);
             }
-            public void OnCompleted() => _stream.Terminate(null, true);
-            public void OnError(Exception error) => _stream.Terminate(error, false);
+
+            public void OnCompleted()
+            {
+                if (_finished) return;
+                _finished = true;
+                try
+                {
+                    _stream.CompleteInput();
+                }
+                finally
+                {
+                    Release();
+                }
+            }
+
+            public void OnError(Exception error)
+            {
+                if (_finished) return;
+                _finished = true;
+                try
+                {
+                    _stream.Terminate(error, false);
+                }
+                finally
+                {
+                    Release();
+                }
+            }
+
+            public void OnDisconnected()
+            {
+                if (_finished) return;
+                _finished = true;
+                _connection = null;
+                _stream.LoseInput();
+            }
+
+            public void Dispose()
+            {
+                _finished = true;
+                Release();
+            }
+
+            private void Release()
+            {
+                var connection = _connection;
+                _connection = null;
+                connection?.Dispose();
+            }
         }
     }
 }

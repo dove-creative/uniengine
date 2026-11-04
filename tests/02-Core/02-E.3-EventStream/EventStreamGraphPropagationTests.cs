@@ -109,9 +109,9 @@ namespace BlackThunder.UniEngine.Tests
         public void TearDown() => ExceptionHandler.SetHandler(null);
 
         [Test]
-        public void SourcePreservesAnEarlierGraphFailureAndFinishesDeliveringAfterADirectSubscriberFails()
+        public void UpstreamPreservesAnEarlierConnectedFailureAndFinishesDeliveringAfterADirectSubscriberFails()
         {
-            using var source = new EventSource<int>();
+            using var source = new EventStream<int>();
             using var stream = new EventStream<int>(source);
             var graphFailure = new ApplicationException("graph");
             var directFailure = new InvalidOperationException("direct");
@@ -224,6 +224,63 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(failed.IsDisposed && leaf.IsDisposed, Is.True);
             Assert.That(stream.NodeCount, Is.EqualTo(1));
             Assert.That(healthy, Is.EqualTo(new[] { 1, 2 }));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void RelationPredicateFailureSilentlyReleasesTheRelationAndKeepsItsSiblings(bool skip)
+        {
+            using var stream = new EventStream<int>();
+            var reported = new List<Exception>();
+            ExceptionHandler.SetHandler(reported.Add);
+            var failure = new ApplicationException("filter");
+            var failing = new Filter<int>("failed", _ => throw failure);
+            using var relation = skip ? stream.SkipWhile(failing) : stream.TakeWhile(failing);
+            var unexpected = 0;
+            var failed = (Handle)relation.Subscribe(_ => unexpected++, () => unexpected++, _ => unexpected++);
+            var healthy = new List<int>();
+            stream.Subscribe(healthy.Add);
+
+            stream.OnNext(1);
+            stream.OnNext(2);
+
+            Assert.That(reported, Is.EqualTo(new[] { failure }));
+            Assert.That(unexpected, Is.Zero);
+            Assert.That(failed.IsDisposed && relation.IsDisposed, Is.True);
+            Assert.That(stream.NodeCount, Is.Zero);
+            Assert.That(healthy, Is.EqualTo(new[] { 1, 2 }));
+        }
+
+        [Test]
+        public void UnhandledRelationPredicateFailureIsRethrownAfterSiblingsReceiveTheValue()
+        {
+            using var stream = new EventStream<int>();
+            var failure = new ApplicationException("filter");
+            using var relation = stream.TakeWhile(new Filter<int>("failed", _ => throw failure));
+            relation.Subscribe(_ => { });
+            var healthy = new List<int>();
+            stream.Where(new Filter<int>("healthy", _ => true)).Subscribe(healthy.Add);
+
+            Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
+
+            Assert.That(healthy, Is.EqualTo(new[] { 1 }));
+            Assert.That(relation.IsDisposed, Is.True);
+        }
+
+        [Test]
+        public void UnhandledFailureInTheLastTakeValueStillCompletesTheTake()
+        {
+            using var stream = new EventStream<int>();
+            var failure = new ApplicationException("subscriber");
+            using var taken = stream.Take(1);
+            taken.Subscribe(_ => throw failure);
+            var completions = 0;
+            taken.Subscribe(_ => { }, () => completions++, null);
+
+            Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
+
+            Assert.That(completions, Is.EqualTo(1));
+            Assert.That(taken.IsDisposed, Is.True);
         }
     }
 }

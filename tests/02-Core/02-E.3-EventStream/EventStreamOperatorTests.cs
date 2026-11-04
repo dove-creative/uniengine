@@ -74,9 +74,9 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(sourceValues, Is.EqualTo(new[] { 2, 3 }));
         }
 
-        // O2: Late subscribers count from their own registration.
+        // O2: Subscribers of one Take share its remaining count.
         [Test]
-        public void LateSubscriberGetsItsOwnTakeWindow()
+        public void LateSubscriberContinuesTheRemainingTakeCount()
         {
             using var source = new EventStream<int>();
             var taken = source.Take(2);
@@ -91,10 +91,46 @@ namespace BlackThunder.UniEngine.Tests
             source.OnNext(3);
 
             Assert.That(earlyValues, Is.EqualTo(new[] { 1, 2 }));
-            Assert.That(lateValues, Is.EqualTo(new[] { 2, 3 }));
+            Assert.That(lateValues, Is.EqualTo(new[] { 2 }));
             Assert.That(earlyCompletions, Is.EqualTo(1));
             Assert.That(lateCompletions, Is.EqualTo(1));
+            Assert.That(taken.IsDisposed, Is.True);
             Assert.That(source.NodeCount, Is.Zero);
+        }
+
+        // O2: The count starts when the first subscription connects Take to its input.
+        [Test]
+        public void TakeCountsFromItsFirstSubscription()
+        {
+            using var source = new EventStream<int>();
+            using var taken = source.Take(1);
+            var values = new List<int>();
+
+            source.OnNext(1);
+            Assert.That(taken.IsDisposed, Is.False);
+            using var subscription = taken.Subscribe(values.Add);
+            source.OnNext(2);
+
+            Assert.That(values, Is.EqualTo(new[] { 2 }));
+            Assert.That(taken.IsDisposed, Is.True);
+        }
+
+        // O2: Subscribing to a finished Take is rejected; calling Take again starts a new count.
+        [Test]
+        public void FinishedTakeRejectsSubscriptionsAndANewTakeStartsAgain()
+        {
+            using var source = new EventStream<int>();
+            using var first = source.Take(1);
+            var values = new List<int>();
+            using var subscription = first.Subscribe(values.Add);
+
+            source.OnNext(1);
+            Assert.Throws<ObjectDisposedException>(() => first.Subscribe(values.Add));
+            using var second = source.Take(1);
+            using var renewed = second.Subscribe(values.Add);
+            source.OnNext(2);
+
+            Assert.That(values, Is.EqualTo(new[] { 1, 2 }));
         }
 
         // O3: A closed external gate ends this branch on the rejected input.
@@ -154,19 +190,37 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void LateSkipSubscriptionHasAnIndependentPrefix()
+        public void LateSkipSubscriptionContinuesAfterTheConsumedPrefix()
         {
             using var source = new EventStream<int>();
-            var path = source.Skip(1);
+            var skipped = source.Skip(1);
             var early = new List<int>();
             var late = new List<int>();
-            path.Subscribe(early.Add);
+            skipped.Subscribe(early.Add);
             source.OnNext(1);
-            path.Subscribe(late.Add);
+            skipped.Subscribe(late.Add);
             source.OnNext(2);
             source.OnNext(3);
             Assert.That(early, Is.EqualTo(new[] { 2, 3 }));
-            Assert.That(late, Is.EqualTo(new[] { 3 }));
+            Assert.That(late, Is.EqualTo(new[] { 2, 3 }));
+        }
+
+        // Stateful operators keep the graph free of state, so their filters are never shared.
+        [Test]
+        public void StatefulOperatorsStartSeparateRelationsForTheSameFilter()
+        {
+            using var source = new EventStream<int>();
+            var checks = 0;
+            var filter = new Filter<int>("open", _ => { checks++; return true; });
+            using var first = source.TakeWhile(filter);
+            using var second = source.TakeWhile(filter);
+            using var firstListener = first.Subscribe(_ => { });
+            using var secondListener = second.Subscribe(_ => { });
+
+            source.OnNext(1);
+
+            Assert.That(first, Is.Not.SameAs(second));
+            Assert.That(checks, Is.EqualTo(2));
         }
 
         // O4: Each branch ends when its last subscription leaves.

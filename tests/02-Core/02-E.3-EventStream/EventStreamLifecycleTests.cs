@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Blackthunder.UniEngine.Core.EventStreamCore;
 using Blackthunder.UniEngine.Core;
 using NUnit.Framework;
 using Handle = Blackthunder.UniEngine.Core.Handle;
@@ -84,10 +83,6 @@ namespace BlackThunder.UniEngine.Tests
             var values = new List<int>();
             var terminals = 0;
             var handle = (Handle)stream.Subscribe(values.Add, () => terminals++, _ => terminals++);
-            Assert.Throws<InvalidOperationException>(() => stream.OnNext(99));
-            Assert.Throws<InvalidOperationException>(() => stream.OnCompleted());
-            Assert.Throws<InvalidOperationException>(() => stream.OnError(new Exception()));
-            Assert.Throws<InvalidOperationException>(() => stream.Enabled = false);
 
             source.Observer.OnNext(7);
             stream.Dispose();
@@ -95,6 +90,34 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(values, Is.EqualTo(new[] { 7 }));
             Assert.That(terminals, Is.Zero);
             Assert.That(handle.IsDisposed && stream.IsDisposed, Is.True);
+            Assert.That(source.Connection.IsDisposed, Is.True);
+            Assert.That(source.IsDisposed, Is.False);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void StreamWithAnExternalSourceAcceptsDirectInputAndControl(bool error)
+        {
+            using var source = new ExternalSource();
+            using var stream = new EventStream<int>(source);
+            var values = new List<int>();
+            var completions = 0;
+            var errors = new List<Exception>();
+            var failure = new ApplicationException("direct");
+            using var subscription = stream.Subscribe(values.Add, () => completions++, errors.Add);
+
+            stream.OnNext(1);
+            stream.Enabled = false;
+            stream.OnNext(2);
+            source.Observer.OnNext(3);
+            stream.Enabled = true;
+            source.Observer.OnNext(4);
+            if (error) stream.OnError(failure);
+            else stream.OnCompleted();
+
+            Assert.That(values, Is.EqualTo(new[] { 1, 4 }));
+            Assert.That(completions, Is.EqualTo(error ? 0 : 1));
+            Assert.That(errors, Is.EqualTo(error ? new[] { failure } : Array.Empty<Exception>()));
             Assert.That(source.Connection.IsDisposed, Is.True);
             Assert.That(source.IsDisposed, Is.False);
         }
@@ -217,66 +240,45 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(stream.IsDisposed, Is.False);
         }
 
-        // Merge
-        [TestCase(false)]
-        [TestCase(true)]
-        public void SynchronousUpstreamCompletionCountsOnceAndWaitsForTheLiveUpstream(bool completeTwice)
-        {
-            using var immediate = new SubscribingSource(observer =>
-            {
-                observer.OnCompleted();
-                if (completeTwice) observer.OnCompleted();
-            });
-            using var live = new EventSource<int>();
-            using var merged = EventStream<int>.Merge(immediate, live);
-            Assert.That(merged.IsDisposed, Is.False);
-            var values = new List<int>();
-            var completions = 0;
-            merged.Subscribe(values.Add, () => completions++, null);
-            live.OnNext(7);
-            live.OnCompleted();
-
-            Assert.That(values, Is.EqualTo(new[] { 7 }));
-            Assert.That(completions, Is.EqualTo(1));
-            Assert.That(merged.IsDisposed, Is.True);
-            Assert.That(immediate.Releases, Is.EqualTo(1));
-        }
-
-        [TestCase(false)]
-        [TestCase(true)]
-        public void MergeCanFinishDuringConnectionAndReleasesTheReturnedHandleOnce(bool error)
+        // External sources
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        public void ExternalSourceCanFinishDuringConnectionAndReleasesTheReturnedHandleOnce(bool error, bool completeTwice)
         {
             var failure = new ApplicationException("upstream");
-            using var source = new SubscribingSource(observer =>
+            var source = new SubscribingSource(observer =>
             {
                 if (error) observer.OnError(failure);
                 else observer.OnCompleted();
+                if (completeTwice) observer.OnCompleted();
             });
 
-            using var merged = EventStream<int>.Merge(source);
-            Assert.That(merged.IsDisposed, Is.True);
+            using var stream = new EventStream<int>(source);
+
+            Assert.That(stream.IsDisposed, Is.True);
             Assert.That(source.Releases, Is.EqualTo(1));
-            Assert.That(source.IsDisposed, Is.False);
         }
 
         [Test]
-        public void MergeReleasesEarlierConnectionsWhenAnUpstreamSubscribeThrows()
+        public void ExternalSubscribeFailureDisposesTheStreamAndKeepsTheOriginalException()
         {
             var failure = new ApplicationException("connection");
-            using var first = new SubscribingSource(_ => { });
-            using var second = new SubscribingSource(_ => throw failure);
+            var source = new SubscribingSource(_ => throw failure);
 
-            Assert.That(Assert.Throws<ApplicationException>(() => EventStream<int>.Merge(first, second)), Is.SameAs(failure));
-            Assert.That(first.Releases, Is.EqualTo(1));
-            Assert.That(first.IsDisposed || second.IsDisposed, Is.False);
+            var thrown = Assert.Throws<ApplicationException>(() => new EventStream<int>(source));
+
+            Assert.That(thrown, Is.SameAs(failure));
+            Assert.That(source.Releases, Is.Zero);
         }
 
+        // Merge
         [Test]
-        public void MergedSourceDeliversBothInputsAndCompletesWhenAllUpstreamsComplete()
+        public void MergedStreamDeliversBothInputsAndCompletesWhenAllUpstreamsComplete()
         {
-            using var left = new EventSource<int>();
-            using var right = new EventSource<int>();
-            using var merged = EventStream<int>.Merge(left, right);
+            using var left = new EventStream<int>();
+            using var right = new EventStream<int>();
+            using var merged = left.Merge(right);
             var values = new List<int>();
             var completions = 0;
             merged.Subscribe(values.Add, () => completions++, _ => Assert.Fail("Unexpected source error."));
@@ -292,13 +294,28 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void DisposingTheOwnedMergeSilentlyReleasesItsSubscriptionsAndUpstreamConnections()
+        public void MergedErrorEndsTheStreamAndReleasesTheOtherInput()
         {
-            using var upstream = new EventSource<int>
-            {
-                TerminationMode = TerminationMode.NoSubscribers,
-            };
-            using var merged = EventStream<int>.Merge(upstream);
+            using var left = new EventStream<int>();
+            using var right = new EventStream<int>();
+            using var merged = left.Merge(right);
+            var failure = new ApplicationException("input");
+            var errors = new List<Exception>();
+            merged.Subscribe(_ => { }, null, errors.Add);
+
+            left.OnError(failure);
+
+            Assert.That(errors, Is.EqualTo(new[] { failure }));
+            Assert.That(merged.IsDisposed, Is.True);
+            Assert.That(right.NodeCount, Is.Zero);
+            Assert.That(right.IsDisposed, Is.False);
+        }
+
+        [Test]
+        public void DisposingAMergedStreamSilentlyReleasesItsSubscriptionsAndUpstreamConnections()
+        {
+            using var upstream = new EventStream<int>();
+            using var merged = upstream.Merge();
             var notifications = 0;
             var handle = (Handle)merged.Take(1)
                 .Subscribe(_ => notifications++, () => notifications++, _ => notifications++);
@@ -307,18 +324,19 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(handle.IsDisposed, Is.True);
             Assert.That(merged.NodeCount, Is.Zero);
             Assert.That(notifications, Is.Zero);
-            Assert.That(upstream.IsDisposed, Is.True, "The upstream disposes itself when its last connection leaves.");
+            Assert.That(upstream.NodeCount, Is.Zero);
+            Assert.That(upstream.IsDisposed, Is.False);
         }
 
         // Helpers
-        private class SubscribingSource : EventSource<int>, IObservable<int>
+        private class SubscribingSource : IObservable<int>
         {
             public int Releases { get; private set; }
             private readonly Action<IObserver<int>> _onSubscribe;
 
             public SubscribingSource(Action<IObserver<int>> onSubscribe) => _onSubscribe = onSubscribe;
 
-            IDisposable IObservable<int>.Subscribe(IObserver<int> observer)
+            public IDisposable Subscribe(IObserver<int> observer)
             {
                 _onSubscribe(observer);
                 return new Connection(this);

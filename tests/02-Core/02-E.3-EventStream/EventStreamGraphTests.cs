@@ -183,21 +183,19 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void ReusingATakePathCreatesIndependentCountersForEachRegistration()
+        public void RelationConnectsThroughOneNodeInItsUpstreamGraph()
         {
             using var stream = new EventStream<int>();
-            var first = new List<int>();
-            var second = new List<int>();
             var take = stream.Take(2);
-            take.Subscribe(first.Add);
-            stream.OnNext(1);
-            take.Subscribe(second.Add);
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
-            stream.OnNext(2);
+            Assert.That(stream.NodeCount, Is.Zero);
+
+            take.Subscribe(_ => { });
+            take.Where(new Filter<int>("all", _ => true)).Subscribe(_ => { });
             Assert.That(stream.NodeCount, Is.EqualTo(1));
-            stream.OnNext(3);
-            Assert.That(first, Is.EqualTo(new[] { 1, 2 }));
-            Assert.That(second, Is.EqualTo(new[] { 2, 3 }));
+            Assert.That(take.NodeCount, Is.EqualTo(1));
+
+            stream.OnNext(1);
+            stream.OnNext(2);
             Assert.That(stream.NodeCount, Is.Zero);
         }
     }

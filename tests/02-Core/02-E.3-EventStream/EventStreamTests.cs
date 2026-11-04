@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using BlackThunder.UniEngine.Infrastructure;
 using Blackthunder.UniEngine.Core;
-using Blackthunder.UniEngine.Core.EventStreamCore;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
@@ -19,9 +18,9 @@ namespace BlackThunder.UniEngine.Tests
 
         // R2: Removal affects the current publication; new subscriptions wait for the next.
         [Test]
-        public void EventSourceAppliesSubscriptionChangesAtTheExpectedTime()
+        public void EventStreamAppliesSubscriptionChangesAtTheExpectedTime()
         {
-            using var stream = new EventSource<int>();
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
             var removed = (IDisposable)null;
             stream.Subscribe(value =>
@@ -40,9 +39,9 @@ namespace BlackThunder.UniEngine.Tests
         // R2: Fault isolation or propagation still permits a later publication.
         [TestCase(false)]
         [TestCase(true)]
-        public void EventSourceRecoversAfterCallbackFailure(bool handled)
+        public void EventStreamRecoversAfterCallbackFailure(bool handled)
         {
-            using var stream = new EventSource<int>();
+            using var stream = new EventStream<int>();
             var calls = new List<int>();
             var failure = new ApplicationException("subscriber");
             var reported = new List<Exception>();
@@ -65,9 +64,9 @@ namespace BlackThunder.UniEngine.Tests
 
         // R2: Disposal inside a callback stops the remaining receivers and cleans up.
         [Test]
-        public void EventSourceDisposalDuringPublicationStopsRemainingCallbacks()
+        public void EventStreamDisposalDuringPublicationStopsRemainingCallbacks()
         {
-            using var stream = new EventSource<int>();
+            using var stream = new EventStream<int>();
             var laterCalls = 0;
             stream.Subscribe(_ => stream.Dispose());
             stream.Subscribe(_ => laterCalls++);
@@ -91,40 +90,34 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(values, Is.EqualTo(expected));
         }
 
-        // Every creation path rejects disposed inputs and releases earlier connections.
-        [TestCaseSource(nameof(DisposedMergeCases))]
-        public void MergeRejectsDisposedInputsAndReleasesConnections(
-            Func<IEventSource<int>[], IDisposable> create, bool disposedFirst)
+        // Merge rejects disposed inputs and leaves the valid input untouched.
+        [TestCase(true)]
+        [TestCase(false)]
+        public void MergeRejectsDisposedInputsAndLeavesTheOtherInputConnected(bool disposedFirst)
         {
-            using var source = new EventSource<int> { TerminationMode = TerminationMode.NoSubscribers };
-            using var disposed = new EventSource<int>();
+            using var source = new EventStream<int>();
+            using var disposed = new EventStream<int>();
             var values = new List<int>();
             using var subscription = source.Subscribe(values.Add);
             disposed.Dispose();
-            var upstreams = disposedFirst
-                ? new IEventSource<int>[] { disposed, source }
-                : new IEventSource<int>[] { source, disposed };
 
             Assert.Throws<ObjectDisposedException>(() =>
             {
-                using var merged = create(upstreams);
+                using var merged = disposedFirst ? disposed.Merge(source) : source.Merge(disposed);
             });
 
-            Assert.That(source.IsDisposed, Is.False);
             source.OnNext(7);
             Assert.That(values, Is.EqualTo(new[] { 7 }));
-            subscription.Dispose();
-            Assert.That(source.IsDisposed, Is.True, "Failed construction must not leave an upstream subscription.");
+            Assert.That(source.NodeCount, Is.Zero, "Failed construction must not leave an upstream connection.");
         }
 
-        // Valid inputs retain their value and completion behavior; null entries remain optional.
-        [TestCase(Merge<int>.CompletionMode.All)]
-        [TestCase(Merge<int>.CompletionMode.Any)]
-        public void MergePreservesCompletionPolicyForValidInputs(Merge<int>.CompletionMode completionMode)
+        // Merge completes after every input completes; null entries remain optional.
+        [Test]
+        public void MergeCompletesAfterEveryInputCompletes()
         {
-            using var left = new EventSource<int>();
-            using var right = new EventSource<int>();
-            using var merged = new Merge<int>(completionMode, left, null, right);
+            using var left = new EventStream<int>();
+            using var right = new EventStream<int>();
+            using var merged = left.Merge(null, right);
             var values = new List<int>();
             var completions = 0;
             using var subscription = merged.Subscribe(values.Add, () => completions++, null);
@@ -132,30 +125,87 @@ namespace BlackThunder.UniEngine.Tests
             left.OnNext(1);
             right.OnNext(2);
             left.OnCompleted();
-            Assert.That(merged.IsDisposed, Is.EqualTo(completionMode == Merge<int>.CompletionMode.Any));
+            Assert.That(merged.IsDisposed, Is.False);
 
             right.OnNext(3);
             right.OnCompleted();
-            Assert.That(values, Is.EqualTo(completionMode == Merge<int>.CompletionMode.All
-                ? new[] { 1, 2, 3 } : new[] { 1, 2 }));
+            Assert.That(values, Is.EqualTo(new[] { 1, 2, 3 }));
             Assert.That(completions, Is.EqualTo(1));
             Assert.That(merged.IsDisposed, Is.True);
         }
 
-        private static IEnumerable<TestCaseData> DisposedMergeCases()
+        // A value that reaches two inputs is delivered once for each input.
+        [Test]
+        public void MergeDeliversAValueForEachInputThatPassesIt()
         {
-            var factories = new (string Name, Func<IEventSource<int>[], IDisposable> Create)[]
-            {
-                ("ArrayConstructor", upstreams => new Merge<int>(upstreams)),
-                ("EnumerableConstructor", upstreams => new Merge<int>((IEnumerable<IEventSource<int>>)upstreams)),
-                ("GraphFactory", upstreams => EventStream<int>.Merge(upstreams)),
-            };
+            using var source = new EventStream<int>();
+            var positive = new Filter<int>("positive", value => value > 0);
+            var even = new Filter<int>("even", value => value % 2 == 0);
+            using var merged = source.Where(positive).Branch().Merge(source.Where(even).Branch());
+            var values = new List<int>();
+            using var subscription = merged.Subscribe(values.Add);
 
-            foreach (var (name, create) in factories)
-            {
-                yield return new TestCaseData(create, true).SetName($"MergeRejectsDisposedInput_{name}_First");
-                yield return new TestCaseData(create, false).SetName($"MergeRejectsDisposedInput_{name}_Last");
-            }
+            source.OnNext(1);
+            source.OnNext(2);
+            source.OnNext(-2);
+            source.OnNext(-1);
+
+            Assert.That(values, Is.EqualTo(new[] { 1, 2, 2, -2 }));
+        }
+
+        // Disposal of one input leaves the remaining inputs in charge of completion.
+        [Test]
+        public void MergeCompletesWithTheRemainingInputAfterAnotherInputIsDisposed()
+        {
+            using var left = new EventStream<int>();
+            using var right = new EventStream<int>();
+            using var merged = left.Merge(right);
+            var values = new List<int>();
+            var notifications = 0;
+            using var subscription = merged.Subscribe(values.Add, () => notifications++, _ => notifications++);
+
+            left.Dispose();
+            Assert.That(merged.IsDisposed, Is.False);
+            Assert.That(notifications, Is.Zero);
+
+            right.OnNext(1);
+            right.OnCompleted();
+
+            Assert.That(values, Is.EqualTo(new[] { 1 }));
+            Assert.That(notifications, Is.EqualTo(1));
+            Assert.That(merged.IsDisposed, Is.True);
+        }
+
+        [Test]
+        public void MergeIsSilentlyReleasedWithItsLastDisposedInput()
+        {
+            using var left = new EventStream<int>();
+            using var right = new EventStream<int>();
+            using var merged = left.Merge(right);
+            var notifications = 0;
+            using var subscription = merged.Subscribe(_ => { }, () => notifications++, _ => notifications++);
+
+            left.Dispose();
+            right.Dispose();
+
+            Assert.That(merged.IsDisposed, Is.True);
+            Assert.That(notifications, Is.Zero);
+        }
+
+        // A pending merge connects only to the inputs that are still alive.
+        [Test]
+        public void PendingMergeSkipsAnInputThatEndedBeforeTheFirstSubscription()
+        {
+            using var left = new EventStream<int>();
+            using var right = new EventStream<int>();
+            using var merged = left.Merge(right);
+            left.Dispose();
+            var values = new List<int>();
+            using var subscription = merged.Subscribe(values.Add);
+
+            right.OnNext(1);
+
+            Assert.That(values, Is.EqualTo(new[] { 1 }));
         }
     }
 }

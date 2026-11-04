@@ -24,17 +24,17 @@ namespace Blackthunder.UniEngine.Core
         internal EventGraph(Action onEmpty) => _onEmpty = onEmpty;
 
         internal Handle Subscribe(EventPath<T> path, Action<T> updated, Action completed, Action<Exception> errored,
-            bool graphConnection = false)
+            IGraphObserver<T> input = null)
         {
             var node = RegisterPath(path);
-            return Attach(node, updated, completed, errored, graphConnection, null);
+            return Attach(node, updated, completed, errored, input);
         }
 
-        internal Handle ConnectBranch(EventPath<T> path, EventStream<T> branch)
+        internal Handle Connect(EventPath<T> path, IGraphObserver<T> input)
         {
             var parent = RegisterPath(path);
             var node = AddChild(parent, new Node());
-            return Attach(node, branch.OnNext, branch.CompleteFromParent, branch.ErrorFromParent, true, branch.Dispose);
+            return Attach(node, input.OnNext, input.OnCompleted, input.OnError, input);
         }
 
         private Node RegisterPath(EventPath<T> path)
@@ -53,8 +53,8 @@ namespace Blackthunder.UniEngine.Core
                 for (var group = parent.Children.First; group != null; group = group.Next)
                 {
                     if (group.Path?.Operation != PathOperation.Group) continue;
-                    if (group.Path.Count == path.Count) return group;
-                    if (group.Path.Count > path.Count)
+                    if (group.Path.Order == path.Order) return group;
+                    if (group.Path.Order > path.Order)
                         return AddChild(parent, new Node { Path = path }, group);
                 }
             }
@@ -63,7 +63,7 @@ namespace Blackthunder.UniEngine.Core
                 var existing = FindWhere(parent, path.Filter);
                 if (existing != null) return existing;
             }
-            return AddChild(parent, new Node { Path = path, Remaining = path.Count });
+            return AddChild(parent, new Node { Path = path });
         }
 
         private static Node FindWhere(Node parent, Filter<T> filter)
@@ -98,14 +98,14 @@ namespace Blackthunder.UniEngine.Core
         }
 
         private Handle Attach(Node node, Action<T> updated, Action completed, Action<Exception> errored,
-            bool graphConnection, Action disconnected)
+            IGraphObserver<T> input)
         {
-            var subscription = new Subscription(updated, completed, errored, graphConnection) { Registration = _lastRegistration };
+            var subscription = new Subscription(updated, completed, errored, input != null) { Registration = _lastRegistration };
             subscription.Handle = new Handle(() =>
             {
                 node.Subscriptions.Remove(subscription);
                 Prune(node);
-                disconnected?.Invoke();
+                input?.OnDisconnected();
                 if (!_closed && _root.Children.First == null && _root.Subscriptions.First == null)
                     _onEmpty?.Invoke();
             });
@@ -158,28 +158,6 @@ namespace Blackthunder.UniEngine.Core
                         case PathOperation.Where:
                             if (!path.Filter.Predicate(value)) return;
                             break;
-                        case PathOperation.Skip:
-                            if (node.Remaining > 0)
-                            {
-                                node.Remaining--;
-                                return;
-                            }
-                            break;
-                        case PathOperation.SkipWhile:
-                            if (!node.SkipFinished)
-                            {
-                                if (path.Filter.Predicate(value)) return;
-                                node.SkipFinished = true;
-                            }
-                            break;
-                        case PathOperation.Take:
-                            if (node.Remaining > 0) break;
-                            End(node, Signal.Completed, null, ref failure);
-                            return;
-                        case PathOperation.TakeWhile:
-                            if (path.Filter.Predicate(value)) break;
-                            End(node, Signal.Completed, null, ref failure);
-                            return;
                         case PathOperation.Debug:
                             $"{value}: {path.Message}".Write(path.LogType);
                             break;
@@ -211,9 +189,6 @@ namespace Blackthunder.UniEngine.Core
                 if (child.Parent != null && child.Registration <= lastVisible)
                     Visit(child, value, lastVisible, ref failure);
             }
-
-            if (path?.Operation == PathOperation.Take && --node.Remaining == 0)
-                End(node, Signal.Completed, null, ref failure);
         }
 
         private static void Report(Exception exception, ref ExceptionDispatchInfo failure)
@@ -288,8 +263,6 @@ namespace Blackthunder.UniEngine.Core
             internal EventPath<T> Path;
             internal int ChildCount;
             internal Dictionary<Filter<T>, Node> WhereIndex;
-            internal bool SkipFinished;
-            internal int Remaining;
         }
 
         private sealed class Subscription : Link<Subscription>

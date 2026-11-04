@@ -25,12 +25,12 @@
 | --- | --- |
 | [Handle·Token](02-E.1-HandleToken/README.md) | 연결 해제나 정리 동작을 폐기에 묶는다. |
 | [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md) | 순회 중 변경과 반영 시점을 관리한다. |
-| [EventStream](02-E.3-EventStream/README.md) | 구독, 값·완료·오류 전파, 순서·마스크·연산자와 연결 수명을 관리한다. |
+| [EventStream](02-E.3-EventStream/README.md) | 구독, 값·완료·오류 전파, 순서·조건·연산자와 연결 수명을 관리한다. |
 | [EventHub](03-E.1-EventHub/README.md) | 객체별 연결, Sleep·Awake, 갱신과 폐기 알림을 관리한다. |
 
 ## 연결과 전파
 
-Subscribe는 연결 해제 핸들을 반환한다. Chain·Connect는 Observer를 연결하고, IPassiveObserver인 수신자에게 상위 연결 핸들을 전달한다. 수신자는 자신의 폐기 때 해당 연결을 해제한다.
+Subscribe는 연결 해제 핸들을 반환한다. Take·Skip·Branch·Merge가 만든 스트림은 상위와의 연결을 스스로 소유하며, 자신이 폐기될 때 그 연결을 해제한다.
 
 기본 지연 모드에서는 전파 중 추가한 수신자는 다음 전파부터 실행하고 제거한 수신자는 이후 호출에서 제외한다. 현재 실행 중인 콜백을 강제로 중단하지는 않는다. EventStream은 모든 순서 그룹에 같은 등록 시점을 적용한다. 앞 그룹에서 추가한 뒤 그룹의 구독도 다음 전파부터 적용된다.
 

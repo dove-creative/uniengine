@@ -4,8 +4,9 @@
 
 1. Release 검증
 2. 이전 사례와의 대응
-3. UniTest 상태 전이
-4. 실행 명령
+3. 성능 비교
+4. UniTest 상태 전이
+5. 실행 명령
 
 ## Release 검증
 
@@ -13,21 +14,41 @@
 
 | 실행 범위 | 통과 / 실행 |
 | --- | ---: |
-| EventSource·EventStream 모듈 | 119 / 119 |
-| 일반 전체 | 673 / 673 |
+| EventStream 모듈 | 123 / 123 |
+| 일반 전체 | 677 / 677 |
 | 별도 명시적 Benchmark | 1 / 1 |
 
 ## 이전 사례와의 대응
 
-교체 전 일반 전체 688개에서 이번 검증의 673개로 15개 줄었다. 이전에는 공급원 계약 C1–C5를 기본 EventStream, OrderedEventStream, EventRouter에서 반복했다. 같은 입력의 세 묶음을 EventSource 계약 한 묶음으로 통합했다. 마스크 변환기가 없는 EventRouter, 빈 대상 배열 전용 오버로드, 기존 Merge 확장 메서드의 생성 경로는 제거된 API여서 별도 사례로 세지 않는다.
+이전 검증의 일반 전체 673개에서 677개로 늘었다. EventSource 공개 형식과 Chain·Connect·TerminationMode를 없애면서 그 계약 사례를 빼고, 상태 공유·직접 입력·입력별 Merge 사례를 추가했다.
 
-| 기존 검증 | 본 구현에서 검증하는 동작 |
+| 이전 검증 | 현재 검증하는 동작 |
 | --- | --- |
-| 기본 스트림과 라우터·순서 스트림의 중복 계약 | EventSource의 구독, 핸들 인계 실패, 명시적 폐기, 완료·오류·비활성 동작과 원래 콜백의 참조 회수를 검증한다. 그래프에서는 같은 대리자를 등록해도 각 구독을 독립적으로 해제할 수 있다. |
-| 대상 마스크, 라우터 연결, 순서 그룹 | 마스크의 합집합 판정과 불일치·빈 마스크를 Filter로 검증한다. 그룹 간 생성 순서, 전파 중 그룹 추가·제거, 같은 그룹 안의 조건 공유와 그룹 간 조건 분리를 확인한다. |
-| 별도 Where·Take·Skip, Append | Where 노드의 참조 공유·가지치기, 등록별 상태, Branch의 첫 연결·마지막 해제·직접 발행과 부모 종료를 검증한다. |
-| 외부 스트림 병합과 예외 | Merge 생성 중 부분 연결 실패 회수, 동기·중복 완료, 오류, All·Any 완료를 확인한다. 그래프 실패가 생기면 정상 형제와 공급원 구독도 순회를 마치고 첫 미처리 예외가 발행자에게 돌아온다. |
-| 첫 전파·반복 전파 할당 | 값·참조 형식 공급원, 그룹, 마스크, 필터 체인, Merge, 비활성 경로와 Take의 마지막 값에 Branch가 완료·폐기되는 경로를 측정한다. |
+| EventSource의 Chain·Connect, 핸들 인계 | 공개 API에서 제거했다. 새 스트림의 연결 수명과 폐기는 C1·C5로 검증한다. |
+| Dispatch 호환성 | 파생 지점을 제거하여 사례를 뺐다. |
+| 구독마다 독립적인 Take·Skip 상태 | 같은 스트림의 구독자가 상태를 공유하고, 연산자를 다시 호출하면 새로 시작한다. |
+| 외부 공급원의 직접 발행 거부 | 모든 스트림이 값을 직접 받는다. 횟수·조건 반영과 재진입 거부를 C6으로 검증한다. |
+| Merge의 All·Any 완료, 공급원 입력 | EventStream 입력의 All 완료, 입력 폐기, 입력별 전달을 M1·M2로 검증한다. Any 완료는 제거했다. |
+
+## 성능 비교
+
+같은 벤치마크 코드를 이전 커밋 b80b018과 현재 구현에서 차례로 실행한 중앙값이다. 각 시나리오는 1.5초 이상 예열한 뒤 200,000회씩 세 라운드를 측정했다. 고정 구독의 할당은 양쪽 모두 0 B이다. 벤치마크는 실행마다 차이가 있어 작은 차이는 구조의 차이로 해석하지 않는다.
+
+| 시나리오 | b80b018 | 현재 | 단위 |
+| --- | ---: | ---: | --- |
+| E 공유 Filter, 4/64 수신 | 0.1390 | 0.0789 | µs/전파 |
+| F 개별 Filter, 4/64 수신 | 0.2630 | 0.2359 | µs/전파 |
+| G 공통 조건 통과 후 공유 Filter | 0.1388 | 0.0748 | µs/전파 |
+| I 60/64 수신 | 0.4322 | 0.3362 | µs/전파 |
+| J 필터 없이 64명 수신 | 0.3451 | 0.2861 | µs/전파 |
+| K 공통 조건 탈락 | 0.0615 | 0.0076 | µs/전파 |
+| L 구독자마다 Take | 0.1913 | 0.1705 | µs/전파 |
+| H 공유 Filter 구독 교체 | 1.8443 | 2.2305 | µs/프레임 |
+| H 프레임당 할당 | 5888 | 5888 | B/프레임 |
+| M 일회성 Take(1) 16개 교체 | 2.5973 | 7.1458 | µs/프레임 |
+| M 프레임당 할당 | 8704 | 23040 | B/프레임 |
+
+Take가 노드에서 스트림으로 바뀌면서 M의 비용이 늘었다. 매 프레임 Take(1)을 많이 만드는 코드는 이 비용을 고려해야 한다.
 
 ## UniTest 상태 전이
 
@@ -39,8 +60,9 @@ U1과 U2는 NUnit 사례 하나에서 도달한 서로 다른 종료 이력이�
 ## 실행 명령
 
 ```powershell
-dotnet test tests/GoldenHind.Tests.csproj -c Release --filter 'FullyQualifiedName~BlackThunder.UniEngine.Tests.EventStream|FullyQualifiedName~BlackThunder.UniEngine.Tests.EventSource'
+dotnet test tests/GoldenHind.Tests.csproj -c Release --filter 'FullyQualifiedName~BlackThunder.UniEngine.Tests.EventStream&TestCategory!=Benchmark'
 dotnet test tests/GoldenHind.Tests.csproj -c Release
+dotnet test tests/GoldenHind.Tests.csproj -c Release --filter 'FullyQualifiedName=BlackThunder.UniEngine.Tests.EventStreamBenchmarks.ComparePropagationAndSubscriptionChurn' --logger 'console;verbosity=detailed'
 ```
 
 [상태·동작 표](01-Tables.md) · [테스트 계획](02-Plans.md)

@@ -18,11 +18,10 @@ namespace BlackThunder.UniEngine.Tests
         [TearDown]
         public void TearDown() => ExceptionHandler.SetHandler(null);
 
-        [TestCase(0)]
-        [TestCase(1)]
-        public void SelfRemovalSkipsTheRestOfTheMulticastSubscription(int kind)
+        [Test]
+        public void SelfRemovalSkipsTheRestOfTheMulticastSubscription()
         {
-            using var stream = CreateStream(kind);
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
             var subscription = (IDisposable)null;
             Action<int> callback = value =>
@@ -40,11 +39,10 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(calls, Is.EqualTo(new[] { "first:1", "other:1", "other:2" }));
         }
 
-        [TestCase(0)]
-        [TestCase(1)]
-        public void RemovingAnEarlierDuplicateDoesNotInterruptTheCurrentRegistration(int kind)
+        [Test]
+        public void RemovingAnEarlierDuplicateDoesNotInterruptTheCurrentRegistration()
         {
-            using var stream = CreateStream(kind);
+            using var stream = new EventStream<int>();
             var firstCalls = 0;
             var tailCalls = 0;
             var first = (IDisposable)null;
@@ -138,11 +136,10 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         // Failure and termination
-        [TestCase(0)]
-        [TestCase(1)]
-        public void DisposalStopsTheMulticastTailAndLaterSubscribers(int kind)
+        [Test]
+        public void DisposalStopsTheMulticastTailAndLaterSubscribers()
         {
-            using var stream = CreateStream(kind);
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
             Action<int> callback = _ =>
             {
@@ -160,13 +157,11 @@ namespace BlackThunder.UniEngine.Tests
             Assert.Throws<ObjectDisposedException>(() => stream.OnNext(2));
         }
 
-        [TestCase(0, false)]
-        [TestCase(0, true)]
-        [TestCase(1, false)]
-        [TestCase(1, true)]
-        public void MulticastFailureRemovesTheRegistrationAndPreservesExceptionPolicy(int kind, bool handled)
+        [TestCase(false)]
+        [TestCase(true)]
+        public void MulticastFailureRemovesTheRegistrationAndPreservesExceptionPolicy(bool handled)
         {
-            using var stream = CreateStream(kind);
+            using var stream = new EventStream<int>();
             var calls = new List<int>();
             var failure = new ApplicationException("subscriber");
             var reported = new List<Exception>();
@@ -185,13 +180,11 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(reported, Is.EqualTo(handled ? new[] { failure } : Array.Empty<Exception>()));
         }
 
-        [TestCase(0, false)]
-        [TestCase(0, true)]
-        [TestCase(1, false)]
-        [TestCase(1, true)]
-        public void TerminalNotificationHonorsMulticastRemovalAndDisposesTheStream(int kind, bool error)
+        [TestCase(false)]
+        [TestCase(true)]
+        public void TerminalNotificationHonorsMulticastRemovalAndDisposesTheStream(bool error)
         {
-            using var stream = CreateStream(kind);
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
             var failure = new ApplicationException("terminal");
             var subscription = (IDisposable)null;
@@ -221,34 +214,12 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(stream.IsDisposed, Is.True);
         }
 
-        // Compatibility and lifetime
-        [Test]
-        public void LegacyDispatchStillFiltersAndRemovesRawFailingCallbacks()
-        {
-            using var stream = new LegacyStream();
-            var calls = new List<int>();
-            var reported = new List<Exception>();
-            var failure = new ApplicationException("raw subscriber");
-            ExceptionHandler.SetHandler(reported.Add);
-            Action<int> callback = _ => throw failure;
-            callback += _ => Assert.Fail("The raw multicast tail must not run after failure.");
-            stream.AddRaw(callback);
-            stream.Excluded = _ => Assert.Fail("The legacy filter must still apply.");
-            stream.AddRaw(stream.Excluded);
-            stream.AddRaw(calls.Add);
-
-            stream.OnNext(1);
-            stream.OnNext(2);
-
-            Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
-            Assert.That(reported, Is.EqualTo(new[] { failure }));
-        }
-
+        // Lifetime
         [TestCase(false)]
         [TestCase(true)]
         public void ReleasedOriginalCallbacksAndTargetsAreNotRetained(bool disposeStream)
         {
-            using var stream = new EventSource<int>();
+            using var stream = new EventStream<int>();
             var references = RegisterAndRelease(stream, disposeStream);
 
             GC.Collect();
@@ -266,20 +237,6 @@ namespace BlackThunder.UniEngine.Tests
         // Helpers
         private enum Order { Early, Middle, Late }
 
-        private class LegacyStream : EventSource<int>
-        {
-            public Action<int> Excluded { get; set; }
-
-            public void AddRaw(Action<int> callback) => Updated.Add(callback);
-
-            public override void OnNext(int value)
-            {
-                ThrowIfDisposed();
-                if (!Enabled) return;
-                Dispatch(Updated, callback => callback(value), callback => callback != Excluded);
-            }
-        }
-
         private class Receiver
         {
             public int Value { get; private set; }
@@ -288,12 +245,9 @@ namespace BlackThunder.UniEngine.Tests
             public void OnError(Exception exception) => Value++;
         }
 
-        private static EventSource<int> CreateStream(int kind) =>
-            kind == 0 ? new EventSource<int>() : new LegacyStream();
-
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static (WeakReference Target, WeakReference Updated, WeakReference Completed, WeakReference Errored, IDisposable Handle)
-            RegisterAndRelease(EventSource<int> stream, bool disposeStream)
+            RegisterAndRelease(EventStream<int> stream, bool disposeStream)
         {
             var receiver = new Receiver();
             Action<int> updated = receiver.OnNext;

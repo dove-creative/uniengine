@@ -1,6 +1,6 @@
 # EventStream 본 구현과 비교 측정
 
-EventStreamTodo ES-01–14를 수행한 결과이다. 기존 EventStream은 EventSource로 이관했고, 정식 EventStream은 공급원 하나와 구독 그래프를 소유한다. EventHub도 같은 그래프의 순서 그룹으로 이전했다.
+EventStreamTodo ES-01–14를 수행한 결과이다. 기존 EventStream은 EventSource로 이관했고, 정식 EventStream은 공급원 하나와 구독 그래프를 소유한다. EventHub도 같은 그래프의 순서 그룹으로 이전했다. 본 구현 이후의 구조 변경은 [승인 기록](Approvals.md)을 따른다.
 
 ## 교체 판단
 

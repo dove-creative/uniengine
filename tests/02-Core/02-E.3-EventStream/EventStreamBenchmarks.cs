@@ -23,9 +23,7 @@ namespace BlackThunder.UniEngine.Tests
         private const uint AllBits = 0xffff;
         private static readonly bool _recordsAllocation = RecordsAllocation();
 
-#if !EVENTSTREAM_LEGACY
         private static readonly Filter<uint>[] _sharedFilters = CreateSharedFilters();
-#endif
 
 
         // Content --------------------
@@ -38,20 +36,6 @@ namespace BlackThunder.UniEngine.Tests
 #if DEBUG
             throw new InvalidOperationException("Run this benchmark in Release.");
 #endif
-#if EVENTSTREAM_LEGACY
-            using var router = EventRouterExtensions.Route<uint>(static value => value);
-            var subscribers = new Subscribers();
-            for (var i = 0; i < SubscriberCount; i++)
-                router.Subscribe(1u << (i % TargetCount), subscribers.Permanent[i]);
-            Measure("A Router", subscribers, _ => router.OnNext(OneBit), OneBit);
-            MeasureWhere("B Separate Where", OneBit, separate: true);
-            MeasureWhere("C Shared Where", OneBit);
-            MeasureDirect("D Direct matching four", OneBit);
-            MeasureWhere("I-C 60 of 64", FifteenBits);
-            MeasureDirect("J-C Direct 64", AllBits);
-            MeasureWhere("K-C Common rejection", OneBit, rejectCommon: true);
-            MeasureWhere("H-C Shared Where churn", OneBit, churn: true);
-#else
             MeasureFilters("E Shared filters", OneBit);
             MeasureFilters("F Separate filters", OneBit, separate: true);
             MeasureFilters("G Common acceptance", OneBit, common: true);
@@ -59,29 +43,10 @@ namespace BlackThunder.UniEngine.Tests
             MeasureDirect("J-E Direct 64", AllBits);
             MeasureFilters("K-E Common rejection", OneBit, common: true, rejectCommon: true);
             MeasureFilters("H-E Shared filter churn", OneBit, churn: true);
-            MeasureSourceChurn();
-#endif
+            MeasureTakePerSubscriber();
+            MeasureTakeChurn();
         }
 
-#if EVENTSTREAM_LEGACY
-        // Build this mode against the archived pre-migration sources.
-        private static void MeasureWhere(string name, uint value, bool separate = false, bool rejectCommon = false, bool churn = false)
-        {
-            using var stream = new EventStream<uint>();
-            var subscribers = new Subscribers();
-            IEventStream<uint> parent = rejectCommon ? stream.Where(static _ => false) : stream;
-            var count = separate ? SubscriberCount : TargetCount;
-            var paths = new IEventStream<uint>[count];
-            for (var i = 0; i < count; i++)
-                paths[i] = parent.Where(MatchTarget(i % TargetCount));
-            for (var i = 0; i < SubscriberCount; i++)
-                paths[i % count].Subscribe(subscribers.Permanent[i]);
-            if (churn)
-                MeasureChurn(name, subscribers, (bit, callback) => paths[bit].Subscribe(callback), stream.OnNext);
-            else
-                Measure(name, subscribers, _ => stream.OnNext(value), rejectCommon ? 0u : value);
-        }
-#else
         private static void MeasureFilters(string name, uint value, bool separate = false, bool common = false,
             bool rejectCommon = false, bool churn = false)
         {
@@ -110,34 +75,25 @@ namespace BlackThunder.UniEngine.Tests
             return filters;
         }
 
-        private static void MeasureSourceChurn()
+        // A stateful operator sits on every path, so each matching value crosses one relation.
+        private static void MeasureTakePerSubscriber()
         {
-            using var source = new EventSource<uint>();
-            var children = new EventSource<uint>[TargetCount];
+            using var stream = new EventStream<uint>();
             var subscribers = new Subscribers();
-            try
-            {
-                for (var bit = 0; bit < children.Length; bit++)
-                {
-                    var child = new EventSource<uint>();
-                    children[bit] = child;
-                    var matches = MatchTarget(bit);
-                    source.Subscribe(value =>
-                    {
-                        if (matches(value)) child.OnNext(value);
-                    }, child.OnCompleted, child.OnError);
-                }
-                for (var i = 0; i < SubscriberCount; i++)
-                    children[i % TargetCount].Subscribe(subscribers.Permanent[i]);
-                MeasureChurn("H-S Shared source churn", subscribers,
-                    (bit, callback) => children[bit].Subscribe(callback), source.OnNext);
-            }
-            finally
-            {
-                foreach (var child in children) child?.Dispose();
-            }
+            for (var i = 0; i < SubscriberCount; i++)
+                stream.Where(_sharedFilters[i % TargetCount]).Take(int.MaxValue).Subscribe(subscribers.Permanent[i]);
+            Measure("L Take per subscriber", subscribers, _ => stream.OnNext(OneBit), OneBit);
         }
-#endif
+
+        private static void MeasureTakeChurn()
+        {
+            using var stream = new EventStream<uint>();
+            var subscribers = new Subscribers();
+            for (var i = 0; i < SubscriberCount; i++)
+                stream.Where(_sharedFilters[i % TargetCount]).Subscribe(subscribers.Permanent[i]);
+            MeasureChurn("M One-shot Take churn", subscribers,
+                (bit, callback) => stream.Where(_sharedFilters[bit]).Take(1).Subscribe(callback), stream.OnNext);
+        }
 
         private static Func<uint, bool> MatchTarget(int bit)
         {

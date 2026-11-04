@@ -3,7 +3,7 @@ using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
-    internal enum PathOperation { Group, Where, Take, Skip, SkipWhile, TakeWhile, Debug }
+    internal enum PathOperation { Group, Where, Debug }
 
     public sealed class EventPath<T>
     {
@@ -12,7 +12,7 @@ namespace Blackthunder.UniEngine.Core
         internal PathOperation Operation { get; }
         internal EventPath<T> Parent { get; }
         internal Filter<T> Filter { get; }
-        internal int Count { get; }
+        internal int Order { get; }
         internal int Depth { get; }
         internal string Message { get; }
         internal LogLevel LogType { get; }
@@ -21,16 +21,15 @@ namespace Blackthunder.UniEngine.Core
         // Content --------------------
         // Construction
         internal EventPath(EventStream<T> stream, EventPath<T> parent, PathOperation operation,
-            int count = 0, Filter<T> filter = null, string message = null, LogLevel logType = LogLevel.Log)
+            int order = 0, Filter<T> filter = null, string message = null, LogLevel logType = LogLevel.Log)
         {
             _stream = stream;
             Parent = parent;
             Depth = (parent?.Depth ?? stream.UpstreamDepth) + 1;
             EventStream<T>.CheckDepth(Depth);
             Operation = operation;
-            Count = count;
-            if ((operation == PathOperation.Where || operation == PathOperation.SkipWhile || operation == PathOperation.TakeWhile)
-                && filter == null)
+            Order = order;
+            if (operation == PathOperation.Where && filter == null)
                 throw new ArgumentNullException(nameof(filter));
             Filter = filter;
             Message = message;
@@ -39,10 +38,6 @@ namespace Blackthunder.UniEngine.Core
 
         // Operators
         public EventPath<T> Where(Filter<T> filter) => new(_stream, this, PathOperation.Where, filter: filter);
-        public EventPath<T> Take(int count = 1) => new(_stream, this, PathOperation.Take, count);
-        public EventPath<T> Skip(int count = 1) => new(_stream, this, PathOperation.Skip, count);
-        public EventPath<T> SkipWhile(Filter<T> filter) => new(_stream, this, PathOperation.SkipWhile, filter: filter);
-        public EventPath<T> TakeWhile(Filter<T> filter) => new(_stream, this, PathOperation.TakeWhile, filter: filter);
         public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
             new(_stream, this, PathOperation.Debug, message: message, logType: logType);
 
@@ -52,6 +47,11 @@ namespace Blackthunder.UniEngine.Core
             _stream.Subscribe(this, updated, completed, errored);
         public IDisposable Subscribe(IObserver<T> observer) => _stream.Subscribe(this, observer);
 
-        public EventStream<T> Branch() => _stream.Branch(this);
+        // Relations
+        public EventStream<T> Take(int count = 1) => new TakeStream<T>(_stream.CreateUpstream(this), count);
+        public EventStream<T> TakeWhile(Filter<T> filter) => new TakeWhileStream<T>(_stream.CreateUpstream(this), filter);
+        public EventStream<T> Skip(int count = 1) => new SkipStream<T>(_stream.CreateUpstream(this), count);
+        public EventStream<T> SkipWhile(Filter<T> filter) => new SkipWhileStream<T>(_stream.CreateUpstream(this), filter);
+        public EventStream<T> Branch() => new(_stream.CreateUpstream(this));
     }
 }

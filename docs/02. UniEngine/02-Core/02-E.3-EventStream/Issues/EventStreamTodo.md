@@ -1,6 +1,6 @@
 # EventStream 작업 목록
 
-그래프 기반 EventStream을 본 구현으로 옮길 때의 작업 목록이다. 아래 '현재 상태'는 작업 착수 당시의 상태이다. 최초 측정은 [프로토타입 평가](EventStreamPrototype.md), 항목별 결정·검증·실행 환경별 측정 결과는 [본 구현 보고서](EventStreamImplementation.md)에 있다.
+그래프 기반 EventStream을 본 구현으로 옮길 때의 작업 목록이다. 아래 '현재 상태'는 작업 착수 당시의 상태이다. 최초 측정은 [프로토타입 평가](EventStreamPrototype.md), 항목별 결정·검증·실행 환경별 측정 결과는 [본 구현 보고서](EventStreamImplementation.md)에 있다. 항목별 결정 중 ES-02·03·08·10은 이후 [승인 기록](Approvals.md)에서 바뀌었다.
 
 ## 목차
 
