@@ -5,7 +5,7 @@ using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public class EventStream<T> : IObservable<T>, IDisposable
+    public class EventStream<T> : IObservable<T>, IObserver<T>, IDisposable
     {
         // Front
         public bool Enabled

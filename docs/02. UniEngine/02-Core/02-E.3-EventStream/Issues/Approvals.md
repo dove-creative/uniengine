@@ -26,6 +26,7 @@ EventStream 본 구현에서 GPT가 정했거나 검토 중에 제안된 결정�
 | AP-12 | 릴레이션 구조         | Take 계열, Merge, Branch는 공급원 없는 릴레이션이다.                                  | 승인·적용   |
 | AP-13 | 직접 입력           | 모든 EventStream의 루트는 OnNext로 값을 직접 받는다. 넣은 값은 위쪽에서 온 값과 같게 처리한다.      | 승인·적용   |
 | AP-14 | 공급원 삭제          | EventSource 클래스와 IEventSource를 모두 없앤다.                                    | 승인·적용   |
+| AP-15 | 관찰자 계약          | EventStream은 `IObserver<T>`를 구현하여 다른 공급원의 수신자가 될 수 있다.                  | 승인·적용   |
 
 ## 결정 내용
 
@@ -74,7 +75,8 @@ Take·TakeWhile·Skip·SkipWhile은 경로 노드가 아니라 공급원 없는 
 
 ## 적용 기록
 
-- AP-01·02·05·07·12·13·14: EventStream, EventPath, 그래프와 연산자 코드를 고치고 EventSource, IEventSource, `Merge<T>`, TerminationMode, IPassiveObserver를 제거했다. 전체 테스트 677개가 통과했다. 측정 결과는 [검증 결과](../../../../../tests/02-Core/02-E.3-EventStream/UniTest/03-Results.md)에 있다.
+- AP-01·02·05·07·12·13·14: EventStream, EventPath, 그래프와 연산자 코드를 고치고 EventSource, IEventSource, `Merge<T>`, TerminationMode, IPassiveObserver를 제거했다. 전체 테스트가 통과했다. 측정 결과는 [검증 결과](../../../../../tests/02-Core/02-E.3-EventStream/UniTest/03-Results.md)에 있다.
+- AP-15: 이전 공개 API와 비교하다 빠진 것을 확인하고 복원했다. 수신자로 넘긴 스트림은 일반 구독으로 동작한다.
 - AP-08: 다이어그램을 마지막 커밋과 같은 내용으로 되돌렸다.
 - AP-09: zip을 저장소 밖으로 옮기고, 본 구현 보고서에서 zip을 가리키던 문장을 고쳤다.
 - AP-10: EventSource를 없애면서 같은 규칙이 그래프의 순회로 일원화되었다.

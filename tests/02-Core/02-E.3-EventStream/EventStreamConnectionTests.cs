@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using BlackThunder.UniEngine.Infrastructure;
 using Blackthunder.UniEngine.Core;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
 {
+    [NonParallelizable]
     public class EventStreamConnectionTests
     {
         // Content --------------------
@@ -198,6 +200,74 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(leftValues, Is.EqualTo(new[] { 2 }));
             Assert.That(mergedValues, Is.EqualTo(new[] { 1, 2, 3 }));
+        }
+
+        // C7: A stream can be handed to any source as a plain observer.
+        [TestCase(false)]
+        [TestCase(true)]
+        public void StreamReceivesValuesAndTerminationAsAnObserver(bool error)
+        {
+            using var source = new EventStream<int>();
+            using var target = new EventStream<int>();
+            var values = new List<int>();
+            var completed = 0;
+            var errors = new List<Exception>();
+            var failure = new ApplicationException("source");
+            using var listener = target.Subscribe(values.Add, () => completed++, errors.Add);
+            IObserver<int> observer = target;
+            using var connection = source.Subscribe(observer);
+
+            source.OnNext(1);
+            if (error) source.OnError(failure);
+            else source.OnCompleted();
+
+            Assert.That(values, Is.EqualTo(new[] { 1 }));
+            Assert.That(completed, Is.EqualTo(error ? 0 : 1));
+            Assert.That(errors, Is.EqualTo(error ? new[] { failure } : Array.Empty<Exception>()));
+            Assert.That(target.IsDisposed, Is.True);
+        }
+
+        [Test]
+        public void ObserverConnectionStaysUnderTheControlOfItsHandle()
+        {
+            using var source = new EventStream<int>();
+            using var target = new EventStream<int>();
+            var values = new List<int>();
+            using var listener = target.Subscribe(values.Add);
+            var connection = source.Subscribe(target);
+
+            source.OnNext(1);
+            connection.Dispose();
+            source.OnNext(2);
+
+            Assert.That(values, Is.EqualTo(new[] { 1 }));
+            Assert.That(target.IsDisposed, Is.False);
+            Assert.That(source.IsDisposed, Is.False);
+        }
+
+        [Test]
+        public void DisposedObserverStreamIsReleasedLikeAFailedSubscriber()
+        {
+            using var source = new EventStream<int>();
+            var target = new EventStream<int>();
+            var reported = new List<Exception>();
+            ExceptionHandler.SetHandler(reported.Add);
+            try
+            {
+                var connection = (Handle)source.Subscribe(target);
+                target.Dispose();
+
+                source.OnNext(1);
+                source.OnNext(2);
+
+                Assert.That(connection.IsDisposed, Is.True);
+                Assert.That(reported, Has.Count.EqualTo(1));
+                Assert.That(reported[0], Is.TypeOf<ObjectDisposedException>());
+            }
+            finally
+            {
+                ExceptionHandler.SetHandler(null);
+            }
         }
 
         [Test]
