@@ -40,7 +40,7 @@ namespace BlackThunder.UniEngine.Tests
             Verify(() =>
             {
                 var counter = new Counter();
-                var stream = new OrderedEventStream<int, UpdateOrder>();
+                var stream = new EventStream<int, UpdateOrder>();
                 Action<int> callback = counter.Record;
                 stream.Subscribe(UpdateOrder.Before, callback);
                 stream.Subscribe(UpdateOrder.After, callback + callback);
@@ -50,46 +50,20 @@ namespace BlackThunder.UniEngine.Tests
             });
         }
 
-        [TestCase("Matched")]
-        [TestCase("Unmatched")]
-        [TestCase("General")]
-        [TestCase("EmptyTargets")]
-        [TestCase("NoConverter")]
-        [TestCase("EmptyTargetsWithoutConverter")]
-        [TestCase("Mixed")]
-        public void FirstAndRepeatedRoutedPublicationsAllocateNoManagedMemory(string registration)
+        [TestCase(1, true, 1)]
+        [TestCase(2, false, 0)]
+        [TestCase(0, true, 0)]
+        [TestCase(1, false, 1)]
+        public void FirstAndRepeatedMaskFiltersAllocateNoManagedMemory(int mask, bool addUnfiltered, int matched)
         {
             Verify(() =>
             {
                 var counter = new Counter();
-                var noConverter = registration == "NoConverter" || registration == "EmptyTargetsWithoutConverter";
-                var stream = noConverter ? new EventRouter<int>() : new EventRouter<int>(static value => (uint)value);
-                var value = registration == "Unmatched" || registration == "NoConverter" ? 2 : 1;
-                var expectedCalls = 1;
-                switch (registration)
-                {
-                    case "General":
-                        stream.Subscribe(counter.Record);
-                        break;
-                    case "EmptyTargets":
-                    case "EmptyTargetsWithoutConverter":
-                        stream.Subscribe(Array.Empty<int>(), counter.Record);
-                        expectedCalls = 0;
-                        break;
-                    case "Mixed":
-                        stream.Subscribe(counter.Record);
-                        stream.Subscribe(1, counter.Record);
-                        stream.Subscribe(2, counter.Record);
-                        stream.Subscribe(Array.Empty<int>(), counter.Record);
-                        expectedCalls = 2;
-                        break;
-                    default:
-                        stream.Subscribe(1, counter.Record);
-                        if (registration == "Unmatched") expectedCalls = 0;
-                        break;
-                }
-
-                return new Publication(counter, () => stream.OnNext(value), expectedCalls, expectedCalls * value, stream);
+                var stream = new EventStream<int>();
+                stream.Where(new Filter<int>("mask", value => (mask & value) != 0)).Subscribe(counter.Record);
+                if (addUnfiltered) stream.Subscribe(counter.Record);
+                var expected = matched + (addUnfiltered ? 1 : 0);
+                return new Publication(counter, () => stream.OnNext(1), expected, expected, stream);
             });
         }
 
@@ -101,17 +75,17 @@ namespace BlackThunder.UniEngine.Tests
             {
                 var counter = new Counter();
                 var source = new EventStream<int>();
-                var where = source.Where(value =>
+                var where = source.Where(new Filter<int>("positive", value =>
                 {
                     counter.PredicateCalls++;
                     return value > 0;
-                });
+                }));
                 var skip = where.Skip(0);
                 var take = skip.Take(int.MaxValue);
                 take.Subscribe(counter.Record);
                 var input = matches ? 7 : 0;
                 return new Publication(counter, () => source.OnNext(input), matches ? 1 : 0, input,
-                    source, where, skip, take)
+                    source)
                 {
                     PredicateCallsPerPublication = 1,
                 };
@@ -125,8 +99,8 @@ namespace BlackThunder.UniEngine.Tests
             Verify(() =>
             {
                 var counter = new Counter();
-                var left = new EventStream<int>();
-                var right = new EventStream<int>();
+                var left = new EventSource<int>();
+                var right = new EventSource<int>();
                 var merged = new Merge<int>(completionMode, left, right);
                 merged.Subscribe(counter.Record);
                 return new Publication(counter, () =>
@@ -137,31 +111,19 @@ namespace BlackThunder.UniEngine.Tests
             });
         }
 
-        [TestCase("Base")]
-        [TestCase("Ordered")]
-        [TestCase("Router")]
-        [TestCase("Where")]
-        public void DisabledPublicationsAllocateNoManagedMemory(string kind)
+        [TestCase(false)]
+        [TestCase(true)]
+        public void DisabledPublicationsAllocateNoManagedMemory(bool ordered)
         {
             Verify(() =>
             {
                 var counter = new Counter();
-                IEventStream<int> stream = kind switch
+                EventStream<int> stream = ordered ? new EventStream<int, UpdateOrder>() : new EventStream<int>();
+                stream.Where(new Filter<int>("disabled", _ =>
                 {
-                    "Ordered" => new OrderedEventStream<int, UpdateOrder>(),
-                    "Router" => new EventRouter<int>(value =>
-                    {
-                        counter.PredicateCalls++;
-                        return (uint)value;
-                    }),
-                    "Where" => new Where<int>(value =>
-                    {
-                        counter.PredicateCalls++;
-                        return true;
-                    }),
-                    _ => new EventStream<int>(),
-                };
-                stream.Subscribe(counter.Record);
+                    counter.PredicateCalls++;
+                    return true;
+                })).Subscribe(counter.Record);
                 stream.Enabled = false;
                 return new Publication(counter, () => stream.OnNext(7), 0, 0, stream);
             });
@@ -172,7 +134,7 @@ namespace BlackThunder.UniEngine.Tests
             int registration, T payload, Action<Counter, T> record, object expectedReference = null)
         {
             var counter = new Counter();
-            var stream = new EventStream<T>();
+            var stream = new EventSource<T>();
             Action<T> callback = value => record(counter, value);
             var expectedCalls = registration == 0 ? 0 : registration == 1 ? 1 : 3;
             switch (registration)

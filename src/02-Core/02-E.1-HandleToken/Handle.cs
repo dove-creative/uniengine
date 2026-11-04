@@ -8,13 +8,28 @@ namespace Blackthunder.UniEngine.Core
         // Front
         public string Description { get; set; }
 
-        protected event Action Disposed;
+        protected event Action Disposed
+        {
+            add => SetCallbacks(_disposed + value);
+            remove => SetCallbacks(_disposed - value);
+        }
         public bool IsDisposed { get; private set; } = false;
+
+        // Internal
+        private Action _disposed;
+        private Delegate[] _callbacks;
 
 
         // Content
         protected internal Handle() { }
-        public Handle(Action action) => Disposed = action;
+        public Handle(Action action) => SetCallbacks(action);
+
+        private void SetCallbacks(Action action)
+        {
+            if (ReferenceEquals(_disposed, action)) return;
+            _callbacks = action?.GetInvocationList();
+            _disposed = action;
+        }
 
         protected void ThrowIfDisposed()
         {
@@ -26,10 +41,10 @@ namespace Blackthunder.UniEngine.Core
         {
             if (IsDisposed) return;
             IsDisposed = true;
+            var callbacks = _callbacks;
 
             try
             {
-                var callbacks = Disposed?.GetInvocationList();
                 if (callbacks == null) return;
 
                 foreach (var entry in callbacks)
@@ -49,7 +64,7 @@ namespace Blackthunder.UniEngine.Core
             }
             finally
             {
-                Disposed = null;
+                SetCallbacks(null);
             }
         }
     }

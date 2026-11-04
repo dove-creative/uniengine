@@ -6,10 +6,7 @@ using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
 {
-    [TestFixture(typeof(EventStream<int>))]
-    [TestFixture(typeof(OrderedEventStream<int, DayOfWeek>))]
-    [TestFixture(typeof(EventRouter<int>))]
-    public class EventStreamContractTests<TSource> where TSource : class, IEventStream<int>, new()
+    public class EventSourceContractTests
     {
         // Content --------------------
         // Connection ownership
@@ -18,7 +15,7 @@ namespace BlackThunder.UniEngine.Tests
         public void PlainObserverSubscriptionRemainsUntilCallerReleasesIt()
         {
             using var source = CreateSource().With(TerminationMode.NoSubscribers);
-            using var child = new EventStream<int>();
+            using var child = new EventSource<int>();
             var values = new List<int>();
             using var listener = child.Subscribe(values.Add);
             using var subscription = source.Subscribe(child);
@@ -37,7 +34,7 @@ namespace BlackThunder.UniEngine.Tests
         public void ChainAndConnectReturnChildAndSourceAndBindIndependentHandles(bool releaseChain)
         {
             using var source = CreateSource().With(TerminationMode.NoSubscribers);
-            using var child = new EventStream<int>();
+            using var child = new EventSource<int>();
             var values = new List<int>();
             using var listener = child.Subscribe(values.Add);
 
@@ -77,7 +74,7 @@ namespace BlackThunder.UniEngine.Tests
         public void DisabledSourceStillForwardsCompletionOrErrorToItsChild(bool sendError)
         {
             using var source = CreateSource();
-            using var child = source.Chain<EventStream<int>>();
+            using var child = source.Chain<EventSource<int>>();
             var values = new List<int>();
             var completed = 0;
             var errors = new List<Exception>();
@@ -102,7 +99,7 @@ namespace BlackThunder.UniEngine.Tests
         public void DisposingSourceLeavesItsChildUsableWithoutTerminalNotification()
         {
             using var source = CreateSource();
-            using var child = source.Chain<EventStream<int>>();
+            using var child = source.Chain<EventSource<int>>();
             var values = new List<int>();
             var completed = 0;
             var errors = new List<Exception>();
@@ -118,7 +115,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         // Helpers
-        private static IEventStream<int> CreateSource() => new TSource();
+        private static IEventSource<int> CreateSource() => new EventSource<int>();
 
         private class RejectingObserver : IObserver<int>, IPassiveObserver
         {

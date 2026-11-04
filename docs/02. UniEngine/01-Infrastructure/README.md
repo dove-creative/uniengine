@@ -35,8 +35,8 @@ Configuration이 데이터 저장 위치를 결정하고 Objects는 좌표·자�
 
 | 모듈 | 설명 대상 |
 | --- | --- |
-| [Configuration](01-M-Configuration/README.md) | 애플리케이션 데이터 경로 |
-| [Objects](02-O-Objects/README.md) | Vector2Int·Vector3Int·Transform2D·Transform3D |
+| [Configuration](01-M.1-Configuration/README.md) | 애플리케이션 데이터 경로 |
+| [Objects](02-O.1-Objects/README.md) | Vector2Int·Vector3Int·Transform2D·Transform3D |
 | [Utilities](03-M.1-Utilities/README.md) | 표시와 JSON 변환 |
 | [Exception Handler](03-M.2-ExceptionHandler/README.md) | 공통 예외 보고 |
 | [Log System](03-M.3-LogSystem/README.md) | 메시지 출력과 파일 기록 |

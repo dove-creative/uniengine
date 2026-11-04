@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using BlackThunder.UniEngine.Infrastructure;
 using Blackthunder.UniEngine.Core;
-using Blackthunder.UniEngine.Core.EventStreamCore;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
@@ -16,26 +18,24 @@ namespace BlackThunder.UniEngine.Tests
             using var source = new EventStream<int>();
             var skipChecks = new List<int>();
             var whereChecks = new List<int>();
-            using var skipped = source.SkipWhile(value =>
+            var skipped = source.SkipWhile(new Filter<int>("prefix", value =>
             {
                 skipChecks.Add(value);
                 return value % 2 == 1;
-            });
-            using var filtered = source.Where(value =>
+            }));
+            var filtered = source.Where(new Filter<int>("odd", value =>
             {
                 whereChecks.Add(value);
                 return value % 2 == 1;
-            });
+            }));
             var skippedValues = new List<int>();
             var filteredValues = new List<int>();
             using var skipSubscription = skipped.Subscribe(skippedValues.Add);
             using var whereSubscription = filtered.Subscribe(filteredValues.Add);
 
-            skipped.Enabled = false;
-            filtered.Enabled = false;
+            source.Enabled = false;
             source.OnNext(0);
-            skipped.Enabled = true;
-            filtered.Enabled = true;
+            source.Enabled = true;
             for (var value = 1; value <= 4; value++) source.OnNext(value);
 
             Assert.That(skipChecks, Is.EqualTo(new[] { 1, 2 }));
@@ -50,36 +50,36 @@ namespace BlackThunder.UniEngine.Tests
         public void NonpositiveTakeCompletesOnFirstEnabledInputAndReleasesItsUpstream(int count)
         {
             using var source = new EventStream<int>();
-            using var filtered = source.Where(static value => value > 0);
-            using var taken = filtered.Take(count);
+            var filtered = source.Where(new Filter<int>("positive", static value => value > 0));
+            var taken = filtered.Take(count);
             var sourceValues = new List<int>();
             var takenValues = new List<int>();
             var completions = 0;
             using var original = source.Subscribe(sourceValues.Add);
             using var selected = taken.Subscribe(takenValues.Add, () => completions++, null);
 
-            taken.Enabled = false;
+            source.Enabled = false;
             source.OnNext(1);
-            Assert.That(taken.IsDisposed, Is.False);
+            Assert.That(((Handle)selected).IsDisposed, Is.False);
             Assert.That(completions, Is.Zero);
 
-            taken.Enabled = true;
+            source.Enabled = true;
             source.OnNext(2);
-            Assert.That(taken.IsDisposed, Is.True);
-            Assert.That(filtered.IsDisposed, Is.True);
+            Assert.That(((Handle)selected).IsDisposed, Is.True);
+            Assert.That(source.NodeCount, Is.Zero);
             source.OnNext(3);
 
             Assert.That(completions, Is.EqualTo(1));
             Assert.That(takenValues, Is.Empty);
-            Assert.That(sourceValues, Is.EqualTo(new[] { 1, 2, 3 }));
+            Assert.That(sourceValues, Is.EqualTo(new[] { 2, 3 }));
         }
 
-        // O2: Late subscribers share the operator's remaining count.
+        // O2: Late subscribers count from their own registration.
         [Test]
-        public void LateSubscriberSharesTheRemainingTakeWindow()
+        public void LateSubscriberGetsItsOwnTakeWindow()
         {
             using var source = new EventStream<int>();
-            using var taken = source.Take(2);
+            var taken = source.Take(2);
             var earlyValues = new List<int>();
             var lateValues = new List<int>();
             var earlyCompletions = 0;
@@ -91,10 +91,10 @@ namespace BlackThunder.UniEngine.Tests
             source.OnNext(3);
 
             Assert.That(earlyValues, Is.EqualTo(new[] { 1, 2 }));
-            Assert.That(lateValues, Is.EqualTo(new[] { 2 }));
+            Assert.That(lateValues, Is.EqualTo(new[] { 2, 3 }));
             Assert.That(earlyCompletions, Is.EqualTo(1));
             Assert.That(lateCompletions, Is.EqualTo(1));
-            Assert.That(taken.IsDisposed, Is.True);
+            Assert.That(source.NodeCount, Is.Zero);
         }
 
         // O3: A closed external gate ends this branch on the rejected input.
@@ -104,11 +104,11 @@ namespace BlackThunder.UniEngine.Tests
             using var source = new EventStream<int>();
             var gateOpen = true;
             var checks = 0;
-            using var taken = source.TakeWhile(() =>
+            var taken = source.TakeWhile(new Filter<int>("gate", _ =>
             {
                 checks++;
                 return gateOpen;
-            });
+            }));
             var sourceValues = new List<int>();
             var takenValues = new List<int>();
             var completions = 0;
@@ -118,7 +118,8 @@ namespace BlackThunder.UniEngine.Tests
             source.OnNext(1);
             gateOpen = false;
             source.OnNext(2);
-            Assert.That(taken.IsDisposed, Is.True);
+            Assert.That(((Handle)selected).IsDisposed, Is.True);
+            Assert.That(source.NodeCount, Is.Zero);
             gateOpen = true;
             source.OnNext(3);
 
@@ -128,17 +129,57 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(sourceValues, Is.EqualTo(new[] { 1, 2, 3 }));
         }
 
-        // O4: Each appended base stream keeps its own subscription lifetime.
         [Test]
-        public void AppendCreatesIndependentChildrenThatStayAvailableAfterUnsubscription()
+        public void DebugWritesOnlyPassingValuesAndForwardsThemUnchanged()
         {
             using var source = new EventStream<int>();
-            using var first = source.Append();
-            using var second = source.Append();
+            var values = new List<int>();
+            source.Where(new Filter<int>("even", value => value % 2 == 0)).Debug("observed", LogLevel.Warning)
+                .Subscribe(values.Add);
+            using var output = new StringWriter();
+            var original = Console.Out;
+            try
+            {
+                Console.SetOut(output);
+                source.OnNext(1);
+                source.OnNext(2);
+            }
+            finally
+            {
+                Console.SetOut(original);
+            }
+
+            Assert.That(values, Is.EqualTo(new[] { 2 }));
+            Assert.That(output.ToString().TrimEnd(), Is.EqualTo("2: observed"));
+        }
+
+        [Test]
+        public void LateSkipSubscriptionHasAnIndependentPrefix()
+        {
+            using var source = new EventStream<int>();
+            var path = source.Skip(1);
+            var early = new List<int>();
+            var late = new List<int>();
+            path.Subscribe(early.Add);
+            source.OnNext(1);
+            path.Subscribe(late.Add);
+            source.OnNext(2);
+            source.OnNext(3);
+            Assert.That(early, Is.EqualTo(new[] { 2, 3 }));
+            Assert.That(late, Is.EqualTo(new[] { 3 }));
+        }
+
+        // O4: Each branch ends when its last subscription leaves.
+        [Test]
+        public void BranchesHaveIndependentSubscriptionLifetimes()
+        {
+            using var source = new EventStream<int>();
+            using var first = source.Branch();
+            using var second = source.Branch();
             Assert.That(first, Is.TypeOf<EventStream<int>>());
             Assert.That(first, Is.Not.SameAs(source));
             Assert.That(first, Is.Not.SameAs(second));
-            Assert.That(first.TerminationMode, Is.EqualTo(TerminationMode.Complete));
+            Assert.That(source.NodeCount, Is.Zero);
 
             var firstValues = new List<int>();
             var secondValues = new List<int>();
@@ -147,10 +188,10 @@ namespace BlackThunder.UniEngine.Tests
             source.OnNext(1);
             initial.Dispose();
             source.OnNext(2);
-            using var renewed = first.Subscribe(firstValues.Add);
+            Assert.That(first.IsDisposed, Is.True);
             source.OnNext(3);
 
-            Assert.That(firstValues, Is.EqualTo(new[] { 1, 3 }));
+            Assert.That(firstValues, Is.EqualTo(new[] { 1 }));
             Assert.That(secondValues, Is.EqualTo(new[] { 1, 2, 3 }));
         }
     }

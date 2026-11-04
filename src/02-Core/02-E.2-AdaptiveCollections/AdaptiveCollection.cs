@@ -99,12 +99,17 @@ namespace Blackthunder.UniEngine.Core
         // Modification
         public void Add(T item)
         {
+            AddPrepared(item);
+            OnItemAdded(item);
+        }
+
+        // EventSource has already prepared the invocation list for the original callback.
+        internal void AddPrepared(T item)
+        {
             if (DeferredUpdate && _isIterating)
                 _pendingItems.Add(item);
             else
                 _items.Add(item);
-
-            OnItemAdded(item);
         }
         public void AddRange(IEnumerable<T> items)
         {

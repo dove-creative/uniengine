@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using BlackThunder.UniEngine.Infrastructure;
-using Blackthunder.UniEngine.Core.EventStreamCore;
 
 namespace Blackthunder.UniEngine.Core
 {
@@ -81,20 +80,26 @@ namespace Blackthunder.UniEngine.Core
             internal bool IsConnected = true;
             internal int SkipCount;
             internal IDisposable UpdateConnection;
-            internal Delegate[] UpdateCallbacks;
-            public Action<TEventArgs> OnUpdate;
-            public Action OnDisposing;
-            public Action<object> OnDisposingSelf;
-            public Action OnDisposed;
-            public Action<object> OnDisposedSelf;
+            internal readonly List<Action<TEventArgs>> UpdateCallbacks = new();
+            internal int PublishedCallbackCount;
+            internal List<Delegate> OnDisposing;
+            internal List<Delegate> OnDisposingSelf;
+            internal List<Delegate> OnDisposed;
+            internal List<Delegate> OnDisposedSelf;
 
             internal Order() { }
+
+            internal static void AddLifecycleCallback(ref List<Delegate> callbacks, Delegate callback)
+            {
+                if (callback == null) return;
+                callbacks ??= new List<Delegate>();
+                callbacks.AddRange(callback.GetInvocationList());
+            }
 
             internal void Clear()
             {
                 IsConnected = false;
-                UpdateCallbacks = null;
-                OnUpdate = null;
+                UpdateCallbacks.Clear();
                 OnDisposing = null;
                 OnDisposingSelf = null;
                 OnDisposed = null;
@@ -108,15 +113,13 @@ namespace Blackthunder.UniEngine.Core
 
         private readonly AdaptiveDictionary<object, Order> _orders = new();
         // One publication defers additions across both update phases.
-        private readonly OrderedEventStream<TEventArgs, UpdatePhase> _updates = new()
-        {
-            TerminationMode = TerminationMode.Complete,
-        };
+        private readonly EventStream<TEventArgs, UpdatePhase> _updates = new();
         private readonly List<UpdateSubscription> _updateSubscriptions = new();
-        private readonly HubCallbacks<Action> _disposing = new();
-        private readonly HubCallbacks<Action> _disposed = new();
+        private readonly HubCallbacks<Action> _disposing = new(static callback => callback());
+        private readonly HubCallbacks<Action> _disposed = new(static callback => callback());
         private Func<Action> _onSleep;
         private Action _onAwake;
+        private Action _awakeHandler;
         private Token _sleepToken;
         private bool _isSleeping;
         private bool _isUpdating;
@@ -170,26 +173,19 @@ namespace Blackthunder.UniEngine.Core
             ThrowIfDisposed();
             if (_isSleeping || _isUpdating) return;
 
-            var orders = new List<Order>(_orders.Count);
             _isUpdating = true;
             var completed = false;
             try
             {
-                // Builder changes must also wait until the next publication.
+                // Freeze the visible prefix for every listener before any callback can add another.
                 foreach (var item in _orders)
-                {
-                    orders.Add(item.Value);
-                    item.Value.UpdateCallbacks = item.Value.OnUpdate?.GetInvocationList();
-                }
+                    item.Value.PublishedCallbackCount = item.Value.UpdateCallbacks.Count;
 
                 _updates.OnNext(args);
                 completed = true;
             }
             finally
             {
-                foreach (var order in orders)
-                    order.UpdateCallbacks = null;
-
                 _isUpdating = false;
                 if (_pendingDispose)
                 {
@@ -210,16 +206,12 @@ namespace Blackthunder.UniEngine.Core
                 return;
             }
 
-            var callbacks = order.UpdateCallbacks;
-            if (callbacks == null) return;
-
             try
             {
-                foreach (var entry in callbacks)
+                for (int i = 0; i < order.PublishedCallbackCount; i++)
                 {
-                    var callback = (Action<TEventArgs>)entry;
                     if (!order.IsConnected || _pendingDispose) return;
-                    callback(args);
+                    order.UpdateCallbacks[i](args);
                 }
             }
             catch (Exception)
@@ -313,14 +305,15 @@ namespace Blackthunder.UniEngine.Core
             _onAwake = onAwake;
             _isSleeping = true;
             _sleepToken = token;
-            token.Action += Awake;
+            _awakeHandler ??= Awake;
+            token.Action += _awakeHandler;
             try
             {
                 _onSleep?.Invoke();
             }
             catch
             {
-                token.Action -= Awake;
+                token.Action -= _awakeHandler;
                 _sleepToken = null;
                 _onAwake = null;
                 _isSleeping = false;
@@ -377,29 +370,20 @@ namespace Blackthunder.UniEngine.Core
                     return;
                 }
 
-                var orders = new List<KeyValuePair<object, Order>>(_orders);
-                _disposing.Invoke(_disposing.Snapshot(), callback => callback());
-                foreach (var item in orders)
+                _disposing.Invoke();
+                foreach (var item in _orders)
                 {
-                    if (InvokeOrder(item.Key, item.Value, item.Value.OnDisposing?.GetInvocationList(),
-                        callback => ((Action)callback)()))
-                    {
-                        InvokeOrder(item.Key, item.Value, item.Value.OnDisposingSelf?.GetInvocationList(),
-                            callback => ((Action<object>)callback)(Owner));
-                    }
+                    InvokeOrder(item.Key, item.Value, item.Value.OnDisposing);
+                    InvokeOrder(item.Key, item.Value, item.Value.OnDisposingSelf);
                 }
 
                 IsDisposed = true;
-                foreach (var item in orders)
+                foreach (var item in _orders)
                 {
-                    if (InvokeOrder(item.Key, item.Value, item.Value.OnDisposed?.GetInvocationList(),
-                        callback => ((Action)callback)()))
-                    {
-                        InvokeOrder(item.Key, item.Value, item.Value.OnDisposedSelf?.GetInvocationList(),
-                            callback => ((Action<object>)callback)(Owner));
-                    }
+                    InvokeOrder(item.Key, item.Value, item.Value.OnDisposed);
+                    InvokeOrder(item.Key, item.Value, item.Value.OnDisposedSelf);
                 }
-                _disposed.Invoke(_disposed.Snapshot(), callback => callback());
+                _disposed.Invoke();
             }
             finally
             {
@@ -420,8 +404,9 @@ namespace Blackthunder.UniEngine.Core
             _isDisposing = false;
             _isSleeping = false;
             if (_sleepToken != null)
-                _sleepToken.Action -= Awake;
+                _sleepToken.Action -= _awakeHandler;
             _sleepToken = null;
+            _awakeHandler = null;
             _onAwake = null;
             _onSleep = null;
 
@@ -434,27 +419,27 @@ namespace Blackthunder.UniEngine.Core
             GC.SuppressFinalize(this);
         }
 
-        private bool InvokeOrder(object listener, Order order, Delegate[] callbacks,
-            Action<Delegate> invoke)
+        private void InvokeOrder(object listener, Order order, List<Delegate> callbacks)
         {
-            if (!order.IsConnected) return false;
-            if (callbacks == null) return true;
+            if (callbacks == null) return;
 
             foreach (var callback in callbacks)
             {
-                if (!order.IsConnected) return false;
+                if (!order.IsConnected) return;
                 try
                 {
-                    invoke(callback);
+                    if (callback is Action action)
+                        action();
+                    else
+                        ((Action<object>)callback)(Owner);
                 }
                 catch (Exception exception)
                 {
                     RemoveOrder(listener, order);
                     ExceptionHandler.Report(exception);
-                    return false;
+                    return;
                 }
             }
-            return order.IsConnected;
         }
 
         private void RemoveOrder(object listener, Order order)
@@ -478,20 +463,28 @@ namespace Blackthunder.UniEngine.Core
         }
 
         private readonly List<Subscription> _subscriptions = new();
+        private readonly Action<TCallback> _invoke;
+        private Subscription[] _snapshot = Array.Empty<Subscription>();
+
+        internal HubCallbacks(Action<TCallback> invoke) => _invoke = invoke;
 
         internal void Add(TCallback callback)
         {
             if (callback == null) return;
-            foreach (var entry in callback.GetInvocationList())
+            foreach (var entry in InvocationListCache<Delegate>.Get(callback))
                 Add(entry, (TCallback)entry, false);
         }
-        internal void Add(Delegate source, TCallback callback, bool isAdapted) =>
+        internal void Add(Delegate source, TCallback callback, bool isAdapted)
+        {
             _subscriptions.Add(new Subscription { Source = source, Callback = callback, IsAdapted = isAdapted });
+            if (_snapshot.Length < _subscriptions.Count)
+                _snapshot = new Subscription[_subscriptions.Capacity];
+        }
 
         internal void Remove(Delegate callback, bool isAdapted = false)
         {
             if (callback == null) return;
-            var entries = callback.GetInvocationList();
+            var entries = InvocationListCache<Delegate>.Get(callback);
             for (var start = _subscriptions.Count - entries.Length; start >= 0; start--)
             {
                 var matches = true;
@@ -513,17 +506,18 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
-        internal Subscription[] Snapshot() => _subscriptions.ToArray();
-
-        internal void Invoke(Subscription[] snapshot, Action<TCallback> invoke, Func<bool> canContinue = null)
+        internal void Invoke()
         {
-            foreach (var subscription in snapshot)
+            // Owners prevent additions and nested notifications while this snapshot is active.
+            _subscriptions.CopyTo(_snapshot);
+            var count = _subscriptions.Count;
+            for (var index = 0; index < count; index++)
             {
-                if (canContinue != null && !canContinue()) return;
+                var subscription = _snapshot[index];
                 if (!subscription.IsActive) continue;
                 try
                 {
-                    invoke(subscription.Callback);
+                    _invoke(subscription.Callback);
                 }
                 catch (Exception exception)
                 {
@@ -539,6 +533,7 @@ namespace Blackthunder.UniEngine.Core
             foreach (var subscription in _subscriptions)
                 subscription.IsActive = false;
             _subscriptions.Clear();
+            _snapshot = Array.Empty<Subscription>();
         }
     }
 }

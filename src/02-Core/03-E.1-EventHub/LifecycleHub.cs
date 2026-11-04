@@ -15,8 +15,8 @@ namespace Blackthunder.UniEngine.Core
         }
 
         // Internal
-        private readonly Dictionary<object, Action> _onDisposedClients = new();
-        private readonly HubCallbacks<Action> _onDisposed = new();
+        private readonly Dictionary<object, Delegate[]> _onDisposedClients = new();
+        private readonly HubCallbacks<Action> _onDisposed = new(static callback => callback());
         private bool _isDisposing;
 
 
@@ -66,12 +66,10 @@ namespace Blackthunder.UniEngine.Core
                 }
 
                 IsDisposed = true;
-                var clients = new List<KeyValuePair<object, Action>>(_onDisposedClients);
-                var callbacks = _onDisposed.Snapshot();
-                foreach (var client in clients)
+                foreach (var client in _onDisposedClients)
                 {
                     if (client.Value == null) continue;
-                    foreach (var entry in client.Value.GetInvocationList())
+                    foreach (var entry in client.Value)
                     {
                         var callback = (Action)entry;
 
@@ -81,13 +79,12 @@ namespace Blackthunder.UniEngine.Core
                         }
                         catch (Exception exception)
                         {
-                            _onDisposedClients.Remove(client.Key);
                             ExceptionHandler.Report(exception);
                             break;
                         }
                     }
                 }
-                _onDisposed.Invoke(callbacks, callback => callback());
+                _onDisposed.Invoke();
             }
             finally
             {

@@ -18,7 +18,7 @@ namespace Blackthunder.UniEngine.Core
             public ILifecycleHubBuilder OnDisposed(Action onDisposed)
             {
                 _owner.ThrowIfDisposed();
-                _owner._onDisposedClients.Add(_client, onDisposed);
+                _owner._onDisposedClients.Add(_client, onDisposed?.GetInvocationList());
                 return this;
             }
         }

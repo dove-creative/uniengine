@@ -12,8 +12,8 @@
 
 | 모듈 | 사례 | 통과 | 실패 | 결과 문서 |
 | --- | --- | --- | --- | --- |
-| Configuration | 7 | 7 | 0 | [결과](01-M-Configuration/UniTest/03-Results.md) |
-| Objects | 10 | 10 | 0 | [결과](02-O-Objects/UniTest/03-Results.md) |
+| Configuration | 7 | 7 | 0 | [결과](01-M.1-Configuration/UniTest/03-Results.md) |
+| Objects | 10 | 10 | 0 | [결과](02-O.1-Objects/UniTest/03-Results.md) |
 | 표시 유틸리티 | 42 | 42 | 0 | [결과](03-M.1-Utilities/UniTest/03-Results.md) |
 | JSON 변환·등록 | 269 | 269 | 0 | [결과](03-M.1-Utilities/Json/UniTest/03-Results.md) |
 | ExceptionHandler | 30 | 30 | 0 | [결과](03-M.2-ExceptionHandler/UniTest/03-Results.md) |

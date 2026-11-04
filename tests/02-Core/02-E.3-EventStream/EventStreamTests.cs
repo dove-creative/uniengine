@@ -19,9 +19,9 @@ namespace BlackThunder.UniEngine.Tests
 
         // R2: Removal affects the current publication; new subscriptions wait for the next.
         [Test]
-        public void EventStreamAppliesSubscriptionChangesAtTheExpectedTime()
+        public void EventSourceAppliesSubscriptionChangesAtTheExpectedTime()
         {
-            using var stream = new EventStream<int>();
+            using var stream = new EventSource<int>();
             var calls = new List<string>();
             var removed = (IDisposable)null;
             stream.Subscribe(value =>
@@ -40,9 +40,9 @@ namespace BlackThunder.UniEngine.Tests
         // R2: Fault isolation or propagation still permits a later publication.
         [TestCase(false)]
         [TestCase(true)]
-        public void EventStreamRecoversAfterCallbackFailure(bool handled)
+        public void EventSourceRecoversAfterCallbackFailure(bool handled)
         {
-            using var stream = new EventStream<int>();
+            using var stream = new EventSource<int>();
             var calls = new List<int>();
             var failure = new ApplicationException("subscriber");
             var reported = new List<Exception>();
@@ -59,14 +59,15 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
             }
             stream.OnNext(2);
-            Assert.That(calls, Is.EqualTo(handled ? new[] { 1, 2 } : new[] { 2 }));
+            // An unhandled failure is rethrown only after the remaining subscribers receive the value.
+            Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
         }
 
         // R2: Disposal inside a callback stops the remaining receivers and cleans up.
         [Test]
-        public void EventStreamDisposalDuringPublicationStopsRemainingCallbacks()
+        public void EventSourceDisposalDuringPublicationStopsRemainingCallbacks()
         {
-            using var stream = new EventStream<int>();
+            using var stream = new EventSource<int>();
             var laterCalls = 0;
             stream.Subscribe(_ => stream.Dispose());
             stream.Subscribe(_ => laterCalls++);
@@ -83,7 +84,7 @@ namespace BlackThunder.UniEngine.Tests
         public void SkipForwardsEveryValueAfterTheSkippedPrefix(int count, int[] expected)
         {
             using var source = new EventStream<int>();
-            using var skipped = source.Skip(count);
+            var skipped = source.Skip(count);
             var values = new List<int>();
             skipped.Subscribe(values.Add);
             for (var value = 1; value <= 4; value++) source.OnNext(value);
@@ -93,16 +94,16 @@ namespace BlackThunder.UniEngine.Tests
         // Every creation path rejects disposed inputs and releases earlier connections.
         [TestCaseSource(nameof(DisposedMergeCases))]
         public void MergeRejectsDisposedInputsAndReleasesConnections(
-            Func<IEventStream<int>[], IEventStream<int>> create, bool disposedFirst)
+            Func<IEventSource<int>[], IDisposable> create, bool disposedFirst)
         {
-            using var source = new EventStream<int> { TerminationMode = TerminationMode.NoSubscribers };
-            using var disposed = new EventStream<int>();
+            using var source = new EventSource<int> { TerminationMode = TerminationMode.NoSubscribers };
+            using var disposed = new EventSource<int>();
             var values = new List<int>();
             using var subscription = source.Subscribe(values.Add);
             disposed.Dispose();
             var upstreams = disposedFirst
-                ? new IEventStream<int>[] { disposed, source }
-                : new IEventStream<int>[] { source, disposed };
+                ? new IEventSource<int>[] { disposed, source }
+                : new IEventSource<int>[] { source, disposed };
 
             Assert.Throws<ObjectDisposedException>(() =>
             {
@@ -121,8 +122,8 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(Merge<int>.CompletionMode.Any)]
         public void MergePreservesCompletionPolicyForValidInputs(Merge<int>.CompletionMode completionMode)
         {
-            using var left = new EventStream<int>();
-            using var right = new EventStream<int>();
+            using var left = new EventSource<int>();
+            using var right = new EventSource<int>();
             using var merged = new Merge<int>(completionMode, left, null, right);
             var values = new List<int>();
             var completions = 0;
@@ -143,14 +144,11 @@ namespace BlackThunder.UniEngine.Tests
 
         private static IEnumerable<TestCaseData> DisposedMergeCases()
         {
-            var factories = new (string Name, Func<IEventStream<int>[], IEventStream<int>> Create)[]
+            var factories = new (string Name, Func<IEventSource<int>[], IDisposable> Create)[]
             {
                 ("ArrayConstructor", upstreams => new Merge<int>(upstreams)),
-                ("EnumerableConstructor", upstreams => new Merge<int>((IEnumerable<IEventStream<int>>)upstreams)),
-                ("Static", upstreams => EventStreamExtensions.Merge(upstreams)),
-                ("StaticWithPolicy", upstreams => EventStreamExtensions.Merge(TerminationMode.Complete, upstreams)),
-                ("Extension", upstreams => upstreams[0].Merge(upstreams[1])),
-                ("ExtensionWithPolicy", upstreams => upstreams[0].Merge(TerminationMode.Complete, upstreams[1])),
+                ("EnumerableConstructor", upstreams => new Merge<int>((IEnumerable<IEventSource<int>>)upstreams)),
+                ("GraphFactory", upstreams => EventStream<int>.Merge(upstreams)),
             };
 
             foreach (var (name, create) in factories)

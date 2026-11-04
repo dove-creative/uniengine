@@ -20,8 +20,6 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(0)]
         [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(3)]
         public void SelfRemovalSkipsTheRestOfTheMulticastSubscription(int kind)
         {
             using var stream = CreateStream(kind);
@@ -44,7 +42,6 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(0)]
         [TestCase(1)]
-        [TestCase(2)]
         public void RemovingAnEarlierDuplicateDoesNotInterruptTheCurrentRegistration(int kind)
         {
             using var stream = CreateStream(kind);
@@ -74,7 +71,7 @@ namespace BlackThunder.UniEngine.Tests
         [Test]
         public void OrderedPublicationDefersNewGroupsAndSkipsRemovedPendingSubscriptions()
         {
-            using var stream = new OrderedEventStream<int, Order>(Order.Early, new[] { Order.Early, Order.Middle });
+            using var stream = new EventStream<int, Order>(Order.Early, new[] { Order.Early, Order.Middle });
             var calls = new List<string>();
             var removed = (IDisposable)null;
             using var early = stream.Subscribe(Order.Early, value =>
@@ -97,37 +94,41 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void RoutedPublicationKeepsMaskFilteringAndDeferredSubscriptionChanges()
+        public void FilteredPublicationKeepsMaskFilteringAndDeferredSubscriptionChanges()
         {
-            using var router = EventRouterExtensions.Route<int>(value => (uint)value);
+            using var router = new EventStream<int>();
             var calls = new List<string>();
             var removed = (IDisposable)null;
-            using var first = router.Subscribe(1, value =>
+            var firstBit = new Filter<int>("first", value => (value & 1) != 0);
+            var secondBit = new Filter<int>("second", value => (value & 2) != 0);
+            using var first = router.Where(firstBit).Subscribe(value =>
             {
                 calls.Add($"first:{value}");
                 removed.Dispose();
-                router.Subscribe(2, next => calls.Add($"late:{next}"));
+                router.Where(secondBit).Subscribe(next => calls.Add($"late:{next}"));
             });
-            removed = router.Subscribe(2, value => calls.Add($"removed:{value}"));
+            removed = router.Where(secondBit).Subscribe(value => calls.Add($"removed:{value}"));
             using var ordinary = router.Subscribe(value => calls.Add($"ordinary:{value}"));
-            using var empty = router.Subscribe(Array.Empty<int>(), value => calls.Add($"empty:{value}"));
+            using var empty = router.Where(new Filter<int>("empty", _ => false)).Subscribe(value => calls.Add($"empty:{value}"));
 
             router.OnNext(3);
             router.OnNext(2);
 
-            Assert.That(calls, Is.EqualTo(new[] { "first:3", "ordinary:3", "ordinary:2", "late:2" }));
+            Assert.That(calls, Is.EqualTo(new[] { "ordinary:3", "first:3", "ordinary:2", "late:2" }));
         }
 
         [Test]
-        public void NestedRoutedPublicationKeepsTheOuterMaskForRemainingSubscribers()
+        public void NestedFilteredPublicationKeepsTheOuterMaskForRemainingSubscribers()
         {
             var reported = new List<Exception>();
             ExceptionHandler.SetHandler(reported.Add);
-            using var router = EventRouterExtensions.Route<int>(value => (uint)value);
+            using var router = new EventStream<int>();
             var calls = new List<string>();
-            using var nested = router.Subscribe(1, _ => router.OnNext(2));
-            using var matched = router.Subscribe(1, value => calls.Add($"matched:{value}"));
-            using var other = router.Subscribe(2, value => calls.Add($"other:{value}"));
+            var firstBit = new Filter<int>("first", value => (value & 1) != 0);
+            var secondBit = new Filter<int>("second", value => (value & 2) != 0);
+            using var nested = router.Where(firstBit).Subscribe(_ => router.OnNext(2));
+            using var matched = router.Where(firstBit).Subscribe(value => calls.Add($"matched:{value}"));
+            using var other = router.Where(secondBit).Subscribe(value => calls.Add($"other:{value}"));
 
             router.OnNext(1);
 
@@ -137,8 +138,8 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         // Failure and termination
+        [TestCase(0)]
         [TestCase(1)]
-        [TestCase(2)]
         public void DisposalStopsTheMulticastTailAndLaterSubscribers(int kind)
         {
             using var stream = CreateStream(kind);
@@ -159,12 +160,10 @@ namespace BlackThunder.UniEngine.Tests
             Assert.Throws<ObjectDisposedException>(() => stream.OnNext(2));
         }
 
+        [TestCase(0, false)]
+        [TestCase(0, true)]
         [TestCase(1, false)]
         [TestCase(1, true)]
-        [TestCase(2, false)]
-        [TestCase(2, true)]
-        [TestCase(3, false)]
-        [TestCase(3, true)]
         public void MulticastFailureRemovesTheRegistrationAndPreservesExceptionPolicy(int kind, bool handled)
         {
             using var stream = CreateStream(kind);
@@ -181,7 +180,8 @@ namespace BlackThunder.UniEngine.Tests
             else Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
             stream.OnNext(2);
 
-            Assert.That(calls, Is.EqualTo(handled ? new[] { 1, 2 } : new[] { 2 }));
+            // An unhandled failure is rethrown only after the remaining subscribers receive the value.
+            Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
             Assert.That(reported, Is.EqualTo(handled ? new[] { failure } : Array.Empty<Exception>()));
         }
 
@@ -189,8 +189,6 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(0, true)]
         [TestCase(1, false)]
         [TestCase(1, true)]
-        [TestCase(2, false)]
-        [TestCase(2, true)]
         public void TerminalNotificationHonorsMulticastRemovalAndDisposesTheStream(int kind, bool error)
         {
             using var stream = CreateStream(kind);
@@ -250,7 +248,7 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(true)]
         public void ReleasedOriginalCallbacksAndTargetsAreNotRetained(bool disposeStream)
         {
-            using var stream = new EventStream<int>();
+            using var stream = new EventSource<int>();
             var references = RegisterAndRelease(stream, disposeStream);
 
             GC.Collect();
@@ -268,7 +266,7 @@ namespace BlackThunder.UniEngine.Tests
         // Helpers
         private enum Order { Early, Middle, Late }
 
-        private class LegacyStream : EventStream<int>
+        private class LegacyStream : EventSource<int>
         {
             public Action<int> Excluded { get; set; }
 
@@ -290,19 +288,12 @@ namespace BlackThunder.UniEngine.Tests
             public void OnError(Exception exception) => Value++;
         }
 
-        private static IEventStream<int> CreateStream(int kind) =>
-            kind switch
-            {
-                0 => new EventStream<int>(),
-                1 => new OrderedEventStream<int, Order>(),
-                2 => EventRouterExtensions.Route<int>(value => (uint)value),
-                3 => new LegacyStream(),
-                _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-            };
+        private static EventSource<int> CreateStream(int kind) =>
+            kind == 0 ? new EventSource<int>() : new LegacyStream();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static (WeakReference Target, WeakReference Updated, WeakReference Completed, WeakReference Errored, IDisposable Handle)
-            RegisterAndRelease(EventStream<int> stream, bool disposeStream)
+            RegisterAndRelease(EventSource<int> stream, bool disposeStream)
         {
             var receiver = new Receiver();
             Action<int> updated = receiver.OnNext;

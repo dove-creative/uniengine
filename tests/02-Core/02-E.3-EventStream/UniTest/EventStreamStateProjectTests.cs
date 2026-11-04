@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BlackThunder.UniTest;
 using Blackthunder.UniEngine.Core;
-using Blackthunder.UniEngine.Core.EventStreamCore;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
@@ -15,7 +14,7 @@ namespace BlackThunder.UniEngine.Tests
         private class StreamModel : Model
         {
             public EventStream<int> Source { get; private set; }
-            public IEventStream<int> Filter { get; private set; }
+            public EventStream<int> Branch { get; private set; }
             public IDisposable First { get; private set; }
             public IDisposable Second { get; private set; }
             public List<int> SourceAfterDetach { get; } = new();
@@ -30,13 +29,14 @@ namespace BlackThunder.UniEngine.Tests
             {
                 Source = new EventStream<int>();
                 Subject = Source;
-                Filter = Source.Where(value =>
+                Branch = Source.Branch();
+                var even = Branch.Where(new Filter<int>("even", value =>
                 {
                     _predicateCalls++;
                     return value % 2 == 0;
-                });
-                First = Filter.Subscribe(_firstValues.Add, () => _firstCompletions++, null);
-                Second = Filter.Subscribe(_secondValues.Add, () => _secondCompletions++, null);
+                }));
+                First = even.Subscribe(_firstValues.Add, () => _firstCompletions++, null);
+                Second = even.Subscribe(_secondValues.Add, () => _secondCompletions++, null);
                 Source.OnNext(2);
             }
 
@@ -63,8 +63,8 @@ namespace BlackThunder.UniEngine.Tests
                             actor: state => state.SubscribePair(),
                             asserter: state =>
                             {
-                                Assert.That(state.Source.TerminationMode, Is.EqualTo(TerminationMode.Complete));
-                                Assert.That(state.Filter.TerminationMode, Is.EqualTo(TerminationMode.NoSubscribers));
+                                Assert.That(state.Source.NodeCount, Is.EqualTo(1));
+                                Assert.That(state.Branch.NodeCount, Is.EqualTo(1));
                                 state.AssertDeliveries(1, new[] { 2 });
                             });
                         break;
@@ -78,7 +78,7 @@ namespace BlackThunder.UniEngine.Tests
                             },
                             asserter: state =>
                             {
-                                Assert.That(state.Filter.IsDisposed, Is.False);
+                                Assert.That(state.Branch.IsDisposed, Is.False);
                                 state.AssertDeliveries(3, new[] { 2, 4 });
                             });
                         break;
@@ -86,12 +86,12 @@ namespace BlackThunder.UniEngine.Tests
                         yield return new CompactLab<StreamModel>("PublishWhileDisabled",
                             actor: state =>
                             {
-                                state.Filter.Enabled = false;
+                                state.Branch.Enabled = false;
                                 state.Source.OnNext(6);
                             },
                             asserter: state =>
                             {
-                                Assert.That(state.Filter.Enabled, Is.False);
+                                Assert.That(state.Branch.Enabled, Is.False);
                                 state.AssertDeliveries(3, new[] { 2, 4 });
                             });
                         break;
@@ -99,7 +99,7 @@ namespace BlackThunder.UniEngine.Tests
                         yield return new CompactLab<StreamModel>("ResumePublication",
                             actor: state =>
                             {
-                                state.Filter.Enabled = true;
+                                state.Branch.Enabled = true;
                                 state.Source.OnNext(8);
                             },
                             asserter: state => state.AssertDeliveries(4, new[] { 2, 4, 8 }));
@@ -109,12 +109,12 @@ namespace BlackThunder.UniEngine.Tests
                             asserter: state =>
                             {
                                 Assert.That(state.Source.IsDisposed, Is.True);
-                                Assert.That(state.Filter.IsDisposed, Is.True);
+                                Assert.That(state.Branch.IsDisposed, Is.True);
                                 state.AssertDeliveries(3, new[] { 2, 4 }, secondCompletions: 1);
                             }, toUncontinuable: true);
                         break;
                     case 4:
-                        // U1: The last release detaches the filter; the source remains usable independently.
+                        // U1: The last release detaches the branch; the source remains usable independently.
                         yield return new CompactLab<StreamModel>("ReleaseLast",
                             actor: state =>
                             {
@@ -124,8 +124,9 @@ namespace BlackThunder.UniEngine.Tests
                             },
                             asserter: state =>
                             {
-                                Assert.That(state.Filter.IsDisposed, Is.True);
+                                Assert.That(state.Branch.IsDisposed, Is.True);
                                 Assert.That(state.Source.IsDisposed, Is.False);
+                                Assert.That(state.Source.NodeCount, Is.Zero);
                                 Assert.That(state.SourceAfterDetach, Is.EqualTo(new[] { 10 }));
                                 state.AssertDeliveries(4, new[] { 2, 4, 8 });
                             }, toUncontinuable: true);
@@ -137,7 +138,7 @@ namespace BlackThunder.UniEngine.Tests
 
         // Content
         [Test]
-        public async Task FilterLifecycleAndDisabledCompletionSucceedThroughUniTest()
+        public async Task BranchLifecycleAndDisabledCompletionSucceedThroughUniTest()
         {
             var result = await new StreamProject().Execute(5, stopOnFailure: false);
             try
@@ -161,7 +162,7 @@ namespace BlackThunder.UniEngine.Tests
 
         private static void DisposeReplaySubjects(Node<StreamModel> node)
         {
-            node.Model.Filter?.Dispose();
+            node.Model.Branch?.Dispose();
             node.Model.Source?.Dispose();
             foreach (var child in node.Afters) DisposeReplaySubjects(child);
         }

@@ -8,19 +8,20 @@
 
 ## NUnit 직접 사례
 
-[상태·동작 표](01-Tables.md)의 각 사례를 실제 스트림과 구독 핸들로 구성한다. 테스트 본문에서 수신 값, 종료 통지, IsDisposed와 반환 객체를 관찰한다.
+[상태·동작 표](01-Tables.md)의 공급원과 그래프를 각각 공개 API로 구성한다. 경로 공유·정리 여부는 internal NodeCount와 관찰자의 수신 이력을 함께 확인한다.
 
 | 범위 | 테스트 파일 | 검증 대상 |
 | --- | --- | --- |
-| C1–C5 | [공통 계약](../EventStreamContractTests.cs) | 세 스트림에 같은 계약을 적용하여 핸들 소유권, 인계 실패, 비활성 전달과 종료를 비교한다. |
-| O1–O4 | [연산자](../EventStreamOperatorTests.cs) | 조건 평가 시점, Take의 잔여 횟수, TakeWhile의 완료와 Append 분기의 수명을 확인한다. |
-| I1–I2 | [라우터 조합](../EventStreamCompositionTests.cs) | 대상 마스크 결합, 실행 그룹 순서, 명시적 연결 해제와 원본 뒤에 이은 라우터의 정리를 검증한다. |
+| C1–C5 | [공급원 연결](../EventSourceContractTests.cs) · [그래프 수명](../EventStreamLifecycleTests.cs) | 연결 핸들 인계, 종료, 외부 공급원 비소유, Branch의 독립적인 직접 발행과 종료를 검증한다. |
+| O1–O5 | [연산자](../EventStreamOperatorTests.cs) · [그래프](../EventStreamGraphTests.cs) | 조건 참조 공유, 거짓 조건 아래 가지치기, 상태 연산의 등록별 수명, Debug 전달을 확인한다. |
+| I1–I2 | [순서 그룹과 마스크](../EventStreamCompositionTests.cs) | 그룹마다 같은 조건을 따로 평가하고, Branch 경로를 독립적으로 해제한다. |
+| 전파 | [공급원과 그룹](../EventStreamPropagationTests.cs) · [그래프 전파](../EventStreamGraphPropagationTests.cs) | 추가는 다음 발행부터, 제거는 즉시 반영한다. 멀티캐스트·재진입·예외·참조 회수와 실패 뒤의 전파를 확인한다. |
+| Merge | [기본 동작과 Merge](../EventStreamTests.cs) · [그래프 수명](../EventStreamLifecycleTests.cs) | 상위 구독의 부분 등록 실패 회수, All·Any 완료와 각 공급원의 수명을 검증한다. |
+| 할당 | [공급원·순서 그룹](../EventStreamAllocationTests.cs) · [그래프·Branch](../EventStreamGraphAllocationTests.cs) | 별도 인스턴스를 예열한 뒤 첫·반복 전파의 할당량을 측정한다. 마지막 Take(1)가 Branch를 완료·폐기하는 경우도 포함한다. |
 
 ## UniTest 실행 경로
 
-[상태 전이 프로젝트](EventStreamStateProjectTests.cs)는 BlackThunder.UniTest의 CompactProject와 CompactLab을 Inline 모드로 실행한다. NUnit에서 프로젝트를 실행하여 각 Lab의 성공과 두 종료 경로의 도달 여부를 확인한다.
-
-두 경로 모두 처음부터 실제 source와 Where, 구독 핸들로 이력을 재현한다. 각 단계에서 두 구독자의 수신 값, 조건 평가 횟수, 완료 횟수와 스트림의 폐기 상태를 확인한다. U1에서는 마지막 구독 해제로 Where만 정리되고, U2에서는 source의 완료 통지가 비활성인 Where까지 전달된다.
+[상태 전이 프로젝트](EventStreamStateProjectTests.cs)는 CompactProject와 CompactLab을 Inline 모드에서 실행하고 두 종료 경로의 이력을 확인한다. 매 단계에서 부모와 Branch를 새로 구성해 이전 이력을 재현한다.
 
 | 구간 | Lab 순서 |
 | --- | --- |
@@ -30,4 +31,4 @@
 
 ## 실행과 기록
 
-.NET 10 Release에서 EventStream 모듈의 기존 테스트와 신규 사례를 함께 실행한다. 실행 명령과 사례별 집계는 [검증 결과](03-Results.md)에 기록한다.
+.NET 10 Release에서 본 모듈과 전체 테스트를 실행한다. 명시적 Benchmark는 일반 검증에서 제외한다. [검증 결과](03-Results.md)에 실행 범위와 결과를 기록한다.

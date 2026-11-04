@@ -27,7 +27,7 @@
 
 ## 동작 흐름
 
-1. [Configuration](../01-M-Configuration/Configuration.md)이 데이터 경로를 확정하고 Log.Initialize가 이를 확보한다.
+1. [Configuration](../01-M.1-Configuration/Configuration.md)이 데이터 경로를 확정하고 Log.Initialize가 이를 확보한다.
 2. Write가 메시지와 [LogLevel](LogLevel.md)을 버퍼에 추가한 뒤 외부 출력기를 호출한다. 컬렉션 표현은 [DataFormattingExtensions](../03-M.1-Utilities/DataFormattingExtensions.md)에 위임한다.
 3. Print가 파일 저장을 완료하면 DebugFilePath를 갱신하고 버퍼를 비운다. 저장 실패 시에는 버퍼를 유지한다.
 

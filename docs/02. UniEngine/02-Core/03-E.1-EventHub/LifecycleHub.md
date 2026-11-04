@@ -21,7 +21,7 @@
 
 ## 동작 흐름
 
-Dispose는 IsDisposed를 먼저 true로 바꾸고 연결별 콜백의 스냅샷을 실행한 뒤 직접 OnDisposed 구독을 호출한다. 실패한 연결을 제거하고 ExceptionHandler에 보고하며, 정상 종료든 예외로 중단되든 전체 참조를 비운다.
+Dispose는 IsDisposed를 먼저 true로 바꾸고 연결별 콜백을 실행한 뒤 직접 OnDisposed 구독을 호출한다. 콜백이 실패하면 해당 연결의 나머지 콜백을 건너뛰고 ExceptionHandler에 보고한다. 정상 종료든 예외로 중단되든 전체 참조를 비운다.
 
 ## 설계 기준과 고려사항
 

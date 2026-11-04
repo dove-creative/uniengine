@@ -27,7 +27,7 @@ Level 1은 공통 도구와 계약, 그 계약으로 동작하는 재사용 객�
 ## 대표 협력 흐름
 
 1. 제공자가 구독을 만들고 해제 동작을 Handle에 담아 반환한다.
-2. EventStream은 변경 가능한 컬렉션을 통해 수신자에게 이벤트를 전달한다.
+2. EventSource가 값을 발행하면 EventStream은 등록된 그래프의 조건을 따라 수신자에게 전달한다.
 3. EventHub는 내부 스트림을 사용하며 객체별 연결, 수면과 폐기 알림을 조율한다.
 
 Property는 외부 페이로드를 저장하는 별개 책임이다. 이벤트 객체에 종속되지 않으며 필요한 도메인 객체가 저장소를 제공한다. 연결·전파·폐기의 공통 흐름은 [Event System](EventSystem.md)에 정리한다.
@@ -41,8 +41,8 @@ Property는 외부 페이로드를 저장하는 별개 책임이다. 이벤트 �
 | 층 | Objects | Event System | Utilities·기타 |
 | --- | --- | --- | --- |
 | Level 1 | [Utilities](01-O.1-Utilities/README.md), [Interfaces](01-O.2-Interfaces/README.md), [Objects](01-O.3-Objects/README.md) | — | — |
-| Level 2 | [Property](02-O.1-Property/README.md) | [Handle·Token](02-E.1-HandleToken/README.md), [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md), [EventStream](02-E.3-EventStream/README.md) | [Math·데이터 도구](02-U-Utilities/README.md), 설계 단계 |
-| Level 3 | — | [EventHub](03-E-EventHub/README.md) | [TransformDataExtensions·Loco](03-U-Utilities/README.md), 설계 단계 |
+| Level 2 | [Property](02-O.1-Property/README.md) | [Handle·Token](02-E.1-HandleToken/README.md), [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md), [EventStream](02-E.3-EventStream/README.md) | [Math·데이터 도구](02-U.1-Utilities/README.md), 설계 단계 |
+| Level 3 | — | [EventHub](03-E.1-EventHub/README.md) | [TransformDataExtensions·Loco](03-U.1-Utilities/README.md), 설계 단계 |
 | Top | — | — | [Kernel.Bootstrapper](Top-Kernel/Bootstrapper.md), 설계 단계 |
 
 [전체 계층](../README.md)
