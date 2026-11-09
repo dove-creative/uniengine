@@ -21,7 +21,6 @@ namespace Blackthunder.UniEngine.Core
             add
             {
                 ThrowIfDisposed();
-
                 if (value == null) return;
 
                 foreach (var entry in value.GetInvocationList())
@@ -40,7 +39,6 @@ namespace Blackthunder.UniEngine.Core
             add
             {
                 ThrowIfDisposed();
-
                 if (value == null) return;
 
                 foreach (var entry in value.GetInvocationList())
@@ -51,6 +49,7 @@ namespace Blackthunder.UniEngine.Core
             }
             remove => RemoveUpdated(value, true);
         }
+
         public event Action Disposing
         {
             add { ThrowIfDisposed(); _disposing.Add(value); }
@@ -135,6 +134,7 @@ namespace Blackthunder.UniEngine.Core
         public EventHub(object owner, Action onDisposing = null, Action onDisposed = null, Func<Action> onSleep = null)
         {
             Owner = owner;
+
             _disposing.Add(onDisposing);
             _disposed.Add(onDisposed);
             _onSleep = onSleep;
@@ -210,7 +210,8 @@ namespace Blackthunder.UniEngine.Core
 
         private void InvokeUpdate(object listener, Order order, TEventArgs args)
         {
-            if (!order.IsConnected || _pendingDispose) return;
+            if (!order.IsConnected || _pendingDispose)
+                return;
 
             if (order.SkipCount > 0)
             {
@@ -222,7 +223,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 for (int i = 0; i < order.PublishedCallbackCount; i++)
                 {
-                    if (!order.IsConnected || _pendingDispose) return;
+                    if (!order.IsConnected || _pendingDispose)
+                        return;
 
                     order.UpdateCallbacks[i](args);
                 }
@@ -240,19 +242,21 @@ namespace Blackthunder.UniEngine.Core
         {
             var subscription = new UpdateSubscription { Source = source, IsAdapted = isAdapted };
 
-            subscription.Connection = _updates.ForOrder(UpdatePhase.Direct).Subscribe(args =>
-            {
-                try
+            subscription.Connection = _updates
+                .ForOrder(UpdatePhase.Direct)
+                .Subscribe(args =>
                 {
-                    callback(args);
-                }
-                catch (Exception)
-                {
-                    RemoveUpdated(subscription);
-                    // Let the stream report the callback failure exactly once.
-                    throw;
-                }
-            });
+                    try
+                    {
+                        callback(args);
+                    }
+                    catch (Exception)
+                    {
+                        RemoveUpdated(subscription);
+                        // Let the stream report the callback failure exactly once.
+                        throw;
+                    }
+                });
 
             _updateSubscriptions.Add(subscription);
         }
@@ -346,7 +350,9 @@ namespace Blackthunder.UniEngine.Core
 
         private void Awake()
         {
-            if (IsDisposed || _pendingDispose || !_isSleeping) return;
+            if (IsDisposed || _pendingDispose || !_isSleeping)
+                return;
+
             _isSleeping = false;
             _sleepToken = null;
 

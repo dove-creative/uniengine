@@ -62,14 +62,14 @@ namespace Blackthunder.UniEngine.Core
 
                 return this;
             }
-            public IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> fliter, Action onUpdated)
+            public IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> filter, Action onUpdated)
             {
                 _order.Hub.ThrowIfDisposed();
                 var callbacks = onUpdated == null ? null : InvocationListCache<Action>.Get(onUpdated);
 
                 _order.UpdateCallbacks.Add(args =>
                 {
-                    if (!fliter(args) || callbacks == null) return;
+                    if (!filter(args) || callbacks == null) return;
 
                     foreach (var entry in callbacks)
                     {

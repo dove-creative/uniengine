@@ -12,8 +12,8 @@ namespace Blackthunder.UniEngine.Core
         IEventHubBuilder OnUpdated(Action<object> onUpdated);
         IEventHubBuilder OnUpdated(object target, Action<object> onUpdated);
         IEventHubBuilder OnUpdated(object target, Action onUpdated);
-        IEventHubBuilder OnUpdated(Func<object, bool> fliter, Action<object> onUpdated);
-        IEventHubBuilder OnUpdated(Func<object, bool> fliter, Action onUpdated);
+        IEventHubBuilder OnUpdated(Func<object, bool> filter, Action<object> onUpdated);
+        IEventHubBuilder OnUpdated(Func<object, bool> filter, Action onUpdated);
 
         new IEventHubBuilder OnDisposed(Action onDisposed);
         IEventHubBuilder OnDisposing(Action onDisposing);
@@ -28,8 +28,8 @@ namespace Blackthunder.UniEngine.Core
         IEventHubBuilder<TEventArgs> OnUpdated(Action<TEventArgs> onUpdated);
         IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action<TEventArgs> onUpdated);
         IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> fliter, Action<TEventArgs> onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> fliter, Action onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> filter, Action<TEventArgs> onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> filter, Action onUpdated);
 
         new IEventHubBuilder<TEventArgs> OnDisposing(Action onDisposing);
         new IEventHubBuilder<TEventArgs> OnDisposing(Action<object> onDisposing);
