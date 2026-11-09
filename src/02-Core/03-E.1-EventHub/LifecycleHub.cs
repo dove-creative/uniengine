@@ -34,6 +34,7 @@ namespace Blackthunder.UniEngine.Core
         public void Disconnect(object client)
         {
             if (IsDisposed || _isDisposing || client == null) return;
+
             _onDisposedClients.Remove(client);
         }
 
@@ -48,6 +49,7 @@ namespace Blackthunder.UniEngine.Core
         {
             if (IsDisposed || _isDisposing) return;
             _isDisposing = true;
+
             try
             {
                 if (!disposing)
@@ -62,13 +64,16 @@ namespace Blackthunder.UniEngine.Core
                     {
                         // Finalizer diagnostics must never escape the finalizer thread.
                     }
+
                     return;
                 }
 
                 IsDisposed = true;
+
                 foreach (var client in _onDisposedClients)
                 {
                     if (client.Value == null) continue;
+
                     foreach (var entry in client.Value)
                     {
                         var callback = (Action)entry;
@@ -84,6 +89,7 @@ namespace Blackthunder.UniEngine.Core
                         }
                     }
                 }
+
                 _onDisposed.Invoke();
             }
             finally

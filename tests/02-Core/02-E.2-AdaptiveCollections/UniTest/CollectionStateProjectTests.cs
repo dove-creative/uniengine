@@ -14,8 +14,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             private readonly bool _deferred;
 
-            public CollectionProject(bool deferred)
-                : base(ExecutionMode.Inline) => _deferred = deferred;
+            public CollectionProject(bool deferred) : base(ExecutionMode.Inline) => _deferred = deferred;
 
             public override IEnumerable<CompactLab<Model>> CreateCompactLabs(Model model)
             {
@@ -27,13 +26,18 @@ namespace BlackThunder.UniEngine.Tests
                             new CompactLab<Model>("Create")
                             {
                                 Actor = state => state.Subject = new AdaptiveCollection<int>(_deferred) { 1, 2 },
-                                Asserter = state => Assert.That(((AdaptiveCollection<int>)state.Subject).Count, Is.EqualTo(2)),
+                                Asserter = state => Assert.That(
+                                    ((AdaptiveCollection<int>)state.Subject).Count,
+                                    Is.EqualTo(2)),
                             },
                         };
                     case 1:
                         return new[] { new CompactLab<Model>("AddDuringIteration") { Actor = AddDuringIteration } };
                     case 2:
-                        return new[] { new CompactLab<Model>("RemoveDuringIteration") { Actor = RemoveDuringIteration } };
+                        return new[]
+                        {
+                            new CompactLab<Model>("RemoveDuringIteration") { Actor = RemoveDuringIteration }
+                        };
                     default:
                         return Array.Empty<CompactLab<Model>>();
                 }
@@ -46,8 +50,10 @@ namespace BlackThunder.UniEngine.Tests
                 foreach (var value in collection)
                 {
                     seen.Add(value);
+
                     if (value == 1) collection.Add(3);
                 }
+
                 Assert.That(seen, Is.EqualTo(_deferred ? new[] { 1, 2 } : new[] { 1, 2, 3 }));
                 Assert.That(collection.Count, Is.EqualTo(3));
             }
@@ -59,8 +65,10 @@ namespace BlackThunder.UniEngine.Tests
                 foreach (var value in collection)
                 {
                     seen.Add(value);
+
                     if (value == 1) collection.Remove(2);
                 }
+
                 Assert.That(seen, Is.EqualTo(new[] { 1, 3 }));
                 Assert.That(collection.Count, Is.EqualTo(2));
             }

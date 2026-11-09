@@ -27,6 +27,7 @@ namespace Blackthunder.UniEngine.Core
         private void SetCallbacks(Action action)
         {
             if (ReferenceEquals(_disposed, action)) return;
+
             _callbacks = action?.GetInvocationList();
             _disposed = action;
         }

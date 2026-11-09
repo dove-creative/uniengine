@@ -67,7 +67,8 @@ namespace BlackThunder.UniEngine.Tests
                 var lastValue = 0;
                 var handle = (Handle)branch.Subscribe(
                     value => { lastValue = value; deliveries++; },
-                    () => { if (lastValue == 7) completionsAfterValue++; }, null);
+                    () => { if (lastValue == 7) completionsAfterValue++; },
+                    null);
                 var before = GC.GetAllocatedBytesForCurrentThread();
                 stream.OnNext(7);
                 allocated += GC.GetAllocatedBytesForCurrentThread() - before;
@@ -97,7 +98,7 @@ namespace BlackThunder.UniEngine.Tests
 
             public Graph(bool enabled)
             {
-                var positive = new Filter<int>("positive", value => { PredicateCalls++; return value > 0; });
+                Func<int, bool> positive = value => { PredicateCalls++; return value > 0; };
                 var path = Stream.Where(positive);
                 Stream.Subscribe(Record);
                 path.Take(int.MaxValue).Subscribe(Record);

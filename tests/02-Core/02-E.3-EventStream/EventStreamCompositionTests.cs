@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Blackthunder.UniEngine.Core;
 using NUnit.Framework;
@@ -12,16 +13,16 @@ namespace BlackThunder.UniEngine.Tests
         [Test]
         public void GroupedFilterBranchesDeliverInGroupOrderAndAllowIndependentPublication()
         {
-            using var stream = new EventStream<int, Phase>(Phase.Render, Phase.Update, Phase.Update);
+            using var stream = new EventStream<int>();
             var checks = 0;
-            var bits = new Filter<int>("mask", value => { checks++; return (value & 5) != 0; });
-            using var render = stream.Where(bits).Branch();
-            using var update = stream.ForOrder(Phase.Update).Where(bits).Branch();
+            Func<int, bool> selected = value => { checks++; return value != 2; };
+            using var render = stream.ForOrder(Phase.Render).Where(selected).Branch();
+            using var update = stream.ForOrder(Phase.Update).Where(selected).Branch();
             var calls = new List<(Phase, int)>();
             var renders = render.Subscribe(value => calls.Add((Phase.Render, value)));
             update.Subscribe(value => calls.Add((Phase.Update, value)));
             var sharedCalls = 0;
-            stream.ForOrder(Phase.Update).Where(bits).Subscribe(_ => sharedCalls++);
+            stream.ForOrder(Phase.Update).Where(selected).Subscribe(_ => sharedCalls++);
 
             stream.OnNext(2);
             stream.OnNext(1);
@@ -36,9 +37,9 @@ namespace BlackThunder.UniEngine.Tests
                 (Phase.Update, 6), (Phase.Render, 6),
                 (Phase.Update, 4), (Phase.Update, 9),
             }));
+
             Assert.That(checks, Is.EqualTo(7));
             Assert.That(sharedCalls, Is.EqualTo(3));
-            Assert.That(stream.Orders, Is.EqualTo(new[] { Phase.Update, Phase.Render }));
             Assert.That(render.IsDisposed, Is.True);
             Assert.That(update.IsDisposed, Is.False);
         }
@@ -48,7 +49,7 @@ namespace BlackThunder.UniEngine.Tests
         public void FilteredBranchReleasesItsUpstreamPathWithItsLastSubscription()
         {
             using var parent = new EventStream<int>();
-            using var branch = parent.Where(new Filter<int>("mask", value => (value & 6) != 0)).Branch();
+            using var branch = parent.Where(value => value > 1).Branch();
             var calls = new List<int>();
             var subscription = branch.Subscribe(calls.Add);
 
@@ -61,6 +62,38 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(branch.IsDisposed, Is.True);
             Assert.That(parent.NodeCount, Is.Zero);
             Assert.That(parent.IsDisposed, Is.False);
+        }
+
+        // I3: Plain subscribers run first because their gate stays the first child of the node.
+        [Test]
+        public void SubscribersWithoutAnOrderRunBeforeGroups()
+        {
+            using var stream = new EventStream<int>();
+            var calls = new List<string>();
+            using var render = stream.ForOrder(Phase.Render).Subscribe(_ => calls.Add("render"));
+            using var update = stream.ForOrder(Phase.Update).Subscribe(_ => calls.Add("update"));
+            using var plain = stream.Subscribe(_ => calls.Add("plain"));
+
+            stream.OnNext(1);
+
+            Assert.That(calls, Is.EqualTo(new[] { "plain", "update", "render" }));
+        }
+
+        // I4: Groups order the children of the position they are used at, not only the root.
+        [Test]
+        public void GroupsCanOrderPartOfAPath()
+        {
+            using var stream = new EventStream<int>();
+            var calls = new List<string>();
+            Func<int, bool> all = _ => true;
+            using var render = stream.Where(all).ForOrder(Phase.Render).Subscribe(_ => calls.Add("render"));
+            using var update = stream.Where(all).ForOrder(Phase.Update).Subscribe(_ => calls.Add("update"));
+
+            stream.OnNext(1);
+
+            Assert.That(calls, Is.EqualTo(new[] { "update", "render" }));
+            // The Where node, the ordered node of its position and one node per order.
+            Assert.That(stream.NodeCount, Is.EqualTo(4));
         }
     }
 }

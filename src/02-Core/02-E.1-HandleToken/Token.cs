@@ -15,6 +15,7 @@ namespace Blackthunder.UniEngine.Core
             remove
             {
                 if (IsDisposed) return;
+
                 Disposed -= value;
             }
         }

@@ -4,9 +4,9 @@ UniEngine 값 형식의 JSON 변환기를 JsonSerializerOptions에 연결하는 
 
 ## 목차
 
-1. 역할과 구성
-2. 동작 흐름
-3. 설계 기준
+- 역할과 구성
+- 동작 흐름
+- 설계 기준
 
 ## 역할과 구성
 

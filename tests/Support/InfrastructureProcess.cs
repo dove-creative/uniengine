@@ -9,7 +9,7 @@ namespace BlackThunder.UniEngine.Tests
 {
     internal static class InfrastructureProcess
     {
-        private const string ApplicationPrefix = "GoldenHindTests-";
+        private const string ApplicationPrefix = "UniEngineTests-";
 
 
         // Content
@@ -19,9 +19,14 @@ namespace BlackThunder.UniEngine.Tests
             var projectPath = GetOwnedPath(applicationId);
             try
             {
-                var host = Path.GetFullPath(Path.Combine(
-                    RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..",
-                    OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet"));
+                var host = Path.GetFullPath(
+                    Path.Combine(
+                        RuntimeEnvironment.GetRuntimeDirectory(),
+                        "..",
+                        "..",
+                        "..",
+                        OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet"));
+
                 var startInfo = new ProcessStartInfo(host)
                 {
                     UseShellExecute = false,
@@ -29,6 +34,7 @@ namespace BlackThunder.UniEngine.Tests
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                 };
+
                 startInfo.ArgumentList.Add(typeof(InfrastructureProcess).Assembly.Location);
                 startInfo.ArgumentList.Add("--infrastructure-scenario");
                 startInfo.ArgumentList.Add(scenario);
@@ -38,6 +44,7 @@ namespace BlackThunder.UniEngine.Tests
                 var outputTask = process.StandardOutput.ReadToEndAsync();
                 var errorTask = process.StandardError.ReadToEndAsync();
                 var exitTask = process.WaitForExitAsync();
+
                 var timedOut = await Task.WhenAny(exitTask, Task.Delay(30_000)) != exitTask;
                 if (timedOut)
                 {
@@ -61,6 +68,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 // Revalidate the exact test-owned target before recursive cleanup.
                 Assert.That(GetOwnedPath(applicationId), Is.EqualTo(projectPath));
+
                 if (Directory.Exists(projectPath))
                     Directory.Delete(projectPath, recursive: true);
                 else if (File.Exists(projectPath))
@@ -76,9 +84,12 @@ namespace BlackThunder.UniEngine.Tests
                 throw new ArgumentException("A test-owned application ID is required.", nameof(applicationId));
             }
 
-            var parent = Path.GetFullPath(Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "BlackThunder", "UniEngine", "Projects"));
+            var parent = Path.GetFullPath(
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "BlackThunder",
+                    "UniEngine",
+                    "Projects"));
             var path = Path.GetFullPath(Path.Combine(parent, applicationId));
             if (!string.Equals(Path.GetDirectoryName(path), parent, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("The test path escaped its parent directory.");

@@ -4,10 +4,10 @@ UniEngine의 계층별 책임과 객체들이 협력하는 방식을 설명하�
 
 ## 목차
 
-1. 소개
-2. 전체 구조
-3. 문서의 구분
-4. 상세 문서
+- 소개
+- 전체 구조
+- 문서의 구분
+- 상세 문서
 
 ## 소개
 
@@ -25,7 +25,7 @@ Infrastructure는 공통 데이터·진단 기능을 제공한다. Core는 이�
 
 ## 문서의 구분
 
-계층·모듈 개요는 기능의 목적과 구성 관계를 먼저 설명하고, 객체 문서는 책임·보유 정보·제공 서비스의 이유와 협력 흐름을 구체화한다. 상태별 검증 기준과 실행 기록은 tests 아래의 대응 모듈에 있는 UniTest 폴더에 둔다.
+계층·모듈 개요는 기능의 목적과 구성 관계를 먼저 설명하고, 객체 문서는 책임·보유 정보·제공 서비스의 이유와 협력 흐름을 구체화한다. 상태별 검증 기준과 실행 기록은 tests 아래에서 해당 테스트 코드가 있는 폴더의 docs에 둔다.
 
 문서는 구현이 지켜야 할 책임·동작·제약을 코드보다 상위 수준에서 정의하며, 특정 소스 파일이나 테스트 절차를 가리키지 않는다. 구현된 모듈은 src의 폴더와 대응한다. 아직 구현이 없는 항목은 정의된 설계 범위만 기록한다. 문서용 폴더가 소스 경로나 API의 확정을 뜻하지 않는다.
 
@@ -35,7 +35,7 @@ Infrastructure는 공통 데이터·진단 기능을 제공한다. Core는 이�
 | --- | --- | --- |
 | 0 | [Supportive Frameworks](00-SupportiveFrameworks/README.md) | 외부 Blackbox System·UniTest의 역할과 연결 |
 | 1 | [Infrastructure](01-Infrastructure/README.md) | 설정·값 형식·유틸리티·예외·로그 |
-| 2 | [UniEngine Core](02-Core/README.md) | 객체 계약·순회·페이로드·이벤트 |
+| 2 | [UniEngine Core](02-Core/README.md) | 객체 계약·순회·풀링·페이로드·이벤트 |
 | 3 | [UniEngine Surface](03-Surface/README.md) | 편의 기능 계층의 설계 범위 |
 | 4 | [Services](04-Services/README.md) | 응용 서비스의 설계 범위 |
 

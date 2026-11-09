@@ -12,11 +12,8 @@ namespace Blackthunder.UniEngine.Core
 
     public class AlreadyAcquiredException : InvalidOperationException
     {
-        public AlreadyAcquiredException()
-            : base("Cannot acquire an object that has already been acquired.") { }
-        public AlreadyAcquiredException(string message)
-            : base(message) { }
-        public AlreadyAcquiredException(string message, Exception innerException)
-            : base(message, innerException) { }
+        public AlreadyAcquiredException() : base("Cannot acquire an object that has already been acquired.") { }
+        public AlreadyAcquiredException(string message) : base(message) { }
+        public AlreadyAcquiredException(string message, Exception innerException) : base(message, innerException) { }
     }
 }

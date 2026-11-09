@@ -85,6 +85,7 @@ namespace BlackThunder.UniEngine.Tests
             AssertEqualityContract(value, equal);
             Assert.That(value == equal, Is.True);
             Assert.That(value != equal, Is.False);
+
             foreach (var other in new[] { new Vector2Int(-1, 2), new Vector2Int(1, -2) })
             {
                 Assert.That(value.Equals(other), Is.False);
@@ -101,7 +102,13 @@ namespace BlackThunder.UniEngine.Tests
             AssertEqualityContract(value, equal);
             Assert.That(value == equal, Is.True);
             Assert.That(value != equal, Is.False);
-            foreach (var other in new[] { new Vector3Int(-1, 2, 3), new Vector3Int(1, -2, 3), new Vector3Int(1, 2, -3) })
+
+            foreach (var other in new[]
+            {
+                new Vector3Int(-1, 2, 3),
+                new Vector3Int(1, -2, 3),
+                new Vector3Int(1, 2, -3)
+            })
             {
                 Assert.That(value.Equals(other), Is.False);
                 Assert.That(value == other, Is.False);
@@ -117,6 +124,7 @@ namespace BlackThunder.UniEngine.Tests
             AssertEqualityContract(value, equal);
             Assert.That(value == equal, Is.True);
             Assert.That(value != equal, Is.False);
+
             foreach (var other in new[]
             {
                 new Transform2D(new Vector2(-1f, 2f), 3f),
@@ -138,6 +146,7 @@ namespace BlackThunder.UniEngine.Tests
             AssertEqualityContract(value, equal);
             Assert.That(value == equal, Is.True);
             Assert.That(value != equal, Is.False);
+
             foreach (var other in new[]
             {
                 new Transform3D(new Vector3(-1f, 2f, 3f), equal.Rotation),
@@ -165,9 +174,11 @@ namespace BlackThunder.UniEngine.Tests
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
                 Assert.That(new Vector2Int(-1, 2).ToString(), Is.EqualTo("<-1, 2>"));
                 Assert.That(new Vector3Int(-1, 2, 3).ToString(), Is.EqualTo("<-1, 2, 3>"));
-                Assert.That(new Transform2D(new Vector2(1.25f, -2.5f), 3.75f).ToString(),
+                Assert.That(
+                    new Transform2D(new Vector2(1.25f, -2.5f), 3.75f).ToString(),
                     Is.EqualTo("Position: <1.25, -2.5>, Rotation: 3.75"));
-                Assert.That(new Transform3D(new Vector3(1.25f, -2.5f, 3.75f), new Quaternion(0f, 0f, 0f, 1f)).ToString(),
+                Assert.That(
+                    new Transform3D(new Vector3(1.25f, -2.5f, 3.75f), new Quaternion(0f, 0f, 0f, 1f)).ToString(),
                     Is.EqualTo("Position: <1.25, -2.5, 3.75>, Rotation: {X:0 Y:0 Z:0 W:1}"));
             }
             finally

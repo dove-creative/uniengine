@@ -106,7 +106,11 @@ namespace BlackThunder.UniEngine.Infrastructure
         }
 
         public static void SafeInvoke<T1, T2, T3, T4>(
-            this Action<T1, T2, T3, T4> action, T1 param1, T2 param2, T3 param3, T4 param4)
+            this Action<T1, T2, T3, T4> action,
+            T1 param1,
+            T2 param2,
+            T3 param3,
+            T4 param4)
         {
             if (action == null)
                 return;

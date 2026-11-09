@@ -12,10 +12,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
 
 
         // Content
-        public override Color Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options)
+        public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var components = new float[_componentNames.Length];
             JsonComponentSerializer.ReadSingleComponents(ref reader, _componentNames, components);
@@ -36,10 +33,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
                 ToByte(components[2]));
         }
 
-        public override void Write(
-            Utf8JsonWriter writer,
-            Color value,
-            JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Color value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
             JsonComponentSerializer.WriteSingle(writer, "R", ToSingle(value.R));
@@ -52,7 +46,6 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
         private static byte ToByte(float component) =>
             (byte)MathF.Round(component * byte.MaxValue, MidpointRounding.AwayFromZero);
 
-        private static float ToSingle(byte component) =>
-            component / (float)byte.MaxValue;
+        private static float ToSingle(byte component) => component / (float)byte.MaxValue;
     }
 }

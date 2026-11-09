@@ -20,14 +20,21 @@ namespace BlackThunder.UniEngine.Tests
                 if (referencePayload)
                 {
                     var payload = new ReferencePayload(7);
-                    return CreateBase(registration, payload, static (counter, value) =>
-                    {
-                        counter.Record(value.Value);
-                        counter.LastReference = value;
-                    }, payload);
+
+                    return CreateBase(
+                        registration,
+                        payload,
+                        static (counter, value) =>
+                        {
+                            counter.Record(value.Value);
+                            counter.LastReference = value;
+                        },
+                        payload);
                 }
 
-                return CreateBase(registration, new ValuePayload(7),
+                return CreateBase(
+                    registration,
+                    new ValuePayload(7),
                     static (counter, value) => counter.Record(value.Value));
             });
         }
@@ -39,11 +46,13 @@ namespace BlackThunder.UniEngine.Tests
             Verify(() =>
             {
                 var counter = new Counter();
-                var stream = new EventStream<int, UpdateOrder>();
+                var stream = new EventStream<int>();
                 Action<int> callback = counter.Record;
-                stream.Subscribe(UpdateOrder.Before, callback);
-                stream.Subscribe(UpdateOrder.After, callback + callback);
-                if (fillMiddleGroup) stream.Subscribe(UpdateOrder.Update, callback);
+                stream.ForOrder(UpdateOrder.Before).Subscribe(callback);
+                stream.ForOrder(UpdateOrder.After).Subscribe(callback + callback);
+
+                if (fillMiddleGroup) stream.ForOrder(UpdateOrder.Update).Subscribe(callback);
+
                 var expectedCalls = fillMiddleGroup ? 4 : 3;
                 return new Publication(counter, () => stream.OnNext(7), expectedCalls, expectedCalls * 7, stream);
             });
@@ -53,14 +62,16 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(2, false, 0)]
         [TestCase(0, true, 0)]
         [TestCase(1, false, 1)]
-        public void FirstAndRepeatedMaskFiltersAllocateNoManagedMemory(int mask, bool addUnfiltered, int matched)
+        public void FirstAndRepeatedFiltersAllocateNoManagedMemory(int target, bool addUnfiltered, int matched)
         {
             Verify(() =>
             {
                 var counter = new Counter();
                 var stream = new EventStream<int>();
-                stream.Where(new Filter<int>("mask", value => (mask & value) != 0)).Subscribe(counter.Record);
+                stream.Where(value => value == target).Subscribe(counter.Record);
+
                 if (addUnfiltered) stream.Subscribe(counter.Record);
+
                 var expected = matched + (addUnfiltered ? 1 : 0);
                 return new Publication(counter, () => stream.OnNext(1), expected, expected, stream);
             });
@@ -74,17 +85,19 @@ namespace BlackThunder.UniEngine.Tests
             {
                 var counter = new Counter();
                 var source = new EventStream<int>();
-                var where = source.Where(new Filter<int>("positive", value =>
+
+                var where = source.Where(value =>
                 {
                     counter.PredicateCalls++;
                     return value > 0;
-                }));
+                });
+
                 var skip = where.Skip(0);
                 var take = skip.Take(int.MaxValue);
                 take.Subscribe(counter.Record);
                 var input = matches ? 7 : 0;
-                return new Publication(counter, () => source.OnNext(input), matches ? 1 : 0, input,
-                    source)
+
+                return new Publication(counter, () => source.OnNext(input), matches ? 1 : 0, input, source)
                 {
                     PredicateCallsPerPublication = 1,
                 };
@@ -101,11 +114,19 @@ namespace BlackThunder.UniEngine.Tests
                 var right = new EventStream<int>();
                 var merged = left.Merge(right);
                 merged.Subscribe(counter.Record);
-                return new Publication(counter, () =>
-                {
-                    left.OnNext(3);
-                    right.OnNext(4);
-                }, 2, 7, left, right, merged);
+
+                return new Publication(
+                    counter,
+                    () =>
+                    {
+                        left.OnNext(3);
+                        right.OnNext(4);
+                    },
+                    2,
+                    7,
+                    left,
+                    right,
+                    merged);
             });
         }
 
@@ -116,12 +137,16 @@ namespace BlackThunder.UniEngine.Tests
             Verify(() =>
             {
                 var counter = new Counter();
-                EventStream<int> stream = ordered ? new EventStream<int, UpdateOrder>() : new EventStream<int>();
-                stream.Where(new Filter<int>("disabled", _ =>
+                var stream = new EventStream<int>();
+
+                Func<int, bool> predicate = _ =>
                 {
                     counter.PredicateCalls++;
                     return true;
-                })).Subscribe(counter.Record);
+                };
+
+                var path = ordered ? stream.ForOrder(UpdateOrder.Before).Where(predicate) : stream.Where(predicate);
+                path.Subscribe(counter.Record);
                 stream.Enabled = false;
                 return new Publication(counter, () => stream.OnNext(7), 0, 0, stream);
             });
@@ -129,12 +154,16 @@ namespace BlackThunder.UniEngine.Tests
 
         // Helpers
         private static Publication CreateBase<T>(
-            int registration, T payload, Action<Counter, T> record, object expectedReference = null)
+            int registration,
+            T payload,
+            Action<Counter, T> record,
+            object expectedReference = null)
         {
             var counter = new Counter();
             var stream = new EventStream<T>();
             Action<T> callback = value => record(counter, value);
             var expectedCalls = registration == 0 ? 0 : registration == 1 ? 1 : 3;
+
             switch (registration)
             {
                 case 1:
@@ -175,7 +204,9 @@ namespace BlackThunder.UniEngine.Tests
             TestContext.WriteLine($"EventStream: first={firstAllocated}, repeated={repeatedAllocated} bytes.");
             Assert.That(measured.Counter.Calls, Is.EqualTo(measured.CallsPerPublication * (repetitions + 1)));
             Assert.That(measured.Counter.Sum, Is.EqualTo(measured.SumPerPublication * (repetitions + 1)));
-            Assert.That(measured.Counter.PredicateCalls, Is.EqualTo(measured.PredicateCallsPerPublication * (repetitions + 1)));
+            Assert.That(
+                measured.Counter.PredicateCalls,
+                Is.EqualTo(measured.PredicateCallsPerPublication * (repetitions + 1)));
             Assert.That(measured.Counter.LastReference, Is.SameAs(measured.ExpectedReference));
             Assert.That(firstAllocated, Is.Zero);
             Assert.That(repeatedAllocated, Is.Zero);
@@ -234,7 +265,12 @@ namespace BlackThunder.UniEngine.Tests
 
             private readonly IDisposable[] _owned;
 
-            public Publication(Counter counter, Action invoke, int callsPerPublication, int sumPerPublication, params IDisposable[] owned)
+            public Publication(
+                Counter counter,
+                Action invoke,
+                int callsPerPublication,
+                int sumPerPublication,
+                params IDisposable[] owned)
             {
                 Counter = counter;
                 Invoke = invoke;

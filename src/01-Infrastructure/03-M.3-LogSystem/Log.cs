@@ -66,6 +66,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             lock (_safetyLock)
             {
                 _buffer.Append('[').Append(logLevel).Append("] ").AppendLine(message);
+
                 if (_logWithStackTrace)
                     _buffer.AppendLine(Environment.StackTrace);
 
@@ -100,8 +101,7 @@ namespace BlackThunder.UniEngine.Infrastructure
                 _buffer.Clear();
         }
 
-        private static void WriteToConsole(string message, LogLevel logLevel) =>
-            Console.WriteLine(message);
+        private static void WriteToConsole(string message, LogLevel logLevel) => Console.WriteLine(message);
 
         private static string SaveLog(string content)
         {

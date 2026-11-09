@@ -4,20 +4,24 @@ using System.Collections.Generic;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public class AdaptiveDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>, IDictionary,
+    public class AdaptiveDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey, TValue>>,
+        IDictionary<TKey, TValue>,
+        IDictionary,
         IEnumerationSource<KeyValuePair<TKey, TValue>>
     {
         // Front
-        public int Count => _isIterating
-            ? _items.Count - _removingKeys.Count + _pendingItems.Count
-            : _items.Count;
+        public int Count => _isIterating ? _items.Count - _removingKeys.Count + _pendingItems.Count : _items.Count;
 
         public bool IsReadOnly { get; } = false;
         public bool IsFixedSize { get; } = false;
         public bool DeferredUpdate { get; private set; }
 
-        public ICollection<TKey> Keys => !_isIterating ? _items.Keys : throw new NotSupportedException("The Keys property cannot be accessed during iteration.");
-        public ICollection<TValue> Values => !_isIterating ? _items.Values : throw new NotSupportedException("The Values property cannot be accessed during iteration.");
+        public ICollection<TKey> Keys => !_isIterating
+            ? _items.Keys
+            : throw new NotSupportedException("The Keys property cannot be accessed during iteration.");
+        public ICollection<TValue> Values => !_isIterating
+            ? _items.Values
+            : throw new NotSupportedException("The Values property cannot be accessed during iteration.");
 
         public bool IsSynchronized { get; } = false;
         public object SyncRoot { get; } = new();
@@ -26,8 +30,10 @@ namespace Blackthunder.UniEngine.Core
         /// Gets or sets the value for the specified key
         /// </summary>
         /// <remarks>
-        /// - If modified during a deferred iteration, the value will not be included in the current iteration but will be available in the next iteration.<br/>
-        /// - If modified during an immediate iteration, the value will be traversed at the end of the current iteration, regardless of whether it has already been iterated over.
+        /// - If modified during a deferred iteration, the value will not be included in the current iteration
+        /// but will be available in the next iteration.<br/>
+        /// - If modified during an immediate iteration, the value will be traversed at the end of the current
+        /// iteration, regardless of whether it has already been iterated over.
         /// </remarks>
         public TValue this[TKey key]
         {
@@ -64,21 +70,24 @@ namespace Blackthunder.UniEngine.Core
 
 
         // Content
-        public AdaptiveDictionary()
-            : this(true) { }
+        public AdaptiveDictionary() : this(true) { }
         public AdaptiveDictionary(bool deferredUpdate)
         {
             DeferredUpdate = deferredUpdate;
         }
 
         #region Iteration
-        public ValueEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => new(this);
-        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public ValueEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() =>
+            new(this);
+        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() =>
+            GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() =>
+            GetEnumerator();
 
         long IEnumerationSource<KeyValuePair<TKey, TValue>>.BeginEnumeration()
         {
-            if (_isIterating) throw new InvalidOperationException("AdaptiveDictionary is already being iterated. Nested iterations are not allowed.");
+            if (_isIterating) throw new InvalidOperationException(
+                "AdaptiveDictionary is already being iterated. Nested iterations are not allowed.");
 
             _enumerationId = checked(_enumerationId + 1);
             _enumerator = _items.GetEnumerator();
@@ -87,7 +96,9 @@ namespace Blackthunder.UniEngine.Core
             return _enumerationId;
         }
 
-        bool IEnumerationSource<KeyValuePair<TKey, TValue>>.TryMoveNext(long enumerationId, out KeyValuePair<TKey, TValue> current)
+        bool IEnumerationSource<KeyValuePair<TKey, TValue>>.TryMoveNext(
+            long enumerationId,
+            out KeyValuePair<TKey, TValue> current)
         {
             if (!_isIterating || enumerationId != _enumerationId)
                 throw new InvalidOperationException("The enumeration is no longer active.");
@@ -97,6 +108,7 @@ namespace Blackthunder.UniEngine.Core
                 while (!_iterationStopped && _enumerator.MoveNext())
                 {
                     var item = _enumerator.Current;
+
                     // Skip the lookup when nothing is marked, so clean passes never hash keys.
                     if (_removingKeys.Count != 0 && _removingKeys.Contains(item.Key)) continue;
 
@@ -108,6 +120,7 @@ namespace Blackthunder.UniEngine.Core
 
                 _enumerator.Dispose();
                 _iterationItems.Clear();
+
                 foreach (var item in _pendingItems)
                     _iterationItems.Add(item.Key, item.Value);
 
@@ -246,6 +259,7 @@ namespace Blackthunder.UniEngine.Core
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             if (!TryGetValue(item.Key, out var value)) return false;
+
             return item.Value.Equals(value);
         }
 
@@ -253,10 +267,13 @@ namespace Blackthunder.UniEngine.Core
         {
             if (_isIterating)
                 throw new InvalidOperationException("AdaptiveDictionary cannot be copied during iteration.");
+
             if (array == null)
                 throw new ArgumentNullException(nameof(array), "Target array cannot be null.");
+
             if (arrayIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex), "Array index must be non-negative.");
+
             if (array.Length - arrayIndex < _items.Count)
                 throw new ArgumentException("The target array is not large enough to hold the collection items.");
 
@@ -266,8 +283,12 @@ namespace Blackthunder.UniEngine.Core
 
 
         #region IDictionary
-        ICollection IDictionary.Keys => !_isIterating ? _items.Keys : throw new NotSupportedException("The Count property cannot be accessed during iteration.");
-        ICollection IDictionary.Values => !_isIterating ? _items.Values : throw new NotSupportedException("The Value property cannot be accessed during iteration.");
+        ICollection IDictionary.Keys => !_isIterating
+            ? _items.Keys
+            : throw new NotSupportedException("The Count property cannot be accessed during iteration.");
+        ICollection IDictionary.Values => !_isIterating
+            ? _items.Values
+            : throw new NotSupportedException("The Value property cannot be accessed during iteration.");
 
         object IDictionary.this[object key]
         {
@@ -282,6 +303,7 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (key is not TKey tKey)
                     throw new ArgumentException("Key is of incorrect type.", nameof(key));
+
                 if (value is not TValue tValue)
                     throw new ArgumentException("Value is of incorrect type.", nameof(value));
 
@@ -306,8 +328,10 @@ namespace Blackthunder.UniEngine.Core
 
             public DictionaryEntry Entry => new(Key, Value);
 
-            public bool MoveNext() => _currentEnumerator.MoveNext();
-            public void Reset() => throw new NotSupportedException("AdaptiveDictionary cannot be reset during iteration.");
+            public bool MoveNext() =>
+                _currentEnumerator.MoveNext();
+            public void Reset() =>
+                throw new NotSupportedException("AdaptiveDictionary cannot be reset during iteration.");
 
             public object Current => Entry;
 
@@ -327,12 +351,16 @@ namespace Blackthunder.UniEngine.Core
         {
             if (_isIterating)
                 throw new NotSupportedException("AdaptiveDictionary cannot be copied during iteration.");
+
             if (array == null)
                 throw new ArgumentNullException(nameof(array), "Target array cannot be null.");
+
             if (index < 0)
                 throw new ArgumentOutOfRangeException(nameof(index), "Array index must be non-negative.");
+
             if (array.Rank != 1)
                 throw new ArgumentException("Target array must be single-dimensional.", nameof(array));
+
             if (array.Length - index < _items.Count)
                 throw new ArgumentException("The target array is not large enough to hold the collection items.");
 

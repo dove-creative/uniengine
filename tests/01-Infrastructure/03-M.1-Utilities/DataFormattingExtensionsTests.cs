@@ -83,11 +83,14 @@ namespace BlackThunder.UniEngine.Tests
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
                 Assert.That(1250f.ToCompactString(), Is.EqualTo("1.3K"));
-                Assert.That(new Quaternion(1.25f, -2.5f, 3.75f, 4f).ToDisplayString(),
+                Assert.That(
+                    new Quaternion(1.25f, -2.5f, 3.75f, 4f).ToDisplayString(),
                     Is.EqualTo("X=1.25, Y=-2.5, Z=3.75, W=4"));
-                Assert.That(new Transform2D(new Vector2(1.25f, -2.5f), 3.75f).ToDisplayString(),
+                Assert.That(
+                    new Transform2D(new Vector2(1.25f, -2.5f), 3.75f).ToDisplayString(),
                     Is.EqualTo("Position: <1.25, -2.5>, Rotation: 3.75"));
-                Assert.That(new Transform3D(new Vector3(1.25f, -2.5f, 3.75f), Quaternion.Identity).ToDisplayString(),
+                Assert.That(
+                    new Transform3D(new Vector3(1.25f, -2.5f, 3.75f), Quaternion.Identity).ToDisplayString(),
                     Is.EqualTo("Position: <1.25, -2.5, 3.75>, Rotation: {X:0 Y:0 Z:0 W:1}"));
                 Assert.That(new[] { 1.25f, -2.5f }.ToDisplayString(detailedFormat: false), Is.EqualTo("[1.25, -2.5]"));
                 Assert.That(TimeSpan.FromSeconds(-61).ToDisplayString(), Is.EqualTo("-1m 1s"));
@@ -104,7 +107,8 @@ namespace BlackThunder.UniEngine.Tests
         {
             Assert.That(((IEnumerable<int>)null).ToDisplayString(detailedFormat: detailed), Is.EqualTo("null"));
             var empty = Array.Empty<int>();
-            Assert.That(empty.ToDisplayString(detailedFormat: detailed),
+            Assert.That(
+                empty.ToDisplayString(detailedFormat: detailed),
                 Is.EqualTo(detailed ? "System.Int32[], Count: 0" : "[]"));
         }
 
@@ -131,6 +135,7 @@ namespace BlackThunder.UniEngine.Tests
         public void SelectorsAreCalledOncePerElementAndMayReturnNull()
         {
             var selected = new List<int>();
+
             var result = new[] { 1, 2, 3 }.ToDisplayString(value =>
             {
                 selected.Add(value);
@@ -145,11 +150,14 @@ namespace BlackThunder.UniEngine.Tests
         public void NonListCollectionsAreEnumeratedOnceBeforeFormatting()
         {
             var enumerations = 0;
+
             IEnumerable<int> Values()
             {
                 enumerations++;
+
                 if (enumerations > 1)
                     throw new InvalidOperationException("The source can only be enumerated once.");
+
                 yield return 3;
                 yield return 1;
             }
@@ -162,14 +170,18 @@ namespace BlackThunder.UniEngine.Tests
         public void EnumerationAndSelectorFailuresPropagateToTheCaller()
         {
             var failure = new InvalidOperationException("source failure");
+
             IEnumerable<int> BrokenValues()
             {
                 yield return 1;
                 throw failure;
             }
 
-            Assert.That(Assert.Throws<InvalidOperationException>(() => BrokenValues().ToDisplayString()), Is.SameAs(failure));
-            Assert.That(Assert.Throws<InvalidOperationException>(() => new[] { 1 }.ToDisplayString(_ => throw failure)),
+            Assert.That(
+                Assert.Throws<InvalidOperationException>(() => BrokenValues().ToDisplayString()),
+                Is.SameAs(failure));
+            Assert.That(
+                Assert.Throws<InvalidOperationException>(() => new[] { 1 }.ToDisplayString(_ => throw failure)),
                 Is.SameAs(failure));
         }
     }

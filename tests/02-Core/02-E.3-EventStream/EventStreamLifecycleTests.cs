@@ -19,9 +19,10 @@ namespace BlackThunder.UniEngine.Tests
             var exceptions = new List<Exception>();
             var failure = new ApplicationException("source");
             var predicateCalls = 0;
-            var left = stream.Where(new Filter<int>("left", _ => { predicateCalls++; return false; }));
-            var nested = left.Where(new Filter<int>("nested", _ => { predicateCalls++; return false; }));
-            var right = stream.Where(new Filter<int>("right", _ => { predicateCalls++; return false; }));
+            var left = stream.Where(_ => { predicateCalls++; return false; });
+            var nested = left.Where(_ => { predicateCalls++; return false; });
+            var right = stream.Where(_ => { predicateCalls++; return false; });
+
             Observer Receiver(string name, Action terminating = null)
             {
                 void Record(string signal)
@@ -29,26 +30,37 @@ namespace BlackThunder.UniEngine.Tests
                     calls.Add(name + signal);
                     terminating?.Invoke();
                 }
-                return new Observer(_ => calls.Add("value"), () => Record("-completed"),
+
+                return new Observer(
+                    _ => calls.Add("value"),
+                    () => Record("-completed"),
                     exception => { Record("-error"); exceptions.Add(exception); });
             }
+
             var leaf = (Handle)nested.Subscribe(Receiver("leaf"));
             var parent = (Handle)left.Subscribe(Receiver("left"));
             var root = (Handle)stream.Subscribe(Receiver("root"));
             var earlierHandlesActive = false;
-            var sibling = (Handle)right.Subscribe(Receiver("right", () =>
-                earlierHandlesActive = !root.IsDisposed && !parent.IsDisposed && !leaf.IsDisposed));
+            var sibling = (Handle)right.Subscribe(
+                Receiver(
+                    "right",
+                    () => earlierHandlesActive = !root.IsDisposed && !parent.IsDisposed && !leaf.IsDisposed));
 
             stream.Enabled = false;
             stream.OnNext(7);
             Assert.That(predicateCalls, Is.Zero);
             Assert.That(calls, Is.Empty);
+
             if (error) stream.OnError(failure);
             else stream.OnCompleted();
 
             var suffix = error ? "-error" : "-completed";
-            Assert.That(calls, Is.EqualTo(new[] { "root" + suffix, "left" + suffix, "leaf" + suffix, "right" + suffix }));
-            Assert.That(exceptions, Is.EqualTo(error ? new[] { failure, failure, failure, failure } : Array.Empty<Exception>()));
+            Assert.That(
+                calls,
+                Is.EqualTo(new[] { "root" + suffix, "left" + suffix, "leaf" + suffix, "right" + suffix }));
+            Assert.That(
+                exceptions,
+                Is.EqualTo(error ? new[] { failure, failure, failure, failure } : Array.Empty<Exception>()));
             Assert.That(predicateCalls, Is.Zero);
             Assert.That(earlierHandlesActive, Is.True, "Notify every subscription before disposing the graph.");
             Assert.That(leaf.IsDisposed && sibling.IsDisposed && parent.IsDisposed && root.IsDisposed, Is.True);
@@ -112,6 +124,7 @@ namespace BlackThunder.UniEngine.Tests
             source.Observer.OnNext(3);
             stream.Enabled = true;
             source.Observer.OnNext(4);
+
             if (error) stream.OnError(failure);
             else stream.OnCompleted();
 
@@ -132,6 +145,7 @@ namespace BlackThunder.UniEngine.Tests
             var completed = 0;
             var errors = new List<Exception>();
             var handle = (Handle)stream.Subscribe(_ => { }, () => completed++, errors.Add);
+
             if (error) source.Observer.OnError(failure);
             else source.Observer.OnCompleted();
 
@@ -160,7 +174,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var parent = new EventStream<int>();
             var checks = 0;
-            using var branch = parent.Where(new Filter<int>("pending", _ => { checks++; return true; })).Branch();
+            using var branch = parent.Where(_ => { checks++; return true; }).Branch();
             parent.OnNext(1);
             Assert.That(parent.NodeCount, Is.Zero);
             Assert.That(checks, Is.Zero);
@@ -179,7 +193,7 @@ namespace BlackThunder.UniEngine.Tests
         public void EndingTheParentForwardsItsSignalAndReleasesTheBranch(string signal)
         {
             using var parent = new EventStream<int>();
-            using var branch = parent.Where(new Filter<int>("reject", _ => false)).Branch();
+            using var branch = parent.Where(_ => false).Branch();
             var values = new List<int>();
             var completions = 0;
             var errors = new List<Exception>();
@@ -203,7 +217,7 @@ namespace BlackThunder.UniEngine.Tests
         public void BranchesPublishAndEnableIndependentlyAndReleaseOnlyTheirOwnPaths()
         {
             using var stream = new EventStream<int>();
-            var path = stream.Where(new Filter<int>("positive", value => value > 0));
+            var path = stream.Where(value => value > 0);
             using var left = path.Branch();
             using var right = path.Branch();
             var parentValues = new List<int>();
@@ -211,7 +225,7 @@ namespace BlackThunder.UniEngine.Tests
             var rightValues = new List<int>();
             stream.Subscribe(parentValues.Add);
             var leftRoot = left.Subscribe(leftValues.Add);
-            var leftLeaf = left.Where(new Filter<int>("all", _ => true)).Subscribe(_ => { });
+            var leftLeaf = left.Where(_ => true).Subscribe(_ => { });
             var rightRoot = right.Subscribe(rightValues.Add);
             Assert.That(stream.NodeCount, Is.EqualTo(3));
 
@@ -244,13 +258,17 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(false, false)]
         [TestCase(false, true)]
         [TestCase(true, false)]
-        public void ExternalSourceCanFinishDuringConnectionAndReleasesTheReturnedHandleOnce(bool error, bool completeTwice)
+        public void ExternalSourceCanFinishDuringConnectionAndReleasesTheReturnedHandleOnce(
+            bool error,
+            bool completeTwice)
         {
             var failure = new ApplicationException("upstream");
+
             var source = new SubscribingSource(observer =>
             {
                 if (error) observer.OnError(failure);
                 else observer.OnCompleted();
+
                 if (completeTwice) observer.OnCompleted();
             });
 
@@ -360,7 +378,9 @@ namespace BlackThunder.UniEngine.Tests
             public IDisposable Subscribe(IObserver<int> observer)
             {
                 Observer = observer;
+
                 if (CompleteOnSubscribe) observer.OnCompleted();
+
                 return Connection;
             }
 

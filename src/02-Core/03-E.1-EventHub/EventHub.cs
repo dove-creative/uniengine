@@ -21,6 +21,7 @@ namespace Blackthunder.UniEngine.Core
             add
             {
                 ThrowIfDisposed();
+
                 if (value == null) return;
 
                 foreach (var entry in value.GetInvocationList())
@@ -39,6 +40,7 @@ namespace Blackthunder.UniEngine.Core
             add
             {
                 ThrowIfDisposed();
+
                 if (value == null) return;
 
                 foreach (var entry in value.GetInvocationList())
@@ -67,7 +69,7 @@ namespace Blackthunder.UniEngine.Core
             Direct,
         }
 
-        private sealed class UpdateSubscription
+        private class UpdateSubscription
         {
             internal Delegate Source;
             internal bool IsAdapted;
@@ -92,6 +94,7 @@ namespace Blackthunder.UniEngine.Core
             internal static void AddLifecycleCallback(ref List<Delegate> callbacks, Delegate callback)
             {
                 if (callback == null) return;
+
                 callbacks ??= new List<Delegate>();
                 callbacks.AddRange(callback.GetInvocationList());
             }
@@ -113,7 +116,7 @@ namespace Blackthunder.UniEngine.Core
 
         private readonly AdaptiveDictionary<object, Order> _orders = new();
         // One publication defers additions across both update phases.
-        private readonly EventStream<TEventArgs, UpdatePhase> _updates = new();
+        private readonly EventStream<TEventArgs> _updates = new();
         private readonly List<UpdateSubscription> _updateSubscriptions = new();
         private readonly HubCallbacks<Action> _disposing = new(static callback => callback());
         private readonly HubCallbacks<Action> _disposed = new(static callback => callback());
@@ -141,14 +144,19 @@ namespace Blackthunder.UniEngine.Core
         public IEventHubBuilder<TEventArgs> Connect(object listener)
         {
             ThrowIfDisposed();
+
             if (listener == null)
                 throw new ArgumentNullException(nameof(listener), Ctx("Cannot register a null listener."));
+
             if (_orders.ContainsKey(listener))
                 throw new InvalidOperationException(Ctx($"This Listener already exists: {listener}"));
 
             var order = new Order { Hub = this };
             _orders.Add(listener, order);
-            order.UpdateConnection = _updates.Subscribe(UpdatePhase.Listeners, args => InvokeUpdate(listener, order, args));
+            order.UpdateConnection = _updates
+                .ForOrder(UpdatePhase.Listeners)
+                .Subscribe(args => InvokeUpdate(listener, order, args));
+
             return GetBuilder(order);
         }
         IEventHubBuilder IEventHub.Connect(object listener) => Connect(listener);
@@ -160,6 +168,7 @@ namespace Blackthunder.UniEngine.Core
         public void Disconnect(object listener)
         {
             if (IsDisposed || listener == null) return;
+
             if (_orders.TryGetValue(listener, out var order))
                 RemoveOrder(listener, order);
         }
@@ -171,9 +180,10 @@ namespace Blackthunder.UniEngine.Core
         public virtual void Update(TEventArgs args)
         {
             ThrowIfDisposed();
-            if (_isSleeping || _isUpdating) return;
 
+            if (_isSleeping || _isUpdating) return;
             _isUpdating = true;
+
             var completed = false;
             try
             {
@@ -187,6 +197,7 @@ namespace Blackthunder.UniEngine.Core
             finally
             {
                 _isUpdating = false;
+
                 if (_pendingDispose)
                 {
                     if (completed)
@@ -200,6 +211,7 @@ namespace Blackthunder.UniEngine.Core
         private void InvokeUpdate(object listener, Order order, TEventArgs args)
         {
             if (!order.IsConnected || _pendingDispose) return;
+
             if (order.SkipCount > 0)
             {
                 order.SkipCount--;
@@ -211,6 +223,7 @@ namespace Blackthunder.UniEngine.Core
                 for (int i = 0; i < order.PublishedCallbackCount; i++)
                 {
                     if (!order.IsConnected || _pendingDispose) return;
+
                     order.UpdateCallbacks[i](args);
                 }
             }
@@ -226,7 +239,8 @@ namespace Blackthunder.UniEngine.Core
         private void AddUpdated(Delegate source, Action<TEventArgs> callback, bool isAdapted)
         {
             var subscription = new UpdateSubscription { Source = source, IsAdapted = isAdapted };
-            subscription.Connection = _updates.Subscribe(UpdatePhase.Direct, args =>
+
+            subscription.Connection = _updates.ForOrder(UpdatePhase.Direct).Subscribe(args =>
             {
                 try
                 {
@@ -239,6 +253,7 @@ namespace Blackthunder.UniEngine.Core
                     throw;
                 }
             });
+
             _updateSubscriptions.Add(subscription);
         }
 
@@ -259,10 +274,12 @@ namespace Blackthunder.UniEngine.Core
                         break;
                     }
                 }
+
                 if (!matches) continue;
 
                 for (var offset = 0; offset < entries.Length; offset++)
                     RemoveUpdated(_updateSubscriptions[start]);
+
                 return;
             }
         }
@@ -279,6 +296,7 @@ namespace Blackthunder.UniEngine.Core
         public bool TrySleep(out IDisposable token, Action onAwake = null)
         {
             ThrowIfDisposed();
+
             if (_isSleeping)
             {
                 token = default;
@@ -297,8 +315,10 @@ namespace Blackthunder.UniEngine.Core
         public IDisposable Sleep(Token token, Action onAwake = null)
         {
             ThrowIfDisposed();
+
             if (_isSleeping)
                 throw new InvalidOperationException(Ctx("Nested Sleep is not allowed."));
+
             if (token == null || token.IsDisposed)
                 throw new ArgumentException(Ctx("Invalid Token could not be connected"), nameof(token));
 
@@ -307,6 +327,7 @@ namespace Blackthunder.UniEngine.Core
             _sleepToken = token;
             _awakeHandler ??= Awake;
             token.Action += _awakeHandler;
+
             try
             {
                 _onSleep?.Invoke();
@@ -328,6 +349,7 @@ namespace Blackthunder.UniEngine.Core
             if (IsDisposed || _pendingDispose || !_isSleeping) return;
             _isSleeping = false;
             _sleepToken = null;
+
             var onAwake = _onAwake;
             _onAwake = null;
             onAwake?.Invoke();
@@ -344,6 +366,7 @@ namespace Blackthunder.UniEngine.Core
         {
             if (IsDisposed || _isDisposing) return;
             _pendingDispose = true;
+
             if (_isUpdating)
             {
                 // Stop updates now; lifecycle callbacks wait for the current callback to return.
@@ -352,14 +375,17 @@ namespace Blackthunder.UniEngine.Core
             }
 
             _isDisposing = true;
+
             try
             {
                 _updates.Dispose();
+
                 if (!disposing)
                 {
                     try
                     {
-                        Ctx("An IEventSubject object was garbage collected without being disposed.\n"
+                        Ctx(
+                            "An IEventSubject object was garbage collected without being disposed.\n"
                             + "Ensure that Dispose() is explicitly called when the object is no longer needed.")
                             .Write(LogLevel.Warning);
                     }
@@ -367,10 +393,12 @@ namespace Blackthunder.UniEngine.Core
                     {
                         // Finalizer diagnostics must never escape the finalizer thread.
                     }
+
                     return;
                 }
 
                 _disposing.Invoke();
+
                 foreach (var item in _orders)
                 {
                     InvokeOrder(item.Key, item.Value, item.Value.OnDisposing);
@@ -378,11 +406,13 @@ namespace Blackthunder.UniEngine.Core
                 }
 
                 IsDisposed = true;
+
                 foreach (var item in _orders)
                 {
                     InvokeOrder(item.Key, item.Value, item.Value.OnDisposed);
                     InvokeOrder(item.Key, item.Value, item.Value.OnDisposedSelf);
                 }
+
                 _disposed.Invoke();
             }
             finally
@@ -403,8 +433,10 @@ namespace Blackthunder.UniEngine.Core
             _pendingDispose = true;
             _isDisposing = false;
             _isSleeping = false;
+
             if (_sleepToken != null)
                 _sleepToken.Action -= _awakeHandler;
+
             _sleepToken = null;
             _awakeHandler = null;
             _onAwake = null;
@@ -412,6 +444,7 @@ namespace Blackthunder.UniEngine.Core
 
             foreach (var item in _orders)
                 item.Value.Clear();
+
             _orders.Clear();
             _updateSubscriptions.Clear();
             _disposing.Clear();
@@ -426,6 +459,7 @@ namespace Blackthunder.UniEngine.Core
             foreach (var callback in callbacks)
             {
                 if (!order.IsConnected) return;
+
                 try
                 {
                     if (callback is Action action)
@@ -445,6 +479,7 @@ namespace Blackthunder.UniEngine.Core
         private void RemoveOrder(object listener, Order order)
         {
             order.Clear();
+
             if (_orders.TryGetValue(listener, out var current) && ReferenceEquals(current, order))
                 _orders.Remove(listener);
         }
@@ -452,9 +487,9 @@ namespace Blackthunder.UniEngine.Core
         private string Ctx(string message) => $"[EventHub: {Owner ?? "null"}] {message}";
     }
 
-    internal sealed class HubCallbacks<TCallback> where TCallback : Delegate
+    internal class HubCallbacks<TCallback> where TCallback : Delegate
     {
-        internal sealed class Subscription
+        internal class Subscription
         {
             internal TCallback Callback;
             internal Delegate Source;
@@ -471,12 +506,14 @@ namespace Blackthunder.UniEngine.Core
         internal void Add(TCallback callback)
         {
             if (callback == null) return;
+
             foreach (var entry in InvocationListCache<Delegate>.Get(callback))
                 Add(entry, (TCallback)entry, false);
         }
         internal void Add(Delegate source, TCallback callback, bool isAdapted)
         {
             _subscriptions.Add(new Subscription { Source = source, Callback = callback, IsAdapted = isAdapted });
+
             if (_snapshot.Length < _subscriptions.Count)
                 _snapshot = new Subscription[_subscriptions.Capacity];
         }
@@ -484,6 +521,7 @@ namespace Blackthunder.UniEngine.Core
         internal void Remove(Delegate callback, bool isAdapted = false)
         {
             if (callback == null) return;
+
             var entries = InvocationListCache<Delegate>.Get(callback);
             for (var start = _subscriptions.Count - entries.Length; start >= 0; start--)
             {
@@ -497,10 +535,12 @@ namespace Blackthunder.UniEngine.Core
                         break;
                     }
                 }
+
                 if (!matches) continue;
 
                 for (var offset = 0; offset < entries.Length; offset++)
                     _subscriptions[start + offset].IsActive = false;
+
                 _subscriptions.RemoveRange(start, entries.Length);
                 return;
             }
@@ -510,11 +550,13 @@ namespace Blackthunder.UniEngine.Core
         {
             // Owners prevent additions and nested notifications while this snapshot is active.
             _subscriptions.CopyTo(_snapshot);
+
             var count = _subscriptions.Count;
             for (var index = 0; index < count; index++)
             {
                 var subscription = _snapshot[index];
                 if (!subscription.IsActive) continue;
+
                 try
                 {
                     _invoke(subscription.Callback);
@@ -532,6 +574,7 @@ namespace Blackthunder.UniEngine.Core
         {
             foreach (var subscription in _subscriptions)
                 subscription.IsActive = false;
+
             _subscriptions.Clear();
             _snapshot = Array.Empty<Subscription>();
         }

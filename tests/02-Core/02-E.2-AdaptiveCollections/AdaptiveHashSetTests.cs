@@ -39,7 +39,9 @@ namespace BlackThunder.UniEngine.Tests
             Assert.Throws<InvalidOperationException>(() => nested.MoveNext());
             nested.Dispose();
             collection.Add(3);
+
             while (outer.MoveNext()) seen.Add(outer.Current);
+
             outer.Dispose();
             Assert.That(seen, Is.EquivalentTo(deferred ? new[] { 1, 2 } : new[] { 1, 2, 3 }));
             Assert.That(Read(collection), Is.EquivalentTo(new[] { 1, 2, 3 }));
@@ -54,12 +56,15 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in collection)
             {
                 seen.Add(item);
+
                 if (item >= 3) continue;
+
                 collection.Add(item + 1);
                 collection.Add(item + 1);
                 Assert.That(collection.Contains(item + 1), Is.True);
                 Assert.That(collection.Count, Is.EqualTo(item + 2));
             }
+
             Assert.That(seen, Is.EqualTo(deferred ? new[] { 0 } : new[] { 0, 1, 2, 3 }));
             Assert.That(Read(collection), Is.EquivalentTo(deferred ? new[] { 0, 1 } : new[] { 0, 1, 2, 3 }));
         }
@@ -71,14 +76,17 @@ namespace BlackThunder.UniEngine.Tests
             var collection = new AdaptiveHashSet<int>(deferred) { 1, 2, 3 };
             var cursor = collection.GetEnumerator();
             Assert.That(cursor.MoveNext(), Is.True);
+
             var first = cursor.Current;
             for (var value = 1; value <= 3; value++)
             {
                 if (value == first) continue;
+
                 Assert.That(collection.Remove(value), Is.True);
                 Assert.That(collection.Remove(value), Is.False);
                 Assert.That(collection.Contains(value), Is.False);
             }
+
             Assert.That(collection.Count, Is.EqualTo(1));
             Assert.That(cursor.MoveNext(), Is.False);
             cursor.Dispose();
@@ -94,12 +102,15 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in collection)
             {
                 visits++;
+
                 if (visits != 1) continue;
+
                 Assert.That(collection.Remove(item), Is.True);
                 collection.Add(item);
                 Assert.That(collection.Count, Is.EqualTo(1));
                 Assert.That(collection.Contains(item), Is.True);
             }
+
             Assert.That(visits, Is.EqualTo(deferred ? 1 : 2));
             Assert.That(Read(collection), Is.EqualTo(new[] { 1 }));
         }
@@ -117,6 +128,7 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(collection.Contains(2), Is.False);
                 Assert.That(collection.Count, Is.EqualTo(1));
             }
+
             Assert.That(Read(collection), Is.EqualTo(new[] { 1 }));
         }
 
@@ -134,6 +146,7 @@ namespace BlackThunder.UniEngine.Tests
                 collection.Add(4);
                 Assert.That(collection.Count, Is.EqualTo(1));
             }
+
             Assert.That(visits, Is.EqualTo(1));
             Assert.That(Read(collection), Is.EqualTo(new[] { 4 }));
         }
@@ -146,15 +159,18 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in collection)
             {
                 seen.Add(item);
+
                 if (item == 0)
                 {
                     collection.Add(1);
                     continue;
                 }
+
                 collection.Add(2);
                 collection.Clear();
                 collection.Add(9);
             }
+
             Assert.That(seen, Is.EqualTo(new[] { 0, 1 }));
             Assert.That(Read(collection), Is.EqualTo(new[] { 9 }));
         }
@@ -172,7 +188,9 @@ namespace BlackThunder.UniEngine.Tests
                 {
                     collection.Remove(item);
                     collection.Add(2);
+
                     if (fail) throw new ApplicationException("body");
+
                     break;
                 }
             }
@@ -180,6 +198,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 Assert.That(fail, Is.True);
             }
+
             Assert.That(Read(collection), Is.EqualTo(new[] { 2 }));
         }
 
@@ -238,6 +257,7 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.Throws<NotSupportedException>(() => cursor.Reset());
                 Assert.Throws<InvalidOperationException>(() => collection.CopyTo(new int[2], 0));
             }
+
             var untyped = ((IEnumerable)collection).GetEnumerator();
             var values = new List<object>();
             try
@@ -248,12 +268,15 @@ namespace BlackThunder.UniEngine.Tests
             {
                 ((IDisposable)untyped).Dispose();
             }
+
             Assert.That(values, Is.EquivalentTo(new[] { 1, 2 }));
+
             Assert.Throws<ApplicationException>(() => collection.ForEach(value =>
             {
                 collection.Add(3);
                 throw new ApplicationException("selector");
             }));
+
             var copied = new int[3];
             collection.CopyTo(copied, 0);
             Assert.That(copied, Is.EquivalentTo(new[] { 1, 2, 3 }));
@@ -267,13 +290,15 @@ namespace BlackThunder.UniEngine.Tests
         {
             var collection = new AdaptiveHashSet<int>(deferred);
             for (var index = 1; index <= count; index++) collection.Add(index);
+
             Sum(collection, 2000);
             var before = GC.GetAllocatedBytesForCurrentThread();
             var sum = Sum(collection, 10000);
             var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
             Assert.That(sum, Is.EqualTo((long)count * (count + 1) / 2 * 10000));
             Assert.That(allocated, Is.Zero);
-            TestContext.WriteLine($"HashSet direct enumeration: deferred={deferred}, count={count}, allocated={allocated} bytes.");
+            TestContext.WriteLine(
+                $"HashSet direct enumeration: deferred={deferred}, count={count}, allocated={allocated} bytes.");
         }
 
         // A past removal keeps the marker set's buckets, so clean passes must still skip hashing.
@@ -283,15 +308,19 @@ namespace BlackThunder.UniEngine.Tests
         {
             var collection = new AdaptiveHashSet<PlainValue>(deferred);
             for (var index = 1; index <= 4; index++) collection.Add(new PlainValue(index));
+
             foreach (var item in collection) collection.Remove(item);
+
             for (var index = 1; index <= 4; index++) collection.Add(new PlainValue(index));
+
             Sum(collection, 2000);
             var before = GC.GetAllocatedBytesForCurrentThread();
             var sum = Sum(collection, 10000);
             var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
             Assert.That(sum, Is.EqualTo(10L * 10000));
             Assert.That(allocated, Is.Zero);
-            TestContext.WriteLine($"HashSet enumeration after removal: deferred={deferred}, allocated={allocated} bytes.");
+            TestContext.WriteLine(
+                $"HashSet enumeration after removal: deferred={deferred}, allocated={allocated} bytes.");
         }
 
         [TestCase(false)]
@@ -313,6 +342,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             var values = new List<T>();
             foreach (var item in collection) values.Add(item);
+
             return values;
         }
 
@@ -324,6 +354,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 foreach (var item in collection) total += item;
             }
+
             return total;
         }
 
@@ -335,6 +366,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 foreach (var item in collection) total += item.Value;
             }
+
             return total;
         }
 
@@ -346,13 +378,16 @@ namespace BlackThunder.UniEngine.Tests
             {
                 collection.Clear();
                 collection.Add(0);
+
                 foreach (var item in collection)
                 {
                     total += item;
                     collection.Remove(item);
+
                     if (item < 3) collection.Add(item + 1);
                 }
             }
+
             return total;
         }
 

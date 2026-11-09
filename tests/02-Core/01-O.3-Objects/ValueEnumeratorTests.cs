@@ -26,6 +26,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 if (FailBegin || _activeId != 0)
                     throw new InvalidOperationException("begin");
+
                 BeginCount++;
                 _index = 0;
                 return _activeId = ++_nextId;
@@ -35,11 +36,13 @@ namespace BlackThunder.UniEngine.Tests
             {
                 if (_activeId != enumerationId || FailMove)
                     throw new InvalidOperationException("move");
+
                 if (_index < _values.Length)
                 {
                     current = _values[_index++];
                     return true;
                 }
+
                 current = default;
                 return false;
             }
@@ -48,7 +51,9 @@ namespace BlackThunder.UniEngine.Tests
             {
                 if (_activeId != enumerationId) return;
                 _activeId = 0;
+
                 EndCount++;
+
                 if (FailEnd) throw new InvalidOperationException("end");
             }
         }
@@ -141,15 +146,21 @@ namespace BlackThunder.UniEngine.Tests
             var source = new NumberSource(1) { FailEnd = true };
             var enumerator = new ValueEnumerator<int>(source);
             Assert.That(enumerator.MoveNext(), Is.True);
+
             if (failureDuringMove)
             {
                 source.FailMove = true;
-                Assert.That(Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext()).Message, Is.EqualTo("end"));
+                Assert.That(
+                    Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext()).Message,
+                    Is.EqualTo("end"));
             }
             else
             {
-                Assert.That(Assert.Throws<InvalidOperationException>(() => enumerator.Dispose()).Message, Is.EqualTo("end"));
+                Assert.That(
+                    Assert.Throws<InvalidOperationException>(() => enumerator.Dispose()).Message,
+                    Is.EqualTo("end"));
             }
+
             enumerator.Dispose();
             Assert.That(enumerator.MoveNext(), Is.False);
             Assert.That(source.EndCount, Is.EqualTo(1));
@@ -166,6 +177,7 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
             else
                 Assert.That(enumerator.MoveNext(), Is.False);
+
             enumerator.Dispose();
             Assert.That(source.BeginCount, Is.EqualTo(1));
             Assert.That(source.EndCount, Is.EqualTo(1));

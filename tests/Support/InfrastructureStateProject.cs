@@ -13,8 +13,8 @@ namespace BlackThunder.UniEngine.Tests
 
 
         // Content
-        private InfrastructureStateProject(string scenario, string[] stepNames)
-            : base(ExecutionMode.Inline) => (_scenario, _stepNames) = (scenario, stepNames);
+        private InfrastructureStateProject(string scenario, string[] stepNames) : base(ExecutionMode.Inline) =>
+            (_scenario, _stepNames) = (scenario, stepNames);
 
         public override IEnumerable<CompactLab<Model>> CreateCompactLabs(Model model)
         {
@@ -22,6 +22,7 @@ namespace BlackThunder.UniEngine.Tests
                 return Array.Empty<CompactLab<Model>>();
 
             var stepCount = model.ExecutionCount + 1;
+
             return new[] { new CompactLab<Model>(_stepNames[stepCount - 1])
             {
                 // UniTest replays prior Labs. Rebuild each real static-state prefix in a fresh process.

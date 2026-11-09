@@ -8,12 +8,26 @@ namespace BlackThunder.UniEngine.Tests
         // Content
         [Test]
         public Task LifecycleSucceedsThroughUniTest() =>
-            InfrastructureStateProject.RunAsync("Log.Lifecycle", "Initialize", "WriteFirst", "SaveFirst", "EmptyBuffer",
-                "WritePending", "Reinitialize", "WriteSecond", "SaveSecond");
+            InfrastructureStateProject.RunAsync(
+                "Log.Lifecycle",
+                "Initialize",
+                "WriteFirst",
+                "SaveFirst",
+                "EmptyBuffer",
+                "WritePending",
+                "Reinitialize",
+                "WriteSecond",
+                "SaveSecond");
 
         [Test]
         public Task FailedSaveRecoversThroughUniTest() =>
-            InfrastructureStateProject.RunAsync("Log.SaveRecovery", "SavePrevious", "BlockPath", "FailSave",
-                "RestoreDirectory", "SaveRetainedBuffer", "EmptyBuffer");
+            InfrastructureStateProject.RunAsync(
+                "Log.SaveRecovery",
+                "SavePrevious",
+                "BlockPath",
+                "FailSave",
+                "RestoreDirectory",
+                "SaveRetainedBuffer",
+                "EmptyBuffer");
     }
 }

@@ -14,7 +14,10 @@ namespace BlackThunder.UniEngine.Tests
         // Internal
         private class CustomVector2Converter : JsonConverter<Vector2>
         {
-            public override Vector2 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+            public override Vector2 Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options) =>
                 reader.TokenType == JsonTokenType.String && reader.GetString() == "custom"
                     ? new Vector2(9, 8)
                     : throw new JsonException("A custom vector string was expected.");
@@ -27,7 +30,10 @@ namespace BlackThunder.UniEngine.Tests
         // Content
         [Test]
         public void NullOptionsAreRejected() =>
-            Assert.That(Assert.Throws<ArgumentNullException>(() => ((JsonSerializerOptions)null).AddUniEngineConverters()).ParamName, Is.EqualTo("options"));
+            Assert.That(
+                Assert.Throws<ArgumentNullException>(
+                    () => ((JsonSerializerOptions)null).AddUniEngineConverters()).ParamName,
+                Is.EqualTo("options"));
 
         [Test]
         public void RegistrationReturnsTheSameOptionsAndAddsEachConverterOnlyOnce()
@@ -35,6 +41,7 @@ namespace BlackThunder.UniEngine.Tests
             var options = new JsonSerializerOptions();
             Assert.That(options.AddUniEngineConverters(), Is.SameAs(options));
             var original = options.Converters.ToArray();
+
             Assert.That(original.Select(converter => converter.GetType()), Is.EqualTo(new[]
             {
                 typeof(Vector2JsonConverter), typeof(Vector3JsonConverter), typeof(Vector2IntJsonConverter),

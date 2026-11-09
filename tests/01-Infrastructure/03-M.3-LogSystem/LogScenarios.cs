@@ -14,6 +14,7 @@ namespace BlackThunder.UniEngine.Tests
         public static Task RunAsync(string scenario, string applicationId)
         {
             var path = InfrastructureProcess.GetOwnedPath(applicationId);
+
             if (scenario == "InitializationRequired")
             {
                 Assert.Throws<InvalidOperationException>(() => Log.Initialize());
@@ -28,6 +29,7 @@ namespace BlackThunder.UniEngine.Tests
 
             Configuration.Initialize(applicationId);
             Log.Initialize((_, _) => { });
+
             if (scenario.StartsWith("Lifecycle.", StringComparison.Ordinal))
             {
                 ExecutePrefix(int.Parse(scenario.Substring("Lifecycle.".Length)), new Action[]
@@ -37,17 +39,25 @@ namespace BlackThunder.UniEngine.Tests
                     () => Assert.That(Log.Print(), Is.EqualTo("[Log] first" + Environment.NewLine)),
                     () => Assert.That(Log.Print(), Is.Empty),
                     () => Log.Write("discard on initialize"),
-                    () => { Log.Initialize((_, _) => { }); Assert.That(Log.Print(), Is.Empty); Assert.That(Log.DebugFilePath, Is.Empty); },
+                    () =>
+                    {
+                        Log.Initialize((_, _) => { });
+                        Assert.That(Log.Print(), Is.Empty);
+                        Assert.That(Log.DebugFilePath, Is.Empty);
+                    },
                     () => Log.Write("second"),
                     () => Assert.That(Log.Print(), Is.EqualTo("[Log] second" + Environment.NewLine)),
                 });
+
                 return Task.CompletedTask;
             }
+
             if (scenario.StartsWith("SaveRecovery.", StringComparison.Ordinal))
             {
                 SaveRecovery(applicationId, int.Parse(scenario.Substring("SaveRecovery.".Length)));
                 return Task.CompletedTask;
             }
+
             switch (scenario)
             {
                 case "DefaultConsole":
@@ -66,27 +76,33 @@ namespace BlackThunder.UniEngine.Tests
                             Console.SetOut(originalOutput);
                         }
                     }
+
                     break;
                 case "MessagesAndLevels":
                     var calls = new List<(string Message, LogLevel Level)>();
                     Log.Initialize((message, level) => calls.Add((message, level)));
+
                     foreach (LogLevel level in Enum.GetValues(typeof(LogLevel)))
                         Assert.That(Log.Write("message", level), Is.EqualTo("message"));
+
                     Assert.That(calls, Is.EqualTo(new[]
                     {
                         ("message", LogLevel.Log), ("message", LogLevel.Warning),
                         ("message", LogLevel.Error), ("message", LogLevel.Exception),
                     }));
+
                     Log.Write((object)null);
                     Log.Write();
                     Log.WriteLine();
-                    Assert.That(Log.Print(), Is.EqualTo(
-                        "[Log] message" + Environment.NewLine
-                        + "[Warning] message" + Environment.NewLine
-                        + "[Error] message" + Environment.NewLine
-                        + "[Exception] message" + Environment.NewLine
-                        + "[Log] null" + Environment.NewLine
-                        + "[Log] Called" + Environment.NewLine + Environment.NewLine));
+                    Assert.That(
+                        Log.Print(),
+                        Is.EqualTo(
+                            "[Log] message" + Environment.NewLine
+                            + "[Warning] message" + Environment.NewLine
+                            + "[Error] message" + Environment.NewLine
+                            + "[Exception] message" + Environment.NewLine
+                            + "[Log] null" + Environment.NewLine
+                            + "[Log] Called" + Environment.NewLine + Environment.NewLine));
                     break;
                 case "Collections":
                     var numbers = new[] { 1, 2 };
@@ -107,7 +123,9 @@ namespace BlackThunder.UniEngine.Tests
                     var content = Log.Print();
                     var savedPath = Log.DebugFilePath;
                     Assert.That(content, Is.EqualTo("[Log] 한글 café 🚢" + Environment.NewLine));
-                    Assert.That(File.ReadAllBytes(savedPath), Is.EqualTo(new UTF8Encoding(false, true).GetBytes(content)));
+                    Assert.That(
+                        File.ReadAllBytes(savedPath),
+                        Is.EqualTo(new UTF8Encoding(false, true).GetBytes(content)));
                     Assert.That(Log.Print(), Is.Empty);
                     Assert.That(Log.DebugFilePath, Is.EqualTo(savedPath));
                     Assert.That(Directory.GetFiles(path), Has.Length.EqualTo(1));
@@ -122,8 +140,10 @@ namespace BlackThunder.UniEngine.Tests
                         Assert.That(Path.GetDirectoryName(Log.DebugFilePath), Is.EqualTo(path));
                         saved.Add(Log.DebugFilePath, text);
                     }
+
                     foreach (var pair in saved)
                         Assert.That(File.ReadAllText(pair.Key), Is.EqualTo(pair.Value));
+
                     Assert.That(Directory.GetFiles(path), Has.Length.EqualTo(5));
                     break;
                 case "OutputFailure":
@@ -140,16 +160,23 @@ namespace BlackThunder.UniEngine.Tests
 
                         // A different thread must acquire the buffer lock during the callback.
                         var nested = Task.Run(() => Log.Write("inner"));
-                        Assert.That(nested.Wait(TimeSpan.FromSeconds(2)), Is.True, "The output callback retained the buffer lock.");
+                        Assert.That(
+                            nested.Wait(TimeSpan.FromSeconds(2)),
+                            Is.True,
+                            "The output callback retained the buffer lock.");
                     });
+
                     Log.Write("outer");
-                    Assert.That(Log.Print(), Is.EqualTo("[Log] outer" + Environment.NewLine + "[Log] inner" + Environment.NewLine));
+                    Assert.That(
+                        Log.Print(),
+                        Is.EqualTo("[Log] outer" + Environment.NewLine + "[Log] inner" + Environment.NewLine));
                     break;
                 case "StackTrace":
                     Log.LogWithStackTrace = true;
                     Log.Write("traced");
-                    Assert.That(Log.Print(), Does.StartWith("[Log] traced" + Environment.NewLine)
-                        .And.Contain(nameof(RunAsync)));
+                    Assert.That(
+                        Log.Print(),
+                        Does.StartWith("[Log] traced" + Environment.NewLine).And.Contain(nameof(RunAsync)));
                     Log.LogWithStackTrace = false;
                     Log.Write("plain");
                     Assert.That(Log.Print(), Is.EqualTo("[Log] plain" + Environment.NewLine));
@@ -183,6 +210,7 @@ namespace BlackThunder.UniEngine.Tests
                 default:
                     throw new ArgumentException("Unknown Log scenario: " + scenario);
             }
+
             return Task.CompletedTask;
         }
 
@@ -190,6 +218,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             var path = InfrastructureProcess.GetOwnedPath(applicationId);
             string previousPath = null;
+
             ExecutePrefix(stepCount, new Action[]
             {
                 () => { Log.Write("previous"); Log.Print(); previousPath = Log.DebugFilePath; },
@@ -209,7 +238,9 @@ namespace BlackThunder.UniEngine.Tests
                 () =>
                 {
                     Assert.That(Log.Print(), Is.EqualTo("[Log] retained" + Environment.NewLine));
-                    Assert.That(File.ReadAllText(Log.DebugFilePath), Is.EqualTo("[Log] retained" + Environment.NewLine));
+                    Assert.That(
+                        File.ReadAllText(Log.DebugFilePath),
+                        Is.EqualTo("[Log] retained" + Environment.NewLine));
                 },
                 () => Assert.That(Log.Print(), Is.Empty),
             });
@@ -218,6 +249,7 @@ namespace BlackThunder.UniEngine.Tests
         private static void ExecutePrefix(int stepCount, Action[] steps)
         {
             Assert.That(stepCount, Is.InRange(1, steps.Length));
+
             for (int index = 0; index < stepCount; index++)
                 steps[index]();
         }

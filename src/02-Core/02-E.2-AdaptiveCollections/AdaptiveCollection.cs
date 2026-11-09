@@ -7,9 +7,7 @@ namespace Blackthunder.UniEngine.Core
     public class AdaptiveCollection<T> : ICollection<T>, IEnumerationSource<T>
     {
         // Front
-        public int Count => DeferredUpdate && _isIterating
-            ? _items.Count + _pendingItems.Count
-            : _items.Count;
+        public int Count => DeferredUpdate && _isIterating ? _items.Count + _pendingItems.Count : _items.Count;
 
         public bool IsReadOnly { get; } = false;
         public bool DeferredUpdate { get; private set; }
@@ -29,11 +27,11 @@ namespace Blackthunder.UniEngine.Core
 
         // Content --------------------
         // Construction
-        public AdaptiveCollection()
-            : this(true) { }
+        public AdaptiveCollection() : this(true) { }
         public AdaptiveCollection(bool deferredUpdate)
         {
             DeferredUpdate = deferredUpdate;
+
             if (DeferredUpdate) _pendingItems = new();
         }
 
@@ -45,7 +43,8 @@ namespace Blackthunder.UniEngine.Core
         long IEnumerationSource<T>.BeginEnumeration()
         {
             if (_isIterating)
-                throw new InvalidOperationException("Collection is already being iterated. Nested iterations are not allowed.");
+                throw new InvalidOperationException(
+                    "Collection is already being iterated. Nested iterations are not allowed.");
 
             _enumerationId = checked(_enumerationId + 1);
             _isIterating = true;
@@ -117,6 +116,7 @@ namespace Blackthunder.UniEngine.Core
                     destination.Add(item);
                     OnItemAdded(item);
                 }
+
                 return;
             }
 
@@ -144,6 +144,7 @@ namespace Blackthunder.UniEngine.Core
                 if (_isIterating && index <= _index)
                 {
                     if (index == _index) _currentItemRemoved = true;
+
                     _index--;
                 }
 
@@ -167,6 +168,7 @@ namespace Blackthunder.UniEngine.Core
         {
             _items.Clear();
             _pendingItems?.Clear();
+
             if (_isIterating) _iterationStopped = true;
         }
 

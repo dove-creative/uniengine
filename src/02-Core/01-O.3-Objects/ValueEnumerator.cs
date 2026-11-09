@@ -38,6 +38,7 @@ namespace Blackthunder.UniEngine.Core
         public bool MoveNext()
         {
             if (_isFinished) return false;
+
             if (_source == null)
             {
                 _isFinished = true;
@@ -77,6 +78,7 @@ namespace Blackthunder.UniEngine.Core
         {
             if (_isFinished) return;
             _isFinished = true;
+
             if (_isStarted)
                 _source.EndEnumeration(_enumerationId);
         }

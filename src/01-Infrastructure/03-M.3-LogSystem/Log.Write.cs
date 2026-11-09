@@ -8,8 +8,7 @@ namespace BlackThunder.UniEngine.Infrastructure
 {
     public static partial class Log
     {
-        public static string Write(LogLevel logLevel = LogLevel.Log) =>
-            Write("Called", logLevel);
+        public static string Write(LogLevel logLevel = LogLevel.Log) => Write("Called", logLevel);
 
         public static string Write<T>(this T value, LogLevel logLevel = LogLevel.Log, bool smartWrite = true)
         {

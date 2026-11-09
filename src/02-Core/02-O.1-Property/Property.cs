@@ -39,13 +39,17 @@ namespace Blackthunder.UniEngine.Core
             _properties[key] = property;
             return property;
         }
-        void IDictionary<object, object>.Add(object key, object property) => Add(key, property);
-        void ICollection<KeyValuePair<object, object>>.Add(KeyValuePair<object, object> item) => Add(item.Key, item.Value);
+        void IDictionary<object, object>.Add(object key, object property) =>
+            Add(key, property);
+        void ICollection<KeyValuePair<object, object>>.Add(KeyValuePair<object, object> item) =>
+            Add(item.Key, item.Value);
 
         public T Get<T>(object key) => TryGet(key, out T value)
-            ? value : throw new KeyNotFoundException(Ctx($"No properties were found for the key you entered. Key: {key}"));
+            ? value
+            : throw new KeyNotFoundException(Ctx($"No properties were found for the key you entered. Key: {key}"));
         public object Get(object key) => TryGet(key, out var value)
-            ? value : throw new KeyNotFoundException(Ctx($"No properties were found for the key you entered. Key: {key}"));
+            ? value
+            : throw new KeyNotFoundException(Ctx($"No properties were found for the key you entered. Key: {key}"));
 
         public bool TryGet<T>(object key, out T value)
         {
@@ -62,9 +66,10 @@ namespace Blackthunder.UniEngine.Core
             }
 
             if (targetValue is not T)
-                throw new InvalidCastException(Ctx(
-                    $"The stored value '{targetValue?.ToString() ?? "null"}' has type '{targetValue?.GetType().FullName ?? "null"}', "
-                    + $"which does not match the expected type '{typeof(T).FullName}'."));
+                throw new InvalidCastException(
+                    Ctx(
+                        $"The stored value '{targetValue?.ToString() ?? "null"}' has type '{targetValue?.GetType().FullName ?? "null"}', "
+                        + $"which does not match the expected type '{typeof(T).FullName}'."));
 
             value = (T)targetValue;
             return true;
@@ -72,8 +77,10 @@ namespace Blackthunder.UniEngine.Core
         public bool TryGet(object key, out object value) => _properties.TryGetValue(key, out value);
         bool IDictionary<object, object>.TryGetValue(object key, out object value) => TryGet(key, out value);
 
-        public bool Remove(object key) => _properties.Remove(key);
-        bool IDictionary<object, object>.Remove(object key) => Remove(key);
+        public bool Remove(object key) =>
+            _properties.Remove(key);
+        bool IDictionary<object, object>.Remove(object key) =>
+            Remove(key);
         bool ICollection<KeyValuePair<object, object>>.Remove(KeyValuePair<object, object> item) =>
             ((ICollection<KeyValuePair<object, object>>)_properties).Remove(item);
 
@@ -96,7 +103,8 @@ namespace Blackthunder.UniEngine.Core
 
         public void Clear() => _properties.Clear();
 
-        public bool ContainsKey(object key) => _properties.ContainsKey(key);
+        public bool ContainsKey(object key) =>
+            _properties.ContainsKey(key);
         bool ICollection<KeyValuePair<object, object>>.Contains(KeyValuePair<object, object> item) =>
             _properties.TryGetValue(item.Key, out var value) && Equals(value, item.Value);
 
@@ -119,8 +127,10 @@ namespace Blackthunder.UniEngine.Core
         {
             if (array == null)
                 throw new ArgumentNullException(nameof(array), Ctx("The target array cannot be null."));
+
             if (arrayIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex), Ctx("The array index cannot be negative."));
+
             if (array.Length - arrayIndex < Count)
                 throw new ArgumentException(Ctx("The target array is not large enough to hold the items."));
 
@@ -131,8 +141,10 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
-        IEnumerator<KeyValuePair<object, object>> IEnumerable<KeyValuePair<object, object>>.GetEnumerator() => _properties.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _properties.GetEnumerator();
+        IEnumerator<KeyValuePair<object, object>> IEnumerable<KeyValuePair<object, object>>.GetEnumerator() =>
+            _properties.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() =>
+            _properties.GetEnumerator();
 
         private string Ctx(string message) => $"[{nameof(Property)}] {message}";
     }

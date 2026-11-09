@@ -3,55 +3,78 @@ using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
-    internal enum PathOperation { Group, Where, Debug }
-
-    public sealed class EventPath<T>
+    public class EventPath<T> : IRegistrable<T>
     {
         // Internal
-        private readonly EventStream<T> _stream;
-        internal PathOperation Operation { get; }
-        internal EventPath<T> Parent { get; }
-        internal Filter<T> Filter { get; }
-        internal int Order { get; }
         internal int Depth { get; }
-        internal string Message { get; }
-        internal LogLevel LogType { get; }
+
+        private readonly IRegistrable<T> _source;
+        private readonly PathInfo<T> _info;
 
 
         // Content --------------------
         // Construction
-        internal EventPath(EventStream<T> stream, EventPath<T> parent, PathOperation operation,
-            int order = 0, Filter<T> filter = null, string message = null, LogLevel logType = LogLevel.Log)
+        internal EventPath(IRegistrable<T> source, PathInfo<T> info)
         {
-            _stream = stream;
-            Parent = parent;
-            Depth = (parent?.Depth ?? stream.UpstreamDepth) + 1;
+            _source = source;
+            _info = info;
+            Depth = source.Depth + 1;
             EventStream<T>.CheckDepth(Depth);
-            Operation = operation;
-            Order = order;
-            if (operation == PathOperation.Where && filter == null)
-                throw new ArgumentNullException(nameof(filter));
-            Filter = filter;
-            Message = message;
-            LogType = logType;
         }
 
         // Operators
-        public EventPath<T> Where(Filter<T> filter) => new(_stream, this, PathOperation.Where, filter: filter);
+        public EventPath<T> Where(Func<T, bool> predicate) =>
+            new(this, PathInfo<T>.Where(predicate));
         public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
-            new(_stream, this, PathOperation.Debug, message: message, logType: logType);
+            new(this, PathInfo<T>.Debug(message, logType));
+        public EventPath<T> ForOrder<TOrder>(TOrder order) where TOrder : Enum =>
+            new(this, PathInfo<T>.Group(Convert.ToInt32(order)));
 
         // Subscriptions
-        public IDisposable Subscribe(Action<T> updated) => _stream.Subscribe(this, updated, null, null);
+        public IDisposable Subscribe(Action<T> updated) =>
+            Register(Registration<T>.Subscription(updated, null, null));
         public IDisposable Subscribe(Action<T> updated, Action completed, Action<Exception> errored) =>
-            _stream.Subscribe(this, updated, completed, errored);
-        public IDisposable Subscribe(IObserver<T> observer) => _stream.Subscribe(this, observer);
+            Register(Registration<T>.Subscription(updated, completed, errored));
+        public IDisposable Subscribe(IObserver<T> observer) =>
+            Register(Registration<T>.Subscription(observer));
 
         // Relations
-        public EventStream<T> Take(int count = 1) => new TakeStream<T>(_stream.CreateUpstream(this), count);
-        public EventStream<T> TakeWhile(Filter<T> filter) => new TakeWhileStream<T>(_stream.CreateUpstream(this), filter);
-        public EventStream<T> Skip(int count = 1) => new SkipStream<T>(_stream.CreateUpstream(this), count);
-        public EventStream<T> SkipWhile(Filter<T> filter) => new SkipWhileStream<T>(_stream.CreateUpstream(this), filter);
-        public EventStream<T> Branch() => new(_stream.CreateUpstream(this));
+        public EventStream<T> Take(int count = 1) =>
+            new TakeStream<T>(EventStream<T>.CreateInput(this), count);
+        public EventStream<T> TakeWhile(Func<T, bool> predicate) =>
+            new TakeWhileStream<T>(EventStream<T>.CreateInput(this), predicate);
+        public EventStream<T> Skip(int count = 1) =>
+            new SkipStream<T>(EventStream<T>.CreateInput(this), count);
+        public EventStream<T> SkipWhile(Func<T, bool> predicate) =>
+            new SkipWhileStream<T>(EventStream<T>.CreateInput(this), predicate);
+        public EventStream<T> Branch() =>
+            new(EventStream<T>.CreateInput(this));
+
+        // Registration
+        int IRegistrable<T>.Depth => Depth;
+        bool IRegistrable<T>.IsDisposed => _source.IsDisposed;
+
+        void IRegistrable<T>.ThrowIfDisposed() => _source.ThrowIfDisposed();
+
+        // A path does not register anything itself. It links its own step in front of the steps after it.
+        IDisposable IRegistrable<T>.Register(Registration<T> registration, PathInfo<T> path) =>
+            _source.Register(registration, _info.Link(path));
+
+        private IDisposable Register(Registration<T> registration) =>
+            ((IRegistrable<T>)this).Register(registration, null);
+    }
+
+    // Paths start from a stream here, so that EventStream does not depend on EventPath.
+    public static class EventPathExtensions
+    {
+        public static EventPath<T> Where<T>(this EventStream<T> stream, Func<T, bool> predicate) =>
+            new(stream, PathInfo<T>.Where(predicate));
+        public static EventPath<T> Debug<T>(
+            this EventStream<T> stream,
+            string message = "Debug",
+            LogLevel logType = LogLevel.Log) =>
+            new(stream, PathInfo<T>.Debug(message, logType));
+        public static EventPath<T> ForOrder<T, TOrder>(this EventStream<T> stream, TOrder order) where TOrder : Enum =>
+            new(stream, PathInfo<T>.Group(Convert.ToInt32(order)));
     }
 }

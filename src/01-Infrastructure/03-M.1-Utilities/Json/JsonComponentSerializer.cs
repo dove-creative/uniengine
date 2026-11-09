@@ -39,7 +39,8 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
                     || !reader.TryGetSingle(out float component)
                     || !float.IsFinite(component))
                 {
-                    throw new JsonException($"The '{componentName}' component must be a finite single-precision number.");
+                    throw new JsonException(
+                        $"The '{componentName}' component must be a finite single-precision number.");
                 }
 
                 components[componentIndex] = component;
@@ -49,10 +50,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             throw new JsonException("The JSON object is incomplete.");
         }
 
-        public static void ReadInt32Components(
-            ref Utf8JsonReader reader,
-            string[] componentNames,
-            Span<int> components)
+        public static void ReadInt32Components(ref Utf8JsonReader reader, string[] componentNames, Span<int> components)
         {
             ValidateArguments(reader, componentNames, components.Length);
             Span<bool> encounteredComponents = stackalloc bool[componentNames.Length];
@@ -122,10 +120,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             writer.WriteNumber(componentName, component);
         }
 
-        private static void ValidateArguments(
-            Utf8JsonReader reader,
-            string[] componentNames,
-            int componentCount)
+        private static void ValidateArguments(Utf8JsonReader reader, string[] componentNames, int componentCount)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
                 throw new JsonException("A JSON object was expected.");

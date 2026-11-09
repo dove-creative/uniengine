@@ -16,27 +16,31 @@ namespace BlackThunder.UniEngine.Tests
         [TearDown]
         public void TearDown() => ExceptionHandler.SetHandler(null);
 
-        // R2: Removal affects the current publication; new subscriptions wait for the next.
+        // R1: Removal affects the current publication; new subscriptions wait for the next.
         [Test]
         public void EventStreamAppliesSubscriptionChangesAtTheExpectedTime()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
             var removed = (IDisposable)null;
+
             stream.Subscribe(value =>
             {
                 calls.Add($"first:{value}");
+
                 if (value != 1) return;
+
                 removed.Dispose();
                 stream.Subscribe(next => calls.Add($"late:{next}"));
             });
+
             removed = stream.Subscribe(value => calls.Add($"removed:{value}"));
             stream.OnNext(1);
             stream.OnNext(2);
             Assert.That(calls, Is.EqualTo(new[] { "first:1", "first:2", "late:2" }));
         }
 
-        // R2: Fault isolation or propagation still permits a later publication.
+        // R1: Fault isolation or propagation still permits a later publication.
         [TestCase(false)]
         [TestCase(true)]
         public void EventStreamRecoversAfterCallbackFailure(bool handled)
@@ -44,10 +48,13 @@ namespace BlackThunder.UniEngine.Tests
             using var stream = new EventStream<int>();
             var calls = new List<int>();
             var failure = new ApplicationException("subscriber");
+
             var reported = new List<Exception>();
             if (handled) ExceptionHandler.SetHandler(reported.Add);
+
             stream.Subscribe(_ => throw failure);
             stream.Subscribe(calls.Add);
+
             if (handled)
             {
                 stream.OnNext(1);
@@ -57,12 +64,13 @@ namespace BlackThunder.UniEngine.Tests
             {
                 Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
             }
+
             stream.OnNext(2);
             // An unhandled failure is rethrown only after the remaining subscribers receive the value.
             Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
         }
 
-        // R2: Disposal inside a callback stops the remaining receivers and cleans up.
+        // R1: Disposal inside a callback stops the remaining receivers and cleans up.
         [Test]
         public void EventStreamDisposalDuringPublicationStopsRemainingCallbacks()
         {
@@ -86,7 +94,9 @@ namespace BlackThunder.UniEngine.Tests
             var skipped = source.Skip(count);
             var values = new List<int>();
             skipped.Subscribe(values.Add);
+
             for (var value = 1; value <= 4; value++) source.OnNext(value);
+
             Assert.That(values, Is.EqualTo(expected));
         }
 
@@ -139,8 +149,8 @@ namespace BlackThunder.UniEngine.Tests
         public void MergeDeliversAValueForEachInputThatPassesIt()
         {
             using var source = new EventStream<int>();
-            var positive = new Filter<int>("positive", value => value > 0);
-            var even = new Filter<int>("even", value => value % 2 == 0);
+            Func<int, bool> positive = value => value > 0;
+            Func<int, bool> even = value => value % 2 == 0;
             using var merged = source.Where(positive).Branch().Merge(source.Where(even).Branch());
             var values = new List<int>();
             using var subscription = merged.Subscribe(values.Add);

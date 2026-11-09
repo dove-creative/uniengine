@@ -21,14 +21,9 @@ namespace BlackThunder.UniEngine.Objects
             Z = z;
         }
 
-        public readonly bool Equals(Vector3Int other) =>
-            X == other.X
-            && Y == other.Y
-            && Z == other.Z;
+        public readonly bool Equals(Vector3Int other) => X == other.X && Y == other.Y && Z == other.Z;
 
-        public override readonly bool Equals(object obj) =>
-            obj is Vector3Int other
-            && Equals(other);
+        public override readonly bool Equals(object obj) => obj is Vector3Int other && Equals(other);
 
         public static bool operator ==(Vector3Int left, Vector3Int right) => left.Equals(right);
         public static bool operator !=(Vector3Int left, Vector3Int right) => !left.Equals(right);
@@ -36,11 +31,6 @@ namespace BlackThunder.UniEngine.Objects
         public override readonly int GetHashCode() => HashCode.Combine(X, Y, Z);
 
         public override readonly string ToString() =>
-            string.Format(
-                CultureInfo.InvariantCulture,
-                "<{0}, {1}, {2}>",
-                X,
-                Y,
-                Z);
+            string.Format(CultureInfo.InvariantCulture, "<{0}, {1}, {2}>", X, Y, Z);
     }
 }

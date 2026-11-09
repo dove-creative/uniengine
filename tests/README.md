@@ -1,43 +1,49 @@
-# Golden Hind 테스트
+# UniEngine 테스트
 
 ## 구성
 
-`GoldenHind.Tests.csproj`는 본체를 ProjectReference로 참조하는 단일 .NET 10·C# 9 테스트 프로젝트이다. 로컬 `BlackThunder.UniTest` 0.4.0 패키지와 NUnit 3을 사용한다. 테스트 코드는 `src`의 계층·모듈 폴더에 대응하도록 배치하며, 모든 테스트를 하나의 `GoldenHind.Tests.dll`로 빌드한다.
+`UniEngine.Tests.csproj`는 본체를 ProjectReference로 참조하는 단일 .NET 10·C# 9 테스트 프로젝트이다. 로컬 `BlackThunder.UniTest` 0.4.1 패키지와 NUnit 3을 사용한다. 테스트 코드는 `src`의 계층·모듈 폴더에 대응하도록 배치하며, 모든 테스트를 하나의 `UniEngine.Tests.dll`로 빌드한다.
 
 ```text
 tests/
-├─ GoldenHind.Tests.csproj
+├─ UniEngine.Tests.csproj
 ├─ Support/
 ├─ 01-Infrastructure/
 │  ├─ 01-M.1-Configuration/
 │  │  ├─ ConfigurationTests.cs
 │  │  ├─ ConfigurationScenarios.cs
-│  │  └─ UniTest/
-│  │     ├─ ConfigurationStateProjectTests.cs
-│  │     ├─ 01-Tables.md
-│  │     ├─ 02-Plans.md
-│  │     └─ 03-Results.md
+│  │  ├─ UniTest/
+│  │  │  └─ ConfigurationStateProjectTests.cs
+│  │  └─ docs/
+│  │     ├─ 01. Tables.md
+│  │     ├─ 02. Plans.md
+│  │     └─ 03. Results.md
 │  ├─ 02-O.1-Objects/
 │  ├─ 03-M.1-Utilities/
 │  │  └─ Json/
 │  ├─ 03-M.2-ExceptionHandler/
 │  │  ├─ ExceptionHandlerTests.cs
-│  │  └─ UniTest/
-│  │     ├─ ExceptionHandlerStateProjectTests.cs
-│  │     ├─ 01-Tables.md
-│  │     ├─ 02-Plans.md
-│  │     └─ 03-Results.md
+│  │  ├─ UniTest/
+│  │  │  └─ ExceptionHandlerStateProjectTests.cs
+│  │  └─ docs/
+│  │     ├─ 01. Tables.md
+│  │     ├─ 02. Plans.md
+│  │     └─ 03. Results.md
 │  └─ 03-M.3-LogSystem/
 │     ├─ LogTests.cs
 │     ├─ LogScenarios.cs
-│     └─ UniTest/
-│        ├─ LogStateProjectTests.cs
-│        ├─ 01-Tables.md
-│        ├─ 02-Plans.md
-│        └─ 03-Results.md
+│     ├─ UniTest/
+│     │  └─ LogStateProjectTests.cs
+│     └─ docs/
+│        ├─ 01. Tables.md
+│        ├─ 02. Plans.md
+│        └─ 03. Results.md
 └─ 02-Core/
    ├─ 01-O.3-Objects/
-   │  └─ ValueEnumeratorTests.cs
+   │  ├─ ValueEnumeratorTests.cs
+   │  └─ docs/
+   │     ├─ 01. Tables.md
+   │     └─ 02. Plans.md
    ├─ 02-E.2-AdaptiveCollections/
    │  ├─ AdaptiveCollectionTests.cs
    │  ├─ AdaptiveActionTests.cs
@@ -45,11 +51,11 @@ tests/
    │  ├─ AdaptiveDictionaryTests.cs
    │  ├─ AdaptiveHashSetTests.cs
    │  ├─ EnumerationAllocationTests.cs
-   │  └─ UniTest/
-   │     ├─ CollectionStateProjectTests.cs
-   │     ├─ 01-Tables.md
-   │     ├─ 02-Plans.md
-   │     └─ 03-Results.md
+   │  ├─ UniTest/
+   │  │  └─ CollectionStateProjectTests.cs
+   │  └─ docs/
+   │     ├─ 01. Tables.md
+   │     └─ 02. Plans.md
    └─ 02-E.3-EventStream/
       ├─ EventStreamTests.cs
       ├─ EventStreamAllocationTests.cs
@@ -61,17 +67,22 @@ tests/
       ├─ EventStreamGraphPropagationTests.cs
       ├─ EventStreamGraphAllocationTests.cs
       ├─ EventStreamLifecycleTests.cs
-      ├─ EventStreamBenchmarks.cs
-      └─ UniTest/
-         ├─ EventStreamStateProjectTests.cs
-         ├─ 01-Tables.md
-         ├─ 02-Plans.md
-         └─ 03-Results.md
+      ├─ EventStreamPendingInputTests.cs
+      ├─ EventStreamWhereIndexTests.cs
+      ├─ Benchmarks/
+      ├─ UniTest/
+      │  ├─ EventStreamStateProjectTests.cs
+      │  ├─ EventStreamMergeStateProjectTests.cs
+      │  └─ EventStreamOperatorStateProjectTests.cs
+      └─ docs/
+         ├─ 01. Tables.md
+         ├─ 02. Plans.md
+         └─ 03. Results.md
 ```
 
-계층이나 모듈의 테스트를 추가할 때는 대응 폴더에 파일을 두며, 별도 프로젝트를 만들지 않는다. NUnit 직접 테스트는 모듈 폴더에 두고, UniTest 상태 전이 구현은 해당 모듈의 UniTest 폴더에 상태·동작 표, 테스트 계획, 결과 기록과 함께 둔다. Infrastructure의 JSON 변환 문서는 Utilities/Json/UniTest에서 소유한다. 모든 하위 폴더의 테스트는 같은 테스트 어셈블리에 포함하며 빌드 산출물은 공통 `tests/bin`·`tests/obj`에 생성한다.
+계층이나 모듈의 테스트를 추가할 때는 대응 폴더에 파일을 두며, 별도 프로젝트를 만들지 않는다. NUnit 직접 테스트는 모듈 폴더에 두고, UniTest 상태 전이 구현은 해당 모듈의 UniTest 폴더에 둔다. 상태·동작 표, 테스트 계획, 결과 기록은 문서가 다루는 테스트 코드가 있는 폴더의 docs에 두며, 테스트 코드가 여러 폴더에 걸치면 가장 가까운 공통 상위 폴더의 docs에 둔다. Infrastructure의 JSON 변환 문서는 Utilities/Json/docs에서 소유한다. 모든 하위 폴더의 테스트는 같은 테스트 어셈블리에 포함하며 빌드 산출물은 공통 `tests/bin`·`tests/obj`에 생성한다.
 
-프로젝트는 본체 `src/GoldenHind.csproj`와 테스트 `tests/GoldenHind.Tests.csproj` 두 개이다. 테스트만 본체를 참조하므로 본체 빌드·배포에 테스트 어셈블리가 포함되지 않는다. 솔루션 `src/GoldenHind.sln`에는 본체만 들어 있으므로 테스트 프로젝트는 별도로 실행한다.
+프로젝트는 본체 `src/UniEngine.csproj`와 테스트 `tests/UniEngine.Tests.csproj` 두 개이다. 테스트만 본체를 참조하므로 본체 빌드·배포에 테스트 어셈블리가 포함되지 않는다. 솔루션 `src/UniEngine.sln`에는 본체만 들어 있으므로 테스트 프로젝트는 별도로 실행한다.
 
 두 프로젝트는 [플랫폼 기준 - C#](../guidelines/blackthunder-conventions/instructions/플랫폼%20기준%20-%20CSharp.md)을 따른다.
 
@@ -82,7 +93,7 @@ tests/
 
 언어 버전 C# 9, nullable 해제, ImplicitUsings 해제는 저장소 루트의 `Directory.Build.props`가 두 프로젝트에 함께 적용한다. 프로젝트 파일에는 LangVersion을 따로 적지 않는다. netstandard2.1에는 System.Text.Json이 포함되어 있지 않으므로, 본체는 JSON 변환을 위해 System.Text.Json NuGet 패키지를 참조한다.
 
-본체는 `InternalsVisibleTo("GoldenHind.Tests")`로 테스트 어셈블리에 internal 접근 권한을 허용한다. 이 선언은 역방향 프로젝트 참조를 만들지 않으며 private 접근은 허용하지 않는다. 현재 Infrastructure 테스트는 공개 API를 사용한다.
+본체는 `InternalsVisibleTo("UniEngine.Tests")`로 테스트 어셈블리에 internal 접근 권한을 허용한다. 이 선언은 역방향 프로젝트 참조를 만들지 않으며 private 접근은 허용하지 않는다. 현재 Infrastructure 테스트는 공개 API를 사용한다.
 
 ## Infrastructure 실행 구성
 
@@ -95,20 +106,19 @@ UniTest는 이전 Lab을 재실행하므로 Configuration·Log의 각 Lab은 해
 ## 실행
 
 ```powershell
-dotnet build src/GoldenHind.sln -c Release
-dotnet test tests/GoldenHind.Tests.csproj -c Release
+dotnet build src/UniEngine.sln -c Release
+dotnet test tests/UniEngine.Tests.csproj -c Release
 ```
 
 본체는 netstandard2.1이므로 .NET 9 SDK로도 빌드할 수 있다. 테스트 명령에는 .NET 10 SDK가 필요하다. 기본 `dotnet`이 .NET 9이고 사용자 위치에 .NET 10이 설치되어 있다면 다음 명령을 사용한다.
 
 ```powershell
-& "$env:LOCALAPPDATA/Microsoft/dotnet/dotnet.exe" test tests/GoldenHind.Tests.csproj -c Release
+& "$env:LOCALAPPDATA/Microsoft/dotnet/dotnet.exe" test tests/UniEngine.Tests.csproj -c Release
 ```
 
 ## 범위
 
-- 공통 ValueEnumerator의 순회 수명과 실패 처리
-- AdaptiveCollection·AdaptiveDictionary·AdaptiveHashSet의 순회 중 변경·중단·복사본 처리
+- 공통 ValueEnumerator의 순회 수명과 실패 처리- AdaptiveCollection·AdaptiveDictionary·AdaptiveHashSet의 순회 중 변경·중단·복사본 처리
 - AdaptiveAction과 EventStream의 순회 소비 회귀 검증
 - EventStream·순서 그룹·필터 경로·상태 연산자·Merge의 구독 후 첫 값 전달과 반복 전달 할당량 검증
 - EventStream의 멀티캐스트 해제, 순서·필터 공유, 해제한 콜백의 참조 정리 검증
@@ -120,6 +130,6 @@ dotnet test tests/GoldenHind.Tests.csproj -c Release
 - Configuration의 초기화·경로 생성 실패와 Log의 출력·저장·복구
 - ExceptionHandler의 보고 정책과 SafeInvoke 전체 오버로드
 
-Core 순회 범위의 상태와 동작 기준은 [테스트 표](02-Core/02-E.2-AdaptiveCollections/UniTest/01-Tables.md), 실행 구성은 [테스트 계획](02-Core/02-E.2-AdaptiveCollections/UniTest/02-Plans.md), 검증 결과는 [결과 기록](02-Core/02-E.2-AdaptiveCollections/UniTest/03-Results.md)을 따른다. 전체 실행 기록과 Infrastructure 모듈별 결과는 [Infrastructure 테스트](01-Infrastructure/README.md)를 따른다.
+Core 순회 범위의 상태와 동작 기준과 실행 구성은 ValueEnumerator의 [상태·동작 표](02-Core/01-O.3-Objects/docs/01.%20Tables.md)·[테스트 계획](02-Core/01-O.3-Objects/docs/02.%20Plans.md)과 Adaptive Collections의 [상태·동작 표](02-Core/02-E.2-AdaptiveCollections/docs/01.%20Tables.md)·[테스트 계획](02-Core/02-E.2-AdaptiveCollections/docs/02.%20Plans.md)을 따른다. 전체 실행 기록과 Infrastructure 모듈별 결과는 [Infrastructure 테스트](01-Infrastructure/README.md)를 따른다.
 
-EventStream 모듈의 [상태·동작 표](02-Core/02-E.3-EventStream/UniTest/01-Tables.md), [테스트 계획](02-Core/02-E.3-EventStream/UniTest/02-Plans.md), [실행 결과](02-Core/02-E.3-EventStream/UniTest/03-Results.md)는 해당 모듈의 UniTest 폴더에서 관리한다.
+EventStream 모듈의 [상태·동작 표](02-Core/02-E.3-EventStream/docs/01.%20Tables.md), [테스트 계획](02-Core/02-E.3-EventStream/docs/02.%20Plans.md), [실행 결과](02-Core/02-E.3-EventStream/docs/03.%20Results.md)는 해당 모듈의 docs 폴더에서 관리한다.

@@ -19,8 +19,7 @@ namespace BlackThunder.UniEngine.Tests
 
         private class HandlerProject : CompactProject<Model>
         {
-            public HandlerProject()
-                : base(ExecutionMode.Inline) { }
+            public HandlerProject() : base(ExecutionMode.Inline) { }
 
             public override IEnumerable<CompactLab<Model>> CreateCompactLabs(Model model)
             {
@@ -35,14 +34,18 @@ namespace BlackThunder.UniEngine.Tests
                                 {
                                     var subject = new HandlerState();
                                     state.Subject = subject;
+
                                     ExceptionHandler.SetHandler(exception =>
                                     {
                                         Assert.That(exception, Is.SameAs(subject.Failure));
                                         subject.Calls.Add("first");
                                     });
+
                                     ExceptionHandler.Report(subject.Failure);
                                 },
-                                Asserter = state => Assert.That(((HandlerState)state.Subject).Calls, Is.EqualTo(new[] { "first" })),
+                                Asserter = state => Assert.That(
+                                    ((HandlerState)state.Subject).Calls,
+                                    Is.EqualTo(new[] { "first" })),
                             },
                         };
                     case 1:
@@ -53,14 +56,18 @@ namespace BlackThunder.UniEngine.Tests
                                 Actor = state =>
                                 {
                                     var subject = (HandlerState)state.Subject;
+
                                     ExceptionHandler.SetHandler(exception =>
                                     {
                                         Assert.That(exception, Is.SameAs(subject.Failure));
                                         subject.Calls.Add("replacement");
                                     });
+
                                     ExceptionHandler.Report(subject.Failure);
                                 },
-                                Asserter = state => Assert.That(((HandlerState)state.Subject).Calls, Is.EqualTo(new[] { "first", "replacement" })),
+                                Asserter = state => Assert.That(
+                                    ((HandlerState)state.Subject).Calls,
+                                    Is.EqualTo(new[] { "first", "replacement" })),
                             },
                         };
                     case 2:
@@ -72,10 +79,13 @@ namespace BlackThunder.UniEngine.Tests
                                 {
                                     var subject = (HandlerState)state.Subject;
                                     ExceptionHandler.SetHandler(null);
-                                    var propagated = Assert.Throws<ApplicationException>(() => ExceptionHandler.Report(subject.Failure));
+                                    var propagated = Assert.Throws<ApplicationException>(
+                                        () => ExceptionHandler.Report(subject.Failure));
                                     Assert.That(propagated, Is.SameAs(subject.Failure));
                                 },
-                                Asserter = state => Assert.That(((HandlerState)state.Subject).Calls, Is.EqualTo(new[] { "first", "replacement" })),
+                                Asserter = state => Assert.That(
+                                    ((HandlerState)state.Subject).Calls,
+                                    Is.EqualTo(new[] { "first", "replacement" })),
                             },
                         };
                     default:

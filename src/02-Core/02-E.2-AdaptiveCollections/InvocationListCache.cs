@@ -7,7 +7,8 @@ namespace Blackthunder.UniEngine.Core
     {
         // Internal
         private static readonly ConditionalWeakTable<TDelegate, Delegate[]> _entries = new();
-        private static readonly ConditionalWeakTable<TDelegate, Delegate[]>.CreateValueCallback _createInvocationList = CreateInvocationList;
+        private static readonly ConditionalWeakTable<TDelegate, Delegate[]>.CreateValueCallback _createInvocationList
+            = CreateInvocationList;
 
 
         // Content

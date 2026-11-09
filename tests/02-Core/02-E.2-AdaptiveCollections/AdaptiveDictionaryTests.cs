@@ -21,6 +21,7 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in dictionary)
             {
                 seen.Add(item.Value);
+
                 if (item.Value != 10) continue;
 
                 dictionary[1] = 20;
@@ -42,6 +43,7 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in dictionary)
             {
                 seen.Add(item.Value);
+
                 if (item.Key == 0)
                 {
                     dictionary.Add(1, 10);
@@ -106,6 +108,7 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in dictionary)
             {
                 visits++;
+
                 if (item.Key == 0)
                 {
                     dictionary.Add(1, 10);
@@ -133,6 +136,7 @@ namespace BlackThunder.UniEngine.Tests
                 dictionary.Add(2, 20);
                 break;
             }
+
             Assert.That(dictionary.Count, Is.EqualTo(2));
 
             Assert.Throws<ApplicationException>(() => dictionary.ForEach((Action<int, int>)((key, value) =>
@@ -140,6 +144,7 @@ namespace BlackThunder.UniEngine.Tests
                 dictionary.Add(3, 30);
                 throw new ApplicationException("callback");
             })));
+
             Assert.That(Sum(dictionary, 1), Is.EqualTo(60));
         }
 
@@ -188,6 +193,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 ((IDisposable)legacy).Dispose();
             }
+
             Assert.That(Sum(dictionary, 1), Is.EqualTo(30));
         }
 
@@ -200,6 +206,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             var dictionary = new AdaptiveDictionary<int, int>(deferred);
             for (var index = 1; index <= count; index++) dictionary.Add(index, index);
+
             Sum(dictionary, 2000);
 
             var before = GC.GetAllocatedBytesForCurrentThread();
@@ -208,7 +215,8 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(total, Is.EqualTo((long)count * (count + 1) / 2 * 10000));
             Assert.That(allocated, Is.Zero);
-            TestContext.WriteLine($"Dictionary direct enumeration: deferred={deferred}, count={count}, allocated={allocated} bytes.");
+            TestContext.WriteLine(
+                $"Dictionary direct enumeration: deferred={deferred}, count={count}, allocated={allocated} bytes.");
         }
 
         // A past removal keeps the marker set's buckets, so clean passes must still skip hashing.
@@ -218,8 +226,11 @@ namespace BlackThunder.UniEngine.Tests
         {
             var dictionary = new AdaptiveDictionary<PlainKey, int>(deferred);
             for (var index = 1; index <= 4; index++) dictionary.Add(new PlainKey(index), index);
+
             foreach (var item in dictionary) dictionary.Remove(item.Key);
+
             for (var index = 1; index <= 4; index++) dictionary.Add(new PlainKey(index), index);
+
             Sum(dictionary, 2000);
 
             var before = GC.GetAllocatedBytesForCurrentThread();
@@ -228,7 +239,8 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(total, Is.EqualTo(10L * 10000));
             Assert.That(allocated, Is.Zero);
-            TestContext.WriteLine($"Dictionary enumeration after removal: deferred={deferred}, allocated={allocated} bytes.");
+            TestContext.WriteLine(
+                $"Dictionary enumeration after removal: deferred={deferred}, allocated={allocated} bytes.");
         }
 
         [TestCase(false)]
@@ -256,6 +268,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 foreach (var item in dictionary) total += item.Value;
             }
+
             return total;
         }
 
@@ -267,14 +280,18 @@ namespace BlackThunder.UniEngine.Tests
             {
                 dictionary.Clear();
                 dictionary.Add(1, 1);
+
                 foreach (var item in dictionary)
                 {
                     total += item.Value;
+
                     if (item.Key == 3) continue;
+
                     dictionary.Remove(item.Key);
                     dictionary.Add(item.Key + 1, item.Value + 1);
                 }
             }
+
             return total;
         }
 

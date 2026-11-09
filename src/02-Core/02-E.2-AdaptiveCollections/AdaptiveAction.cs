@@ -5,10 +5,8 @@ namespace Blackthunder.UniEngine.Core
 {
     public class AdaptiveAction : AdaptiveCollection<Action>
     {
-        public AdaptiveAction()
-            : base() { }
-        public AdaptiveAction(bool deferredUpdate)
-            : base(deferredUpdate) { }
+        public AdaptiveAction() : base() { }
+        public AdaptiveAction(bool deferredUpdate) : base(deferredUpdate) { }
 
         public void Invoke()
         {
@@ -19,6 +17,7 @@ namespace Blackthunder.UniEngine.Core
                 foreach (var entry in InvocationListCache<Action>.Get(action))
                 {
                     var callback = (Action)entry;
+
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -43,10 +42,8 @@ namespace Blackthunder.UniEngine.Core
 
     public class AdaptiveAction<T> : AdaptiveCollection<Action<T>>
     {
-        public AdaptiveAction()
-            : base() { }
-        public AdaptiveAction(bool deferredUpdate)
-            : base(deferredUpdate) { }
+        public AdaptiveAction() : base() { }
+        public AdaptiveAction(bool deferredUpdate) : base(deferredUpdate) { }
 
         public void Invoke(T t)
         {
@@ -57,6 +54,7 @@ namespace Blackthunder.UniEngine.Core
                 foreach (var entry in InvocationListCache<Action<T>>.Get(action))
                 {
                     var callback = (Action<T>)entry;
+
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -81,10 +79,8 @@ namespace Blackthunder.UniEngine.Core
 
     public class AdaptiveAction<T, U> : AdaptiveCollection<Action<T, U>>
     {
-        public AdaptiveAction()
-            : base() { }
-        public AdaptiveAction(bool deferredUpdate)
-            : base(deferredUpdate) { }
+        public AdaptiveAction() : base() { }
+        public AdaptiveAction(bool deferredUpdate) : base(deferredUpdate) { }
 
         public void Invoke(T t, U u)
         {
@@ -95,6 +91,7 @@ namespace Blackthunder.UniEngine.Core
                 foreach (var entry in InvocationListCache<Action<T, U>>.Get(action))
                 {
                     var callback = (Action<T, U>)entry;
+
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -119,10 +116,8 @@ namespace Blackthunder.UniEngine.Core
 
     public class AdaptiveAction<T, U, V> : AdaptiveCollection<Action<T, U, V>>
     {
-        public AdaptiveAction()
-            : base() { }
-        public AdaptiveAction(bool deferredUpdate)
-            : base(deferredUpdate) { }
+        public AdaptiveAction() : base() { }
+        public AdaptiveAction(bool deferredUpdate) : base(deferredUpdate) { }
 
         public void Invoke(T t, U u, V v)
         {
@@ -133,6 +128,7 @@ namespace Blackthunder.UniEngine.Core
                 foreach (var entry in InvocationListCache<Action<T, U, V>>.Get(action))
                 {
                     var callback = (Action<T, U, V>)entry;
+
                     if (!IsCurrentItemActive) break;
 
                     try

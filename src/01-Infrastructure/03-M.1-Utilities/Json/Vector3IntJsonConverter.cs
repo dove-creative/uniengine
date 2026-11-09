@@ -12,20 +12,14 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
 
 
         // Content
-        public override Vector3Int Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options)
+        public override Vector3Int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var components = new int[_componentNames.Length];
             JsonComponentSerializer.ReadInt32Components(ref reader, _componentNames, components);
             return new Vector3Int(components[0], components[1], components[2]);
         }
 
-        public override void Write(
-            Utf8JsonWriter writer,
-            Vector3Int value,
-            JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Vector3Int value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
             writer.WriteNumber("X", value.X);

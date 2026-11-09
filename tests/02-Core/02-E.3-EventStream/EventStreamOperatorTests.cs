@@ -18,16 +18,19 @@ namespace BlackThunder.UniEngine.Tests
             using var source = new EventStream<int>();
             var skipChecks = new List<int>();
             var whereChecks = new List<int>();
-            var skipped = source.SkipWhile(new Filter<int>("prefix", value =>
+
+            var skipped = source.SkipWhile(value =>
             {
                 skipChecks.Add(value);
                 return value % 2 == 1;
-            }));
-            var filtered = source.Where(new Filter<int>("odd", value =>
+            });
+
+            var filtered = source.Where(value =>
             {
                 whereChecks.Add(value);
                 return value % 2 == 1;
-            }));
+            });
+
             var skippedValues = new List<int>();
             var filteredValues = new List<int>();
             using var skipSubscription = skipped.Subscribe(skippedValues.Add);
@@ -36,6 +39,7 @@ namespace BlackThunder.UniEngine.Tests
             source.Enabled = false;
             source.OnNext(0);
             source.Enabled = true;
+
             for (var value = 1; value <= 4; value++) source.OnNext(value);
 
             Assert.That(skipChecks, Is.EqualTo(new[] { 1, 2 }));
@@ -50,7 +54,7 @@ namespace BlackThunder.UniEngine.Tests
         public void NonpositiveTakeCompletesOnFirstEnabledInputAndReleasesItsUpstream(int count)
         {
             using var source = new EventStream<int>();
-            var filtered = source.Where(new Filter<int>("positive", static value => value > 0));
+            var filtered = source.Where(static value => value > 0);
             var taken = filtered.Take(count);
             var sourceValues = new List<int>();
             var takenValues = new List<int>();
@@ -98,9 +102,9 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(source.NodeCount, Is.Zero);
         }
 
-        // O2: The count starts when the first subscription connects Take to its input.
+        // O2: Upstream values reach Take only after its first subscription connects it.
         [Test]
-        public void TakeCountsFromItsFirstSubscription()
+        public void TakeCountsUpstreamValuesFromItsFirstSubscription()
         {
             using var source = new EventStream<int>();
             using var taken = source.Take(1);
@@ -140,11 +144,13 @@ namespace BlackThunder.UniEngine.Tests
             using var source = new EventStream<int>();
             var gateOpen = true;
             var checks = 0;
-            var taken = source.TakeWhile(new Filter<int>("gate", _ =>
+
+            var taken = source.TakeWhile(_ =>
             {
                 checks++;
                 return gateOpen;
-            }));
+            });
+
             var sourceValues = new List<int>();
             var takenValues = new List<int>();
             var completions = 0;
@@ -170,8 +176,9 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var source = new EventStream<int>();
             var values = new List<int>();
-            source.Where(new Filter<int>("even", value => value % 2 == 0)).Debug("observed", LogLevel.Warning)
+            source.Where(value => value % 2 == 0).Debug("observed", LogLevel.Warning)
                 .Subscribe(values.Add);
+
             using var output = new StringWriter();
             var original = Console.Out;
             try
@@ -205,13 +212,13 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(late, Is.EqualTo(new[] { 2, 3 }));
         }
 
-        // Stateful operators keep the graph free of state, so their filters are never shared.
+        // Stateful operators keep the graph free of state, so their predicates are never shared.
         [Test]
-        public void StatefulOperatorsStartSeparateRelationsForTheSameFilter()
+        public void StatefulOperatorsStartSeparateRelationsForTheSamePredicate()
         {
             using var source = new EventStream<int>();
             var checks = 0;
-            var filter = new Filter<int>("open", _ => { checks++; return true; });
+            Func<int, bool> filter = _ => { checks++; return true; };
             using var first = source.TakeWhile(filter);
             using var second = source.TakeWhile(filter);
             using var firstListener = first.Subscribe(_ => { });

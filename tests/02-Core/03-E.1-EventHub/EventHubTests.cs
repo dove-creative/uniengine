@@ -127,7 +127,9 @@ namespace BlackThunder.UniEngine.Tests
 
             const int repetitions = 10000;
             before = GC.GetAllocatedBytesForCurrentThread();
+
             for (var index = 0; index < repetitions; index++) measured.Update(1);
+
             var repeatedBytes = GC.GetAllocatedBytesForCurrentThread() - before;
 
             Assert.That(counter.Calls, Is.EqualTo(subscribe ? 6 * (repetitions + 1) : 0));
@@ -142,22 +144,28 @@ namespace BlackThunder.UniEngine.Tests
             var calls = new List<string>();
             var early = hub.Connect(new object());
             var later = hub.Connect(new object());
+
             early.OnUpdated(value =>
             {
                 calls.Add($"early:{value}");
+
                 if (value != 1) return;
+
                 later.OnUpdated(next => calls.Add($"added:{next}"));
                 hub.Updated += next => calls.Add($"added direct:{next}");
                 hub.Update(99);
             });
+
             later.OnUpdated(value => calls.Add($"later:{value}"));
             var removed = new object();
+
             hub.Connect(removed).OnUpdated(value =>
             {
                 calls.Add($"filter:{value}");
                 hub.Disconnect(removed);
                 return true;
             }, value => calls.Add($"removed:{value}"));
+
             hub.Updated += value => calls.Add($"direct:{value}");
 
             hub.Update(1);
@@ -221,6 +229,7 @@ namespace BlackThunder.UniEngine.Tests
             hub.Connect(listener).OnUpdated(value => calls.Add($"fresh:{value}"));
 
             if (disconnectAgain) hub.Disconnect(listener);
+
             hub.Update(1);
 
             Assert.That(hub.HasListener(listener), Is.EqualTo(!disconnectAgain));
@@ -234,12 +243,14 @@ namespace BlackThunder.UniEngine.Tests
             var first = new object();
             var second = new object();
             var calls = new List<string>();
+
             hub.Connect(first).OnUpdated(_ =>
             {
                 calls.Add("first");
                 hub.Disconnect(first);
                 hub.Disconnect(second);
             }).OnUpdated(_ => calls.Add("first tail"));
+
             hub.Connect(second).OnUpdated(_ => calls.Add("second"));
 
             hub.Update(1);
@@ -429,18 +440,22 @@ namespace BlackThunder.UniEngine.Tests
             var calls = new List<string>();
             var listener = new object();
             var connected = hub.Connect(listener);
+
             connected.OnDisposing(() =>
             {
                 calls.Add("listener disposing");
                 hub.Disconnect(listener);
             }).OnDisposing(() => calls.Add("listener tail"))
                 .OnDisposed(() => calls.Add("listener disposed"));
+
             Action removed = () => calls.Add("removed direct");
+
             hub.Disposing += () =>
             {
                 calls.Add("direct disposing");
                 hub.Disposing -= removed;
             };
+
             hub.Disposing += removed;
             hub.Disposed += () => calls.Add("direct disposed");
 
@@ -454,12 +469,14 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
+
             Action<int> dispose = _ =>
             {
                 calls.Add("before");
                 hub.Dispose();
                 calls.Add("after");
             };
+
             hub.Connect(new object()).OnUpdated(dispose + (_ => calls.Add("tail")));
             hub.Updated += _ => calls.Add("direct");
             hub.Disposing += () => calls.Add("disposing");

@@ -11,9 +11,11 @@ namespace BlackThunder.UniEngine.Tests
             try
             {
                 if (args.Length != 3 || args[0] != "--infrastructure-scenario")
-                    throw new ArgumentException("Use dotnet test, or supply an infrastructure scenario and application ID.");
+                    throw new ArgumentException(
+                        "Use dotnet test, or supply an infrastructure scenario and application ID.");
 
                 InfrastructureProcess.GetOwnedPath(args[2]);
+
                 if (args[1].StartsWith("Configuration.", StringComparison.Ordinal))
                     await ConfigurationScenarios.RunAsync(args[1].Substring("Configuration.".Length), args[2]);
                 else if (args[1].StartsWith("Log.", StringComparison.Ordinal))

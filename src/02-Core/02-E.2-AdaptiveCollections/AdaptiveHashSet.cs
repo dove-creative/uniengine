@@ -7,9 +7,7 @@ namespace Blackthunder.UniEngine.Core
     public class AdaptiveHashSet<T> : ICollection<T>, IEnumerationSource<T>
     {
         // Front
-        public int Count => _isIterating
-            ? _items.Count - _removingItems.Count + _pendingItems.Count
-            : _items.Count;
+        public int Count => _isIterating ? _items.Count - _removingItems.Count + _pendingItems.Count : _items.Count;
 
         public bool IsReadOnly { get; } = false;
         public bool DeferredUpdate { get; private set; }
@@ -28,8 +26,7 @@ namespace Blackthunder.UniEngine.Core
 
         // Content --------------------
         // Construction
-        public AdaptiveHashSet()
-            : this(true) { }
+        public AdaptiveHashSet() : this(true) { }
         public AdaptiveHashSet(bool deferredUpdate) => DeferredUpdate = deferredUpdate;
 
         // Iteration
@@ -40,7 +37,8 @@ namespace Blackthunder.UniEngine.Core
         long IEnumerationSource<T>.BeginEnumeration()
         {
             if (_isIterating)
-                throw new InvalidOperationException("AdaptiveHashSet is already being iterated. Nested iterations are not allowed.");
+                throw new InvalidOperationException(
+                    "AdaptiveHashSet is already being iterated. Nested iterations are not allowed.");
 
             _enumerationId = checked(_enumerationId + 1);
             _enumerator = _items.GetEnumerator();
@@ -59,6 +57,7 @@ namespace Blackthunder.UniEngine.Core
                 while (_enumerator.MoveNext())
                 {
                     var item = _enumerator.Current;
+
                     // Skip the lookup when nothing is marked, so clean passes never hash items.
                     if (_removingItems.Count != 0 && _removingItems.Contains(item)) continue;
 
@@ -67,11 +66,14 @@ namespace Blackthunder.UniEngine.Core
                 }
 
                 _enumerator.Dispose();
+
                 if (DeferredUpdate || _pendingItems.Count == 0) break;
 
                 // Keep a stable batch while callbacks record the next pending changes.
                 _iterationItems.Clear();
+
                 foreach (var item in _pendingItems) _iterationItems.Add(item);
+
                 ApplyChanges();
                 _enumerator = _iterationItems.GetEnumerator();
             }
@@ -103,6 +105,7 @@ namespace Blackthunder.UniEngine.Core
         private void ApplyChanges()
         {
             foreach (var item in _removingItems) _items.Remove(item);
+
             foreach (var item in _pendingItems) _items.Add(item);
 
             _removingItems.Clear();

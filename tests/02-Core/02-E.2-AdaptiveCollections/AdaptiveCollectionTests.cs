@@ -49,7 +49,9 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in collection)
             {
                 seen.Add(item);
+
                 if (item != 1) continue;
+
                 collection.Add(3);
                 collection.AddRange(new[] { 4, 5 });
                 Assert.That(collection.Count, Is.EqualTo(5));
@@ -58,6 +60,7 @@ namespace BlackThunder.UniEngine.Tests
                 collection.CopyTo(copied, 1);
                 Assert.That(copied, Is.EqualTo(new[] { 0, 1, 2, 3, 4, 5, 0 }));
             }
+
             Assert.That(seen, Is.EqualTo(deferred ? new[] { 1, 2 } : new[] { 1, 2, 3, 4, 5 }));
             Assert.That(Read(collection), Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
         }
@@ -76,8 +79,10 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in collection)
             {
                 seen.Add(item);
+
                 if (item == 2) Assert.That(collection.Remove(removed), Is.True);
             }
+
             Assert.That(seen, Is.EqualTo(removed == 3 ? new[] { 1, 2, 4 } : new[] { 1, 2, 3, 4 }));
             Assert.That(collection.Contains(removed), Is.False);
             Assert.That(collection.Count, Is.EqualTo(3));
@@ -94,8 +99,10 @@ namespace BlackThunder.UniEngine.Tests
             foreach (var item in collection)
             {
                 seen.Add(item);
+
                 if (seen.Count == 1) collection.Remove(1);
             }
+
             Assert.That(seen, Is.EqualTo(new[] { 1, 1, 2 }));
             Assert.That(Read(collection), Is.EqualTo(new[] { 1, 2 }));
         }
@@ -113,6 +120,7 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(collection.Count, Is.EqualTo(1));
                 Assert.That(collection.Contains(2), Is.False);
             }
+
             Assert.That(Read(collection), Is.EqualTo(new[] { 1 }));
         }
 
@@ -131,6 +139,7 @@ namespace BlackThunder.UniEngine.Tests
                 collection.Add(4);
                 Assert.That(collection.Count, Is.EqualTo(1));
             }
+
             Assert.That(seen, Is.EqualTo(new[] { 1 }));
             Assert.That(Read(collection), Is.EqualTo(new[] { 4 }));
         }
@@ -148,7 +157,9 @@ namespace BlackThunder.UniEngine.Tests
                 foreach (var item in collection)
                 {
                     collection.Add(3);
+
                     if (throwInBody) throw new ApplicationException("body");
+
                     break;
                 }
             }
@@ -156,6 +167,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 Assert.That(throwInBody, Is.True);
             }
+
             Assert.That(Read(collection), Is.EqualTo(new[] { 1, 2, 3 }));
         }
 
@@ -262,17 +274,20 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.Throws<NotSupportedException>(() => generic.Reset());
                 collection.Add(3);
             }
+
             var untyped = ((IEnumerable)collection).GetEnumerator();
             var seen = new List<object>();
             try
             {
                 while (untyped.MoveNext()) seen.Add(untyped.Current);
+
                 Assert.Throws<NotSupportedException>(() => untyped.Reset());
             }
             finally
             {
                 ((IDisposable)untyped).Dispose();
             }
+
             Assert.That(seen, Is.EqualTo(new[] { 1, 2, 3 }));
         }
 
@@ -281,11 +296,13 @@ namespace BlackThunder.UniEngine.Tests
         public void ForEachRestoresStateWhenTheSelectorThrows()
         {
             var collection = Create(true, 1, 2);
+
             Assert.Throws<ApplicationException>(() => collection.ForEach(item =>
             {
                 collection.Add(3);
                 throw new ApplicationException("selector");
             }));
+
             Assert.That(Read(collection), Is.EqualTo(new[] { 1, 2, 3 }));
         }
 
@@ -300,6 +317,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             var result = new List<T>();
             foreach (var item in collection) result.Add(item);
+
             return result;
         }
     }

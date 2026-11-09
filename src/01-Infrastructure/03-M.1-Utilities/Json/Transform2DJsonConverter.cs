@@ -13,10 +13,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
 
 
         // Content
-        public override Transform2D Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options)
+        public override Transform2D Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
                 throw new JsonException("A JSON object was expected.");
@@ -43,6 +40,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
                     throw new JsonException("A JSON component name was expected.");
 
                 string componentName = reader.GetString();
+
                 if (!reader.Read())
                     throw new JsonException("The JSON object is incomplete.");
 
@@ -71,10 +69,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             throw new JsonException("The JSON object is incomplete.");
         }
 
-        public override void Write(
-            Utf8JsonWriter writer,
-            Transform2D value,
-            JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Transform2D value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
             writer.WritePropertyName("Position");

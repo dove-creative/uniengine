@@ -30,11 +30,13 @@ namespace BlackThunder.UniEngine.Tests
                 Source = new EventStream<int>();
                 Subject = Source;
                 Branch = Source.Branch();
-                var even = Branch.Where(new Filter<int>("even", value =>
+
+                var even = Branch.Where(value =>
                 {
                     _predicateCalls++;
                     return value % 2 == 0;
-                }));
+                });
+
                 First = even.Subscribe(_firstValues.Add, () => _firstCompletions++, null);
                 Second = even.Subscribe(_secondValues.Add, () => _secondCompletions++, null);
                 Source.OnNext(2);
@@ -59,7 +61,8 @@ namespace BlackThunder.UniEngine.Tests
                 switch (model.ExecutionCount)
                 {
                     case 0:
-                        yield return new CompactLab<StreamModel>("SubscribePair",
+                        yield return new CompactLab<StreamModel>(
+                            "SubscribePair",
                             actor: state => state.SubscribePair(),
                             asserter: state =>
                             {
@@ -67,9 +70,11 @@ namespace BlackThunder.UniEngine.Tests
                                 Assert.That(state.Branch.NodeCount, Is.EqualTo(1));
                                 state.AssertDeliveries(1, new[] { 2 });
                             });
+
                         break;
                     case 1:
-                        yield return new CompactLab<StreamModel>("ReleaseFirst",
+                        yield return new CompactLab<StreamModel>(
+                            "ReleaseFirst",
                             actor: state =>
                             {
                                 state.First.Dispose();
@@ -81,9 +86,11 @@ namespace BlackThunder.UniEngine.Tests
                                 Assert.That(state.Branch.IsDisposed, Is.False);
                                 state.AssertDeliveries(3, new[] { 2, 4 });
                             });
+
                         break;
                     case 2:
-                        yield return new CompactLab<StreamModel>("PublishWhileDisabled",
+                        yield return new CompactLab<StreamModel>(
+                            "PublishWhileDisabled",
                             actor: state =>
                             {
                                 state.Branch.Enabled = false;
@@ -94,28 +101,35 @@ namespace BlackThunder.UniEngine.Tests
                                 Assert.That(state.Branch.Enabled, Is.False);
                                 state.AssertDeliveries(3, new[] { 2, 4 });
                             });
+
                         break;
                     case 3:
-                        yield return new CompactLab<StreamModel>("ResumePublication",
+                        yield return new CompactLab<StreamModel>(
+                            "ResumePublication",
                             actor: state =>
                             {
                                 state.Branch.Enabled = true;
                                 state.Source.OnNext(8);
                             },
                             asserter: state => state.AssertDeliveries(4, new[] { 2, 4, 8 }));
+
                         // U2: Completion still reaches the remaining observer while values are disabled.
-                        yield return new CompactLab<StreamModel>("CompleteWhileDisabled",
+                        yield return new CompactLab<StreamModel>(
+                            "CompleteWhileDisabled",
                             actor: state => state.Source.OnCompleted(),
                             asserter: state =>
                             {
                                 Assert.That(state.Source.IsDisposed, Is.True);
                                 Assert.That(state.Branch.IsDisposed, Is.True);
                                 state.AssertDeliveries(3, new[] { 2, 4 }, secondCompletions: 1);
-                            }, toUncontinuable: true);
+                            },
+                            toUncontinuable: true);
+
                         break;
                     case 4:
                         // U1: The last release detaches the branch; the source remains usable independently.
-                        yield return new CompactLab<StreamModel>("ReleaseLast",
+                        yield return new CompactLab<StreamModel>(
+                            "ReleaseLast",
                             actor: state =>
                             {
                                 state.Second.Dispose();
@@ -129,7 +143,9 @@ namespace BlackThunder.UniEngine.Tests
                                 Assert.That(state.Source.NodeCount, Is.Zero);
                                 Assert.That(state.SourceAfterDetach, Is.EqualTo(new[] { 10 }));
                                 state.AssertDeliveries(4, new[] { 2, 4, 8 });
-                            }, toUncontinuable: true);
+                            },
+                            toUncontinuable: true);
+
                         break;
                 }
             }
@@ -147,8 +163,11 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(result.AllSucceed(out var cancelled), Is.True, report.ToJson());
                 Assert.That(cancelled, Is.False);
                 const string prefix = "SubscribePair/ReleaseFirst/PublishWhileDisabled/";
-                Assert.That(report.Nodes.Where(node => node.LabId == "ReleaseLast" || node.LabId == "CompleteWhileDisabled")
-                    .Select(node => node.History), Is.EquivalentTo(new[]
+
+                Assert.That(
+                    report.Nodes.Where(node => node.LabId == "ReleaseLast" || node.LabId == "CompleteWhileDisabled")
+                        .Select(node => node.History),
+                    Is.EquivalentTo(new[]
                     {
                         prefix + "ResumePublication/ReleaseLast",
                         prefix + "CompleteWhileDisabled",
@@ -164,6 +183,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             node.Model.Branch?.Dispose();
             node.Model.Source?.Dispose();
+
             foreach (var child in node.Afters) DisposeReplaySubjects(child);
         }
     }

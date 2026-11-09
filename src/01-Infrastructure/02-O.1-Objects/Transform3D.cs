@@ -24,9 +24,7 @@ namespace BlackThunder.UniEngine.Objects
             Position.Equals(other.Position)
             && Rotation.Equals(other.Rotation);
 
-        public override readonly bool Equals(object obj) =>
-            obj is Transform3D other
-            && Equals(other);
+        public override readonly bool Equals(object obj) => obj is Transform3D other && Equals(other);
 
         public static bool operator ==(Transform3D left, Transform3D right) => left.Equals(right);
         public static bool operator !=(Transform3D left, Transform3D right) => !left.Equals(right);
@@ -34,10 +32,6 @@ namespace BlackThunder.UniEngine.Objects
         public override readonly int GetHashCode() => HashCode.Combine(Position, Rotation);
 
         public override readonly string ToString() =>
-            string.Format(
-                CultureInfo.InvariantCulture,
-                "Position: {0}, Rotation: {1}",
-                Position,
-                Rotation);
+            string.Format(CultureInfo.InvariantCulture, "Position: {0}, Rotation: {1}", Position, Rotation);
     }
 }

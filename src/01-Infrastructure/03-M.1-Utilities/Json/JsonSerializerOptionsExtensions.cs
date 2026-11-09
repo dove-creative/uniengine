@@ -20,12 +20,11 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
             AddConverter(options, new ColorJsonConverter());
             AddConverter(options, new Transform2DJsonConverter());
             AddConverter(options, new Transform3DJsonConverter());
+
             return options;
         }
 
-        private static void AddConverter<T>(
-            JsonSerializerOptions options,
-            JsonConverter<T> converter)
+        private static void AddConverter<T>(JsonSerializerOptions options, JsonConverter<T> converter)
         {
             foreach (var registeredConverter in options.Converters)
             {

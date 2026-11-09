@@ -58,6 +58,7 @@ namespace BlackThunder.UniEngine.Tests
             var original = new ApplicationException("original");
             var handlerFailure = new InvalidOperationException("handler");
             Exception observed = null;
+
             ExceptionHandler.SetHandler(exception =>
             {
                 observed = exception;
@@ -151,6 +152,7 @@ namespace BlackThunder.UniEngine.Tests
             var calls = new List<string>();
             var invoke = CreateInvocation(arity, calls, failure);
             Exception observed = null;
+
             ExceptionHandler.SetHandler(exception =>
             {
                 observed = exception;
@@ -186,6 +188,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 Assert.That(arguments, Is.EqualTo(expected), "Arguments must reach every multicast subscriber.");
                 calls.Add(name);
+
                 if (name == "middle" && failure != null)
                     throw failure;
             }
@@ -213,7 +216,8 @@ namespace BlackThunder.UniEngine.Tests
                     action3 += (value, text, item) => Record("after", value, text, item);
                     return () => action3.SafeInvoke(17, "payload", marker);
                 case 4:
-                    Action<int, string, object, bool> action4 = (value, text, item, flag) => Record("before", value, text, item, flag);
+                    Action<int, string, object, bool> action4 = (value, text, item, flag) =>
+                        Record("before", value, text, item, flag);
                     action4 += (value, text, item, flag) => Record("middle", value, text, item, flag);
                     action4 += (value, text, item, flag) => Record("after", value, text, item, flag);
                     return () => action4.SafeInvoke(17, "payload", marker, true);

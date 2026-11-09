@@ -10,8 +10,7 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities
     public static class DataFormattingExtensions
     {
         // Content
-        public static string ToCompactString(this int value) =>
-            FormatCompact(value);
+        public static string ToCompactString(this int value) => FormatCompact(value);
 
         public static string ToCompactString(this float value)
         {
@@ -72,11 +71,9 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities
                 value.Z,
                 value.W);
 
-        public static string ToDisplayString(this Transform2D value) =>
-            value.ToString();
+        public static string ToDisplayString(this Transform2D value) => value.ToString();
 
-        public static string ToDisplayString(this Transform3D value) =>
-            value.ToString();
+        public static string ToDisplayString(this Transform3D value) => value.ToString();
 
         public static string ToDisplayString<T>(
             this IEnumerable<T> collection,

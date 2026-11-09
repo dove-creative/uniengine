@@ -20,11 +20,13 @@ namespace Blackthunder.UniEngine.Core
             public IEventHubBuilder<TEventArgs> OnUpdated(Action<TEventArgs> onUpdate)
             {
                 _order.Hub.ThrowIfDisposed();
+
                 if (onUpdate != null)
                 {
                     foreach (var entry in InvocationListCache<Action<TEventArgs>>.Get(onUpdate))
                         _order.UpdateCallbacks.Add((Action<TEventArgs>)entry);
                 }
+
                 return this;
             }
             public IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action<TEventArgs> onUpdate)
@@ -43,32 +45,42 @@ namespace Blackthunder.UniEngine.Core
             {
                 _order.Hub.ThrowIfDisposed();
                 var callbacks = onUpdate == null ? null : InvocationListCache<Action<TEventArgs>>.Get(onUpdate);
+
                 _order.UpdateCallbacks.Add(args =>
                 {
                     if (!filter(args) || callbacks == null) return;
+
                     foreach (var entry in callbacks)
                     {
                         var callback = (Action<TEventArgs>)entry;
+
                         if (_order.Hub._pendingDispose || !_order.IsConnected) return;
+
                         callback(args);
                     }
                 });
+
                 return this;
             }
             public IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> fliter, Action onUpdated)
             {
                 _order.Hub.ThrowIfDisposed();
                 var callbacks = onUpdated == null ? null : InvocationListCache<Action>.Get(onUpdated);
+
                 _order.UpdateCallbacks.Add(args =>
                 {
                     if (!fliter(args) || callbacks == null) return;
+
                     foreach (var entry in callbacks)
                     {
                         var callback = (Action)entry;
+
                         if (_order.Hub._pendingDispose || !_order.IsConnected) return;
+
                         callback();
                     }
                 });
+
                 return this;
             }
 

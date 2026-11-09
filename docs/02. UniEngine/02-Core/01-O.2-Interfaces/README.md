@@ -4,10 +4,10 @@
 
 ## 목차
 
-1. 소개
-2. 구성과 역할
-3. 대표 흐름
-4. 상세 문서
+- 소개
+- 구성과 역할
+- 대표 흐름
+- 상세 문서
 
 ## 소개
 
@@ -19,7 +19,7 @@
 
 ## 구성과 역할
 
-IInitializable은 준비 진입점, IAcquirable은 제어 핸들의 획득, IEnumerationSource는 순회 세션의 시작·이동·종료를 정의한다. 서로 다른 책임의 계약이므로 모든 객체가 이들을 함께 구현할 필요는 없다.
+IInitializable은 준비 진입점, IAcquirable은 제어 핸들의 획득, IEnumerationSource는 순회 세션의 시작·이동·종료를 정의한다. 각 객체는 자신의 역할에 해당하는 계약을 구현한다.
 
 ## 대표 흐름
 
@@ -34,5 +34,4 @@ IInitializable은 준비 진입점, IAcquirable은 제어 핸들의 획득, IEnu
 | [IInitializable](IInitializable.md) | 초기화 진입점을 공통으로 노출하는 계약이다. |
 | [IAcquirable](IAcquirable.md) | 객체를 제어할 수 있는 단일 프록시의 획득 상태와 획득 경로를 노출하는 계약이다. |
 | [IEnumerationSource](IEnumerationSource.md) | 값 열거자가 사용할 순회의 시작·이동·종료를 제공하는 공통 계약이다. |
-
 [Core 구성](../README.md)

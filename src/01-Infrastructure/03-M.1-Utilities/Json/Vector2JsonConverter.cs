@@ -12,20 +12,14 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
 
 
         // Content
-        public override Vector2 Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options)
+        public override Vector2 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var components = new float[_componentNames.Length];
             JsonComponentSerializer.ReadSingleComponents(ref reader, _componentNames, components);
             return new Vector2(components[0], components[1]);
         }
 
-        public override void Write(
-            Utf8JsonWriter writer,
-            Vector2 value,
-            JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Vector2 value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
             JsonComponentSerializer.WriteSingle(writer, "X", value.X);

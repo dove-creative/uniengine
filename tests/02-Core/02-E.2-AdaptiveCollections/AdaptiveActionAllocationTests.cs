@@ -34,7 +34,8 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(counter.Value, Is.EqualTo(perInvocation * 10001));
             Assert.That(firstAllocated, Is.Zero);
             Assert.That(repeatedAllocated, Is.Zero);
-            TestContext.WriteLine($"AdaptiveAction: arity={arity}, registration={registration}, deferred={deferred}, first={firstAllocated}, repeated={repeatedAllocated} bytes.");
+            TestContext.WriteLine(
+                $"AdaptiveAction: arity={arity}, registration={registration}, deferred={deferred}, first={firstAllocated}, repeated={repeatedAllocated} bytes.");
         }
 
         [TestCase(false)]
@@ -47,7 +48,9 @@ namespace BlackThunder.UniEngine.Tests
             var entry = CreateCallback(counter);
             var failure = new ApplicationException("range");
 
-            Assert.That(Assert.Throws<ApplicationException>(() => actions.AddRange(ThrowAfter(entry, failure))), Is.SameAs(failure));
+            Assert.That(
+                Assert.Throws<ApplicationException>(() => actions.AddRange(ThrowAfter(entry, failure))),
+                Is.SameAs(failure));
             var invoke = new Action(actions.Invoke);
             var before = GC.GetAllocatedBytesForCurrentThread();
             Invoke(invoke, 1);
@@ -95,14 +98,18 @@ namespace BlackThunder.UniEngine.Tests
             var secondCalls = 0;
             var lateCalls = 0;
             var late = (Action)(() => lateCalls++);
+
             actions.Add(() =>
             {
                 firstCalls++;
+
                 if (copied) return;
+
                 copied = true;
                 actions.Add(late);
                 actions.AddRange(actions);
             });
+
             actions.Add(() => secondCalls++);
 
             actions.Invoke();
@@ -126,11 +133,14 @@ namespace BlackThunder.UniEngine.Tests
             var firstCalls = 0;
             var tailCalls = 0;
             var entry = (Action)null;
+
             entry = () =>
             {
                 firstCalls++;
+
                 if (firstCalls == 2) actions.Remove(entry);
             };
+
             entry += () => tailCalls++;
             actions.Add(entry);
             actions.Add(entry);
@@ -177,6 +187,7 @@ namespace BlackThunder.UniEngine.Tests
                     var entry = CreateCallback(counter);
                     if (registration == 0) actions.Add(entry);
                     else Register(actions, entry, registration);
+
                     return actions.Invoke;
                 }
                 case 1:
@@ -184,8 +195,10 @@ namespace BlackThunder.UniEngine.Tests
                     var actions = new AdaptiveAction<int>(deferred);
                     var entry = (Action<int>)(value => counter.Value += value);
                     entry += value => counter.Value += value * 2;
+
                     if (registration == 0) actions.Add(entry);
                     else Register(actions, entry, registration);
+
                     return () => actions.Invoke(1);
                 }
                 case 2:
@@ -193,17 +206,22 @@ namespace BlackThunder.UniEngine.Tests
                     var actions = new AdaptiveAction<int, int>(deferred);
                     var entry = (Action<int, int>)((first, second) => counter.Value += first + second);
                     entry += (first, second) => counter.Value += (first + second) * 2;
+
                     if (registration == 0) actions.Add(entry);
                     else Register(actions, entry, registration);
+
                     return () => actions.Invoke(1, 2);
                 }
                 default:
                 {
                     var actions = new AdaptiveAction<int, int, int>(deferred);
-                    var entry = (Action<int, int, int>)((first, second, third) => counter.Value += first + second + third);
+                    var entry = (Action<int, int, int>)((first, second, third) =>
+                        counter.Value += first + second + third);
                     entry += (first, second, third) => counter.Value += (first + second + third) * 2;
+
                     if (registration == 0) actions.Add(entry);
                     else Register(actions, entry, registration);
+
                     return () => actions.Invoke(1, 2, 3);
                 }
             }
@@ -239,7 +257,11 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         private static IEnumerable<Action> YieldInvokeAndReplace(
-            AdaptiveAction actions, Action first, Action second, Action invoke, long[] allocation)
+            AdaptiveAction actions,
+            Action first,
+            Action second,
+            Action invoke,
+            long[] allocation)
         {
             yield return first;
             var before = GC.GetAllocatedBytesForCurrentThread();
@@ -256,13 +278,17 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static (WeakReference Callback, WeakReference Target) RegisterAndRelease(AdaptiveAction actions, bool clear)
+        private static (WeakReference Callback, WeakReference Target) RegisterAndRelease(
+            AdaptiveAction actions,
+            bool clear)
         {
             var counter = new Counter();
             var entry = CreateCallback(counter);
             actions.Add(entry);
+
             if (clear) actions.Clear();
             else actions.Remove(entry);
+
             return (new WeakReference(entry), new WeakReference(counter));
         }
     }

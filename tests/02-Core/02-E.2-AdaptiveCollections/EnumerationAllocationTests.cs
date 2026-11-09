@@ -18,6 +18,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             var collection = new AdaptiveCollection<int>(deferred);
             for (var index = 1; index <= count; index++) collection.Add(index);
+
             Sum(collection, 2000);
 
             var before = GC.GetAllocatedBytesForCurrentThread();
@@ -26,7 +27,8 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(sum, Is.EqualTo((long)count * (count + 1) / 2 * 10000));
             Assert.That(allocated, Is.Zero);
-            TestContext.WriteLine($"Direct enumeration: deferred={deferred}, count={count}, allocated={allocated} bytes.");
+            TestContext.WriteLine(
+                $"Direct enumeration: deferred={deferred}, count={count}, allocated={allocated} bytes.");
         }
 
         // A1: A previously created selector does not introduce per-enumeration allocations.
@@ -63,6 +65,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 foreach (var item in collection) total += item;
             }
+
             return total;
         }
     }

@@ -16,14 +16,16 @@ namespace BlackThunder.UniEngine.Tests
         public void SelfRemovalSkipsItsMulticastTailButPreservesAnIdenticalGraphSubscription()
         {
             using var stream = new EventStream<int>();
-            var path = stream.Where(new Filter<int>("positive", value => value > 0));
+            var path = stream.Where(value => value > 0);
             var calls = new List<string>();
             var first = (IDisposable)null;
+
             Action<int> updated = value =>
             {
                 calls.Add($"head:{value}");
                 first.Dispose();
             };
+
             updated += value => calls.Add($"tail:{value}");
             first = path.Subscribe(updated);
             path.Subscribe(updated);
@@ -39,13 +41,16 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
-            var existing = stream.Where(new Filter<int>("existing", _ => true));
-            var newChild = stream.Where(new Filter<int>("new", _ => true));
+            var existing = stream.Where(_ => true);
+            var newChild = stream.Where(_ => true);
             var removed = (IDisposable)null;
+
             stream.Subscribe(value =>
             {
                 calls.Add($"root:{value}");
+
                 if (value != 1) return;
+
                 removed.Dispose();
                 stream.Subscribe(next => calls.Add($"lateRoot:{next}"));
                 existing.Subscribe(next => calls.Add($"lateExisting:{next}"));
@@ -53,11 +58,13 @@ namespace BlackThunder.UniEngine.Tests
                 var cancelled = newChild.Subscribe(next => calls.Add($"cancelled:{next}"));
                 cancelled.Dispose();
             });
+
             removed = existing.Subscribe(value => calls.Add($"removed:{value}"));
             existing.Subscribe(value => calls.Add($"existing:{value}"));
 
             stream.OnNext(1);
             stream.OnNext(2);
+
             Assert.That(calls, Is.EqualTo(new[]
             {
                 "root:1", "existing:1", "root:2", "lateRoot:2", "existing:2", "lateExisting:2", "lateChild:2",
@@ -69,10 +76,11 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
-            var first = stream.Where(new Filter<int>("first", _ => true));
-            var next = stream.Where(new Filter<int>("next", _ => true));
+            var first = stream.Where(_ => true);
+            var next = stream.Where(_ => true);
             var current = (IDisposable)null;
             var removed = (IDisposable)null;
+
             current = first.Subscribe(value =>
             {
                 calls.Add($"first:{value}");
@@ -80,8 +88,9 @@ namespace BlackThunder.UniEngine.Tests
                 removed.Dispose();
                 next.Subscribe(v => calls.Add($"replacement:{v}"));
             });
+
             removed = next.Subscribe(_ => calls.Add("removed"));
-            stream.Where(new Filter<int>("last", _ => true)).Subscribe(value => calls.Add($"last:{value}"));
+            stream.Where(_ => true).Subscribe(value => calls.Add($"last:{value}"));
 
             stream.OnNext(1);
             Assert.That(calls, Is.EqualTo(new[] { "first:1", "last:1" }));
@@ -95,7 +104,7 @@ namespace BlackThunder.UniEngine.Tests
             using var stream = new EventStream<int>();
             var notifications = 0;
             var first = (Handle)stream.Subscribe(_ => stream.Dispose());
-            var later = (Handle)stream.Where(new Filter<int>("child", _ => true))
+            var later = (Handle)stream.Where(_ => true)
                 .Subscribe(_ => notifications++, () => notifications++, _ => notifications++);
             stream.OnNext(1);
             Assert.That(notifications, Is.Zero);
@@ -137,20 +146,24 @@ namespace BlackThunder.UniEngine.Tests
             ExceptionHandler.SetHandler(reported.Add);
             var failure = new ApplicationException("callback");
             var calls = new List<int>();
-            var path = stream.Where(new Filter<int>("all", _ => true));
+            var path = stream.Where(_ => true);
+
             var failed = (Handle)path.Subscribe(_ =>
             {
                 if (reenter) stream.OnNext(9);
                 else throw failure;
             });
+
             var healthy = (Handle)path.Subscribe(calls.Add);
 
             stream.OnNext(1);
             stream.OnNext(2);
             Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
             Assert.That(reported, Has.Count.EqualTo(1));
+
             if (reenter) Assert.That(reported[0], Is.TypeOf<InvalidOperationException>());
             else Assert.That(reported[0], Is.SameAs(failure));
+
             Assert.That(failed.IsDisposed, Is.True);
             Assert.That(healthy.IsDisposed, Is.False);
             Assert.That(stream.NodeCount, Is.EqualTo(1));
@@ -163,14 +176,16 @@ namespace BlackThunder.UniEngine.Tests
             var failure = new ApplicationException("subscriber");
             var reported = new List<Exception>();
             var reporterFailure = new InvalidOperationException("reporter");
+
             ExceptionHandler.SetHandler(exception =>
             {
                 reported.Add(exception);
                 throw reporterFailure;
             });
-            var failed = (Handle)stream.Where(new Filter<int>("failed", _ => true)).Subscribe(_ => throw failure);
+
+            var failed = (Handle)stream.Where(_ => true).Subscribe(_ => throw failure);
             var values = new List<int>();
-            stream.Where(new Filter<int>("sibling", _ => true)).Subscribe(values.Add);
+            stream.Where(_ => true).Subscribe(values.Add);
 
             Assert.That(Assert.Throws<InvalidOperationException>(() => stream.OnNext(1)), Is.SameAs(reporterFailure));
             stream.OnNext(2);
@@ -190,11 +205,11 @@ namespace BlackThunder.UniEngine.Tests
             var first = new ApplicationException("first");
             var later = new InvalidOperationException("later");
             var values = new List<string>();
-            var selected = branch.Where(new Filter<int>("first", _ => failFilter ? throw first : true));
+            var selected = branch.Where(_ => failFilter ? throw first : true);
             var failed = (Handle)selected.Subscribe(_ => throw first);
-            var second = (Handle)branch.Where(new Filter<int>("second", _ => true)).Subscribe(_ => throw later);
-            branch.Where(new Filter<int>("branch survivor", _ => true)).Subscribe(v => values.Add($"branch:{v}"));
-            parent.Where(new Filter<int>("parent survivor", _ => true)).Subscribe(v => values.Add($"parent:{v}"));
+            var second = (Handle)branch.Where(_ => true).Subscribe(_ => throw later);
+            branch.Where(_ => true).Subscribe(v => values.Add($"branch:{v}"));
+            parent.Where(_ => true).Subscribe(v => values.Add($"parent:{v}"));
 
             Assert.That(Assert.Throws<ApplicationException>(() => parent.OnNext(1)), Is.SameAs(first));
             parent.OnNext(2);
@@ -210,12 +225,12 @@ namespace BlackThunder.UniEngine.Tests
             var reported = new List<Exception>();
             ExceptionHandler.SetHandler(reported.Add);
             var failure = new ApplicationException("filter");
-            var path = stream.Where(new Filter<int>("failed", _ => throw failure));
+            var path = stream.Where(_ => throw failure);
             var unexpected = 0;
             var failed = (Handle)path.Subscribe(_ => unexpected++, () => unexpected++, _ => unexpected++);
             var leaf = (Handle)path.Take(1).Subscribe(_ => unexpected++, () => unexpected++, _ => unexpected++);
             var healthy = new List<int>();
-            stream.Where(new Filter<int>("healthy", _ => true)).Subscribe(healthy.Add);
+            stream.Where(_ => true).Subscribe(healthy.Add);
 
             stream.OnNext(1);
             stream.OnNext(2);
@@ -234,7 +249,7 @@ namespace BlackThunder.UniEngine.Tests
             var reported = new List<Exception>();
             ExceptionHandler.SetHandler(reported.Add);
             var failure = new ApplicationException("filter");
-            var failing = new Filter<int>("failed", _ => throw failure);
+            Func<int, bool> failing = _ => throw failure;
             using var relation = skip ? stream.SkipWhile(failing) : stream.TakeWhile(failing);
             var unexpected = 0;
             var failed = (Handle)relation.Subscribe(_ => unexpected++, () => unexpected++, _ => unexpected++);
@@ -256,10 +271,10 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var stream = new EventStream<int>();
             var failure = new ApplicationException("filter");
-            using var relation = stream.TakeWhile(new Filter<int>("failed", _ => throw failure));
+            using var relation = stream.TakeWhile(_ => throw failure);
             relation.Subscribe(_ => { });
             var healthy = new List<int>();
-            stream.Where(new Filter<int>("healthy", _ => true)).Subscribe(healthy.Add);
+            stream.Where(_ => true).Subscribe(healthy.Add);
 
             Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
 
@@ -281,6 +296,96 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(completions, Is.EqualTo(1));
             Assert.That(taken.IsDisposed, Is.True);
+        }
+
+        // F3: A later completion failure must not replace the first value-reporting failure.
+        [TestCase(false, "Unhandled")]
+        [TestCase(true, "Unhandled")]
+        [TestCase(false, "Handled")]
+        [TestCase(true, "Handled")]
+        [TestCase(false, "ThrowingReporter")]
+        [TestCase(true, "ThrowingReporter")]
+        public void FinalTakePreservesFirstFailureAcrossValueAndCompletion(bool directInput, string reporting)
+        {
+            using var source = new EventStream<int>();
+            using var taken = source.Take(1);
+            var valueFailure = new ApplicationException("value");
+            var completionFailure = new ApplicationException("completion");
+            var firstReportFailure = new InvalidOperationException("first report");
+            var laterReportFailure = new InvalidOperationException("later report");
+            var reports = new List<Exception>();
+            var calls = new List<string>();
+            var sourceValues = new List<int>();
+            ExceptionHandler.SetHandler(null);
+
+            if (reporting != "Unhandled")
+            {
+                ExceptionHandler.SetHandler(exception =>
+                {
+                    reports.Add(exception);
+                    if (reporting == "ThrowingReporter")
+                        throw exception == valueFailure ? firstReportFailure : laterReportFailure;
+                });
+            }
+
+            var failedValue = (Handle)taken.Subscribe(_ => throw valueFailure);
+            var failedCompletion = (Handle)taken.Subscribe(
+                _ => { }, () => throw completionFailure, null);
+            var healthy = (Handle)taken.Subscribe(
+                value => calls.Add($"value:{value}"), () => calls.Add("completed"), null);
+            source.Where(_ => true).Subscribe(sourceValues.Add);
+            TestDelegate publish = () =>
+            {
+                if (directInput) taken.OnNext(1);
+                else source.OnNext(1);
+            };
+
+            if (reporting == "Handled") Assert.DoesNotThrow(publish);
+            else if (reporting == "ThrowingReporter")
+                Assert.That(Assert.Throws<InvalidOperationException>(publish), Is.SameAs(firstReportFailure));
+            else Assert.That(Assert.Throws<ApplicationException>(publish), Is.SameAs(valueFailure));
+
+            Assert.That(reports, Is.EqualTo(reporting == "Unhandled"
+                ? Array.Empty<Exception>() : new Exception[] { valueFailure, completionFailure }));
+            Assert.That(calls, Is.EqualTo(new[] { "value:1", "completed" }));
+            Assert.That(failedValue.IsDisposed && failedCompletion.IsDisposed && healthy.IsDisposed, Is.True);
+            Assert.That(taken.IsDisposed, Is.True);
+            Assert.That(taken.NodeCount, Is.Zero);
+            Assert.That(source.NodeCount, Is.EqualTo(1), "Only the healthy sibling path remains.");
+            source.OnNext(2);
+            Assert.That(sourceValues, Is.EqualTo(directInput ? new[] { 2 } : new[] { 1, 2 }));
+        }
+
+        // F3: Capturing terminal failure must not swallow it when no value callback failed.
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FinalTakeStillPropagatesCompletionFailure(bool directInput)
+        {
+            using var source = new EventStream<int>();
+            using var taken = source.Take(1);
+            var failure = new ApplicationException("completion");
+            var completed = 0;
+            var values = new List<int>();
+            var sourceValues = new List<int>();
+            ExceptionHandler.SetHandler(null);
+            var failed = (Handle)taken.Subscribe(_ => { }, () => throw failure, null);
+            var healthy = (Handle)taken.Subscribe(values.Add, () => completed++, null);
+            source.Where(_ => true).Subscribe(sourceValues.Add);
+
+            var thrown = Assert.Throws<ApplicationException>(() =>
+            {
+                if (directInput) taken.OnNext(1);
+                else source.OnNext(1);
+            });
+
+            Assert.That(thrown, Is.SameAs(failure));
+            Assert.That(values, Is.EqualTo(new[] { 1 }));
+            Assert.That(completed, Is.EqualTo(1));
+            Assert.That(failed.IsDisposed && healthy.IsDisposed && taken.IsDisposed, Is.True);
+            Assert.That(taken.NodeCount, Is.Zero);
+            Assert.That(source.NodeCount, Is.EqualTo(1));
+            source.OnNext(2);
+            Assert.That(sourceValues, Is.EqualTo(directInput ? new[] { 2 } : new[] { 1, 2 }));
         }
     }
 }

@@ -12,20 +12,14 @@ namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
 
 
         // Content
-        public override Quaternion Read(
-            ref Utf8JsonReader reader,
-            Type typeToConvert,
-            JsonSerializerOptions options)
+        public override Quaternion Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var components = new float[_componentNames.Length];
             JsonComponentSerializer.ReadSingleComponents(ref reader, _componentNames, components);
             return new Quaternion(components[0], components[1], components[2], components[3]);
         }
 
-        public override void Write(
-            Utf8JsonWriter writer,
-            Quaternion value,
-            JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Quaternion value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
             JsonComponentSerializer.WriteSingle(writer, "X", value.X);

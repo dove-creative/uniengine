@@ -50,6 +50,7 @@ namespace BlackThunder.UniEngine.Tests
             source.OnNext(1);
             source.Enabled = false;
             source.OnNext(2);
+
             if (sendError) source.OnError(failure);
             else source.OnCompleted();
 
@@ -165,7 +166,7 @@ namespace BlackThunder.UniEngine.Tests
         public void DirectInputPassesThroughTakeWhileAndSkipWhileConditions()
         {
             using var source = new EventStream<int>();
-            var positive = new Filter<int>("positive", value => value > 0);
+            Func<int, bool> positive = value => value > 0;
             using var taken = source.TakeWhile(positive);
             using var skipped = source.SkipWhile(positive);
             var takenValues = new List<int>();
@@ -218,6 +219,7 @@ namespace BlackThunder.UniEngine.Tests
             using var connection = source.Subscribe(observer);
 
             source.OnNext(1);
+
             if (error) source.OnError(failure);
             else source.OnCompleted();
 
@@ -252,6 +254,7 @@ namespace BlackThunder.UniEngine.Tests
             var target = new EventStream<int>();
             var reported = new List<Exception>();
             ExceptionHandler.SetHandler(reported.Add);
+
             try
             {
                 var connection = (Handle)source.Subscribe(target);
@@ -276,6 +279,7 @@ namespace BlackThunder.UniEngine.Tests
             using var source = new EventStream<int>();
             using var branch = source.Branch();
             var failures = new List<Exception>();
+
             using var reentrant = branch.Subscribe(_ =>
             {
                 try

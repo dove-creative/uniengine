@@ -20,8 +20,7 @@ namespace Blackthunder.UniEngine.Core
         IEventHubBuilder OnDisposing(Action<object> onDisposing);
         IEventHubBuilder OnDisposed(Action<object> onDisposed);
 
-        ILifecycleHubBuilder ILifecycleHubBuilder.OnDisposed(Action onDisposed) =>
-            OnDisposed(onDisposed);
+        ILifecycleHubBuilder ILifecycleHubBuilder.OnDisposed(Action onDisposed) => OnDisposed(onDisposed);
     }
 
     public interface IEventHubBuilder<TEventArgs> : IEventHubBuilder
@@ -42,12 +41,14 @@ namespace Blackthunder.UniEngine.Core
         IEventHubBuilder IEventHubBuilder.OnUpdated(Action<object> onUpdated)
         {
             if (onUpdated == null) return OnUpdated((Action<TEventArgs>)null);
+
             Action<TEventArgs> typedAction = null;
             foreach (var entry in onUpdated.GetInvocationList())
             {
                 var callback = (Action<object>)entry;
                 typedAction += args => callback(args);
             }
+
             return OnUpdated(typedAction);
         }
         IEventHubBuilder IEventHubBuilder.OnUpdated(object target, Action<object> onUpdated)
@@ -60,12 +61,14 @@ namespace Blackthunder.UniEngine.Core
             var typedTarget = (TEventArgs)target;
 
             if (onUpdated == null) return OnUpdated(typedTarget, (Action<TEventArgs>)null);
+
             Action<TEventArgs> typedAction = null;
             foreach (var entry in onUpdated.GetInvocationList())
             {
                 var callback = (Action<object>)entry;
                 typedAction += args => callback(args);
             }
+
             return OnUpdated(typedTarget, typedAction);
         }
         IEventHubBuilder IEventHubBuilder.OnUpdated(object target, Action onUpdated)
@@ -85,12 +88,14 @@ namespace Blackthunder.UniEngine.Core
             if (filter != null) typedFilter = args => filter(args);
 
             if (onUpdated == null) return OnUpdated(typedFilter, (Action<TEventArgs>)null);
+
             Action<TEventArgs> typedAction = null;
             foreach (var entry in onUpdated.GetInvocationList())
             {
                 var callback = (Action<object>)entry;
                 typedAction += args => callback(args);
             }
+
             return OnUpdated(typedFilter, typedAction);
         }
         IEventHubBuilder IEventHubBuilder.OnUpdated(Func<object, bool> filter, Action onUpdated)

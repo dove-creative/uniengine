@@ -24,11 +24,13 @@ namespace BlackThunder.UniEngine.Tests
             using var stream = new EventStream<int>();
             var calls = new List<string>();
             var subscription = (IDisposable)null;
+
             Action<int> callback = value =>
             {
                 calls.Add($"first:{value}");
                 subscription.Dispose();
             };
+
             callback += value => calls.Add($"tail:{value}");
             subscription = stream.Subscribe(callback);
             using var other = stream.Subscribe(value => calls.Add($"other:{value}"));
@@ -46,11 +48,14 @@ namespace BlackThunder.UniEngine.Tests
             var firstCalls = 0;
             var tailCalls = 0;
             var first = (IDisposable)null;
+
             Action<int> callback = _ =>
             {
                 firstCalls++;
+
                 if (firstCalls == 2) first.Dispose();
             };
+
             callback += _ => tailCalls++;
             first = stream.Subscribe(callback);
             using var second = stream.Subscribe(callback);
@@ -69,66 +74,72 @@ namespace BlackThunder.UniEngine.Tests
         [Test]
         public void OrderedPublicationDefersNewGroupsAndSkipsRemovedPendingSubscriptions()
         {
-            using var stream = new EventStream<int, Order>(Order.Early, new[] { Order.Early, Order.Middle });
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
             var removed = (IDisposable)null;
-            using var early = stream.Subscribe(Order.Early, value =>
+
+            using var early = stream.ForOrder(Order.Early).Subscribe(value =>
             {
                 calls.Add($"early:{value}");
+
                 if (value != 1) return;
+
                 removed.Dispose();
-                stream.Subscribe(Order.Middle, next => calls.Add($"middle:{next}"));
-                stream.Subscribe(Order.Late, next => calls.Add($"late:{next}"));
-                var cancelled = stream.Subscribe(Order.Middle, next => calls.Add($"cancelled:{next}"));
+                stream.ForOrder(Order.Middle).Subscribe(next => calls.Add($"middle:{next}"));
+                stream.ForOrder(Order.Late).Subscribe(next => calls.Add($"late:{next}"));
+                var cancelled = stream.ForOrder(Order.Middle).Subscribe(next => calls.Add($"cancelled:{next}"));
                 cancelled.Dispose();
             });
-            removed = stream.Subscribe(Order.Middle, value => calls.Add($"removed:{value}"));
+
+            removed = stream.ForOrder(Order.Middle).Subscribe(value => calls.Add($"removed:{value}"));
 
             stream.OnNext(1);
             Assert.That(calls, Is.EqualTo(new[] { "early:1" }));
             stream.OnNext(2);
             Assert.That(calls, Is.EqualTo(new[] { "early:1", "early:2", "middle:2", "late:2" }));
-            Assert.That(stream.Orders, Is.EqualTo(new[] { Order.Early, Order.Middle, Order.Late }));
         }
 
         [Test]
-        public void FilteredPublicationKeepsMaskFilteringAndDeferredSubscriptionChanges()
+        public void FilteredPublicationKeepsFilteringAndDeferredSubscriptionChanges()
         {
-            using var router = new EventStream<int>();
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
             var removed = (IDisposable)null;
-            var firstBit = new Filter<int>("first", value => (value & 1) != 0);
-            var secondBit = new Filter<int>("second", value => (value & 2) != 0);
-            using var first = router.Where(firstBit).Subscribe(value =>
+            Func<int, bool> odd = value => value % 2 == 1;
+            Func<int, bool> large = value => value >= 2;
+
+            using var first = stream.Where(odd).Subscribe(value =>
             {
                 calls.Add($"first:{value}");
                 removed.Dispose();
-                router.Where(secondBit).Subscribe(next => calls.Add($"late:{next}"));
+                stream.Where(large).Subscribe(next => calls.Add($"late:{next}"));
             });
-            removed = router.Where(secondBit).Subscribe(value => calls.Add($"removed:{value}"));
-            using var ordinary = router.Subscribe(value => calls.Add($"ordinary:{value}"));
-            using var empty = router.Where(new Filter<int>("empty", _ => false)).Subscribe(value => calls.Add($"empty:{value}"));
 
-            router.OnNext(3);
-            router.OnNext(2);
+            removed = stream.Where(large).Subscribe(value => calls.Add($"removed:{value}"));
+            using var ordinary = stream.Subscribe(value => calls.Add($"ordinary:{value}"));
+            using var empty = stream.Where(_ => false).Subscribe(
+                value => calls.Add($"empty:{value}"));
+
+            stream.OnNext(3);
+            stream.OnNext(2);
 
             Assert.That(calls, Is.EqualTo(new[] { "ordinary:3", "first:3", "ordinary:2", "late:2" }));
         }
 
         [Test]
-        public void NestedFilteredPublicationKeepsTheOuterMaskForRemainingSubscribers()
+        public void NestedFilteredPublicationKeepsTheOuterValueForRemainingSubscribers()
         {
             var reported = new List<Exception>();
             ExceptionHandler.SetHandler(reported.Add);
-            using var router = new EventStream<int>();
+            using var stream = new EventStream<int>();
             var calls = new List<string>();
-            var firstBit = new Filter<int>("first", value => (value & 1) != 0);
-            var secondBit = new Filter<int>("second", value => (value & 2) != 0);
-            using var nested = router.Where(firstBit).Subscribe(_ => router.OnNext(2));
-            using var matched = router.Where(firstBit).Subscribe(value => calls.Add($"matched:{value}"));
-            using var other = router.Where(secondBit).Subscribe(value => calls.Add($"other:{value}"));
+            Func<int, bool> one = value => value == 1;
+            Func<int, bool> two = value => value == 2;
+            using var nested = stream.Where(one).Subscribe(_ => stream.OnNext(2));
+            using var matched = stream.Where(one).Subscribe(value => calls.Add($"matched:{value}"));
+            using var other = stream.Where(two).Subscribe(value => calls.Add($"other:{value}"));
 
-            router.OnNext(1);
+            stream.OnNext(1);
 
             Assert.That(calls, Is.EqualTo(new[] { "matched:1" }));
             Assert.That(reported, Has.Count.EqualTo(1));
@@ -141,11 +152,13 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
+
             Action<int> callback = _ =>
             {
                 calls.Add("first");
                 stream.Dispose();
             };
+
             callback += _ => calls.Add("tail");
             stream.Subscribe(callback);
             stream.Subscribe(_ => calls.Add("other"));
@@ -164,8 +177,10 @@ namespace BlackThunder.UniEngine.Tests
             using var stream = new EventStream<int>();
             var calls = new List<int>();
             var failure = new ApplicationException("subscriber");
+
             var reported = new List<Exception>();
             if (handled) ExceptionHandler.SetHandler(reported.Add);
+
             Action<int> callback = _ => throw failure;
             callback += _ => Assert.Fail("The remaining multicast callback must not run.");
             using var failed = stream.Subscribe(callback);
@@ -173,6 +188,7 @@ namespace BlackThunder.UniEngine.Tests
 
             if (handled) stream.OnNext(1);
             else Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
+
             stream.OnNext(2);
 
             // An unhandled failure is rethrown only after the remaining subscribers receive the value.
@@ -188,24 +204,32 @@ namespace BlackThunder.UniEngine.Tests
             var calls = new List<string>();
             var failure = new ApplicationException("terminal");
             var subscription = (IDisposable)null;
+
             Action completed = () =>
             {
                 calls.Add("completed");
                 subscription.Dispose();
             };
+
             completed += () => calls.Add("completed tail");
+
             Action<Exception> errored = exception =>
             {
                 Assert.That(exception, Is.SameAs(failure));
                 calls.Add("errored");
                 subscription.Dispose();
             };
+
             errored += _ => calls.Add("errored tail");
             subscription = stream.Subscribe(null, completed, errored);
-            using var other = stream.Subscribe(null, () => calls.Add("other completed"), _ => calls.Add("other errored"));
+            using var other = stream.Subscribe(
+                null,
+                () => calls.Add("other completed"),
+                _ => calls.Add("other errored"));
 
             if (error) stream.OnError(failure);
             else stream.OnCompleted();
+
             stream.OnCompleted();
             stream.OnError(failure);
 
@@ -246,8 +270,12 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static (WeakReference Target, WeakReference Updated, WeakReference Completed, WeakReference Errored, IDisposable Handle)
-            RegisterAndRelease(EventStream<int> stream, bool disposeStream)
+        private static (
+            WeakReference Target,
+            WeakReference Updated,
+            WeakReference Completed,
+            WeakReference Errored,
+            IDisposable Handle) RegisterAndRelease(EventStream<int> stream, bool disposeStream)
         {
             var receiver = new Receiver();
             Action<int> updated = receiver.OnNext;
@@ -256,9 +284,16 @@ namespace BlackThunder.UniEngine.Tests
             Action<Exception> errored = receiver.OnError;
             var handle = stream.Subscribe(updated, completed, errored);
             stream.OnNext(1);
+
             if (disposeStream) stream.Dispose();
             else handle.Dispose();
-            return (new WeakReference(receiver), new WeakReference(updated), new WeakReference(completed), new WeakReference(errored), handle);
+
+            return (
+                new WeakReference(receiver),
+                new WeakReference(updated),
+                new WeakReference(completed),
+                new WeakReference(errored),
+                handle);
         }
     }
 }

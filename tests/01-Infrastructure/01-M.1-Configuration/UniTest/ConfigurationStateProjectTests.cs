@@ -8,7 +8,11 @@ namespace BlackThunder.UniEngine.Tests
         // Content
         [Test]
         public Task FailedInitializationCanTransitionToTheInitializedState() =>
-            InfrastructureStateProject.RunAsync("Configuration.State",
-                "RejectInvalidId", "RemainUninitialized", "Initialize", "RejectReinitialization");
+            InfrastructureStateProject.RunAsync(
+                "Configuration.State",
+                "RejectInvalidId",
+                "RemainUninitialized",
+                "Initialize",
+                "RejectReinitialization");
     }
 }

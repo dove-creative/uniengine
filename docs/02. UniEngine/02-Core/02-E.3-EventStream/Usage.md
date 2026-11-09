@@ -1,19 +1,20 @@
 # EventStream 사용 예제
 
-## 구독과 비트마스크 필터
+## 구독과 필터
 
 ```csharp
+using System;
 using Blackthunder.UniEngine.Core;
 
-using var stream = new EventStream<uint>();
-var death = new Filter<uint>("Death", flags => (flags & 1u) != 0);
+using var stream = new EventStream<UnitEvent>();
+Func<UnitEvent, bool> death = unitEvent => unitEvent.Kind == EventKind.Death;
 
 using var score = stream.Where(death).Subscribe(_ => AddScore());
 using var sound = stream.Where(death).Subscribe(_ => PlaySound());
-stream.OnNext(1u);
+stream.OnNext(new UnitEvent(EventKind.Death));
 ```
 
-두 구독이 같은 death 객체를 사용하므로 조건은 한 번 평가된다.
+UnitEvent는 Kind 속성을 가진 이벤트 형식이다. 두 구독이 같은 death 객체를 사용하므로 조건은 한 번 평가된다.
 
 ## 횟수 제한
 
@@ -33,7 +34,7 @@ stream.OnNext(3);
 
 ```csharp
 using var parent = new EventStream<int>();
-using var branch = parent.Where(new Filter<int>("Positive", value => value > 0)).Branch();
+using var branch = parent.Where(value => value > 0).Branch();
 using var handle = branch.Subscribe(value => Console.WriteLine(value));
 parent.OnNext(-1);
 parent.OnNext(2);
@@ -45,9 +46,9 @@ branch.OnNext(-3);
 ## 순서 그룹과 Merge
 
 ```csharp
-using var updates = new EventStream<int, Phase>(Phase.Before, Phase.Before, Phase.After);
-using var later = updates.Subscribe(Phase.After, _ => Render());
-using var earlier = updates.Subscribe(Phase.Before, _ => Simulate());
+using var updates = new EventStream<int>();
+using var later = updates.ForOrder(Phase.After).Subscribe(_ => Render());
+using var earlier = updates.ForOrder(Phase.Before).Subscribe(_ => Simulate());
 updates.OnNext(1);
 
 using var left = new EventStream<int>();
