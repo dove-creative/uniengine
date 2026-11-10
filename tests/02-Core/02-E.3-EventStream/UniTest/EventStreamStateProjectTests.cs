@@ -56,9 +56,12 @@ namespace BlackThunder.UniEngine.Tests
         {
             public StreamProject() : base(ExecutionMode.Inline) { }
 
-            public override IEnumerable<CompactLab<StreamModel>> CreateCompactLabs(StreamModel model)
+            public override IEnumerable<CompactLab<StreamModel>> CreateCompactLabs(StreamModel model) =>
+                CreateLifecycleLabs(model.ExecutionCount);
+
+            public static IEnumerable<CompactLab<StreamModel>> CreateLifecycleLabs(int step)
             {
-                switch (model.ExecutionCount)
+                switch (step)
                 {
                     case 0:
                         yield return new CompactLab<StreamModel>(
@@ -179,12 +182,30 @@ namespace BlackThunder.UniEngine.Tests
             }
         }
 
+        // U1-U2: Continue through repeated lifecycles with the same assertions as the bounded test.
+        [Category("RandomContinuous")]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task BranchLifecycleContinuesWithRandomSeed(int seed)
+        {
+            using var project = new EventStreamLifecycleProject<StreamModel>(
+                DisposeCycle,
+                ("", StreamProject.CreateLifecycleLabs));
+            await RandomContinuousTest.RunAsync(project, seed);
+        }
+
         private static void DisposeReplaySubjects(Node<StreamModel> node)
         {
-            node.Model.Branch?.Dispose();
-            node.Model.Source?.Dispose();
+            DisposeCycle(node.Model);
 
             foreach (var child in node.Afters) DisposeReplaySubjects(child);
+        }
+
+        private static void DisposeCycle(StreamModel model)
+        {
+            model.Branch?.Dispose();
+            model.Source?.Dispose();
         }
     }
 }

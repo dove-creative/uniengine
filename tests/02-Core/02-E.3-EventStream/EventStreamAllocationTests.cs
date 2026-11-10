@@ -152,6 +152,45 @@ namespace BlackThunder.UniEngine.Tests
             });
         }
 
+        [TestCase(0, 0)]
+        [TestCase(1, 2)]
+        [TestCase(2, 2)]
+        [TestCase(3, 3)]
+        [TestCase(4, 0)]
+        public void FirstAndRepeatedFlagsPublicationsAllocateNoManagedMemory(int value, int expectedCalls)
+        {
+            Verify(() =>
+            {
+                var counter = new Counter();
+                var stream = new EventStream<ulong>();
+                Action<ulong> record = bits => counter.Record((int)bits);
+                stream.ForFlags(EventKinds.First).Subscribe(record);
+                stream.ForFlags(EventKinds.Second).Subscribe(record);
+                stream.ForFlags(EventKinds.First | EventKinds.Second).Subscribe(record);
+
+                return new Publication(
+                    counter, () => stream.OnNext((ulong)value), expectedCalls, expectedCalls * value, stream);
+            });
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FirstAndRepeatedComposedFlagsPublicationsAllocateNoManagedMemory(bool matches)
+        {
+            Verify(() =>
+            {
+                var counter = new Counter();
+                var stream = new EventStream<ulong>();
+                var branch = stream.Where(_ => true).ForFlags(WideEventKinds.Top)
+                    .ForOrder(UpdateOrder.Update).Skip(0).Take(int.MaxValue).Branch();
+                branch.ForFlags(EventKinds.First).Subscribe(_ => counter.Record(1));
+                var value = matches ? (1UL << 63) | 1UL : 1UL;
+                var expected = matches ? 1 : 0;
+
+                return new Publication(counter, () => stream.OnNext(value), expected, expected, stream, branch);
+            });
+        }
+
         // Helpers
         private static Publication CreateBase<T>(
             int registration,
@@ -245,6 +284,12 @@ namespace BlackThunder.UniEngine.Tests
 
             public ReferencePayload(int value) => Value = value;
         }
+
+        [Flags]
+        private enum EventKinds { First = 1, Second = 2 }
+
+        [Flags]
+        private enum WideEventKinds : ulong { Top = 1UL << 63 }
 
         private enum UpdateOrder
         {

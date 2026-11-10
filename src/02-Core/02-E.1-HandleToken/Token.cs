@@ -4,7 +4,7 @@ namespace Blackthunder.UniEngine.Core
 {
     public class Token : Handle
     {
-        // Front
+        // Control
         public event Action Action
         {
             add

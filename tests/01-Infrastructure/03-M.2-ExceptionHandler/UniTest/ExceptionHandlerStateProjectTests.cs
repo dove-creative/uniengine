@@ -112,5 +112,12 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(cancelled, Is.False);
             Assert.That(result.GetLastNode().Model.ExecutionCount, Is.EqualTo(3));
         }
+
+        // E1–E4, E6–E7, EU1: Replay reporting and multicast calls across handler policy changes.
+        [Category("RandomContinuous")]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public Task RandomContinuousStateTransitions(int seed) => ExceptionHandlerContinuousScenario.RunAsync(seed);
     }
 }

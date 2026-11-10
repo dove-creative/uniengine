@@ -81,6 +81,42 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
+        // Keeps one entry per mask. Matching entries retain their creation order.
+        private class FlagsNode : NodeBase
+        {
+            internal FlagsEntry Find(ulong mask)
+            {
+                for (var child = Children.First; child != null; child = child.Next)
+                {
+                    var entry = (FlagsEntry)child;
+                    if (entry.Mask == mask) return entry;
+                }
+
+                return null;
+            }
+
+            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            {
+                var bits = _readFlags(value);
+                if (bits == 0)
+                    return;
+
+                for (var child = Children.First; child != null; child = child.Next)
+                {
+                    if (child.Parent != null && child.Registration <= lastVisible
+                        && bits.HasAny(((FlagsEntry)child).Mask))
+                        child.Visit(value, lastVisible, ref failure);
+                }
+            }
+        }
+
+        private class FlagsEntry : Node
+        {
+            internal ulong Mask { get; }
+
+            internal FlagsEntry(ulong mask) => Mask = mask;
+        }
+
         internal class WhereNode : Node
         {
             internal Func<T, bool> Predicate { get; }

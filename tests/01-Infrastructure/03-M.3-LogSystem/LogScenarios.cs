@@ -15,6 +15,9 @@ namespace BlackThunder.UniEngine.Tests
         {
             var path = InfrastructureProcess.GetOwnedPath(applicationId);
 
+            if (scenario.StartsWith("Continuous.", StringComparison.Ordinal))
+                return LogContinuousScenario.RunAsync(int.Parse(scenario.Substring("Continuous.".Length)), applicationId);
+
             if (scenario == "InitializationRequired")
             {
                 Assert.Throws<InvalidOperationException>(() => Log.Initialize());

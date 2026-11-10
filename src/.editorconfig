@@ -14,3 +14,6 @@ dotnet_diagnostic.IDE0290.severity = none
 
 # IDE0016: throw' 식 사용
 dotnet_diagnostic.IDE0016.severity = none
+
+# IDE0220: 명시적 캐스트 추가
+dotnet_diagnostic.IDE0220.severity = none

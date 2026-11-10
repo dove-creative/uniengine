@@ -10,67 +10,124 @@ namespace BlackThunder.UniEngine.Tests
     public class CollectionStateProjectTests
     {
         // Internal
-        private class CollectionProject : CompactProject<Model>
+        private class CollectionModel : Model
+        {
+            public AdaptiveCollection<int> Collection => (AdaptiveCollection<int>)Subject;
+            public List<int> Expected { get; } = new();
+        }
+
+        private class CollectionProject : CompactProject<CollectionModel>
         {
             private readonly bool _deferred;
+            private readonly bool _continuous;
 
-            public CollectionProject(bool deferred) : base(ExecutionMode.Inline) => _deferred = deferred;
-
-            public override IEnumerable<CompactLab<Model>> CreateCompactLabs(Model model)
+            public CollectionProject(bool deferred, bool continuous = false) : base(ExecutionMode.Inline)
             {
-                switch (model.ExecutionCount)
+                _deferred = deferred;
+                _continuous = continuous;
+            }
+
+            public override IEnumerable<CompactLab<CollectionModel>> CreateCompactLabs(CollectionModel model)
+            {
+                if (model.ExecutionCount == 0)
                 {
-                    case 0:
-                        return new[]
-                        {
-                            new CompactLab<Model>("Create")
-                            {
-                                Actor = state => state.Subject = new AdaptiveCollection<int>(_deferred) { 1, 2 },
-                                Asserter = state => Assert.That(
-                                    ((AdaptiveCollection<int>)state.Subject).Count,
-                                    Is.EqualTo(2)),
-                            },
-                        };
-                    case 1:
-                        return new[] { new CompactLab<Model>("AddDuringIteration") { Actor = AddDuringIteration } };
-                    case 2:
-                        return new[]
-                        {
-                            new CompactLab<Model>("RemoveDuringIteration") { Actor = RemoveDuringIteration }
-                        };
-                    default:
-                        return Array.Empty<CompactLab<Model>>();
+                    yield return CheckedLab("Create", state =>
+                    {
+                        state.Subject = new AdaptiveCollection<int>(_deferred) { 1, 2 };
+                        state.Expected.AddRange(new[] { 1, 2 });
+                    });
+                    yield break;
+                }
+
+                if (_continuous || model.ExecutionCount == 1)
+                    yield return CheckedLab("AddDuringIteration", state => AddDuringIteration(state, stopEarly: false));
+
+                if ((_continuous || model.ExecutionCount == 2) && model.Expected.Count > 1)
+                    yield return CheckedLab("RemoveDuringIteration", RemoveDuringIteration);
+
+                if (_continuous)
+                {
+                    yield return CheckedLab("ClearThenAdd", ClearThenAdd);
+                    yield return CheckedLab("AddThenBreak", state => AddDuringIteration(state, stopEarly: true));
                 }
             }
 
-            private void AddDuringIteration(Model model)
+            private static CompactLab<CollectionModel> CheckedLab(string id, Action<CollectionModel> actor) =>
+                new(id, actor: actor, asserter: AssertContents);
+
+            private void AddDuringIteration(CollectionModel model, bool stopEarly)
             {
-                var collection = (AdaptiveCollection<int>)model.Subject;
+                var collection = model.Collection;
+                var added = model.ExecutionCount + 1;
+                var expectedVisit = new List<int>(model.Expected);
+                if (stopEarly) expectedVisit.RemoveRange(1, expectedVisit.Count - 1);
+                else if (!_deferred) expectedVisit.Add(added);
+
                 var seen = new List<int>();
                 foreach (var value in collection)
                 {
                     seen.Add(value);
+                    if (seen.Count != 1) continue;
 
-                    if (value == 1) collection.Add(3);
+                    collection.Add(added);
+                    model.Expected.Add(added);
+                    Assert.That(collection.Count, Is.EqualTo(model.Expected.Count));
+                    Assert.That(collection.Contains(added), Is.True);
+
+                    if (stopEarly) break;
                 }
 
-                Assert.That(seen, Is.EqualTo(_deferred ? new[] { 1, 2 } : new[] { 1, 2, 3 }));
-                Assert.That(collection.Count, Is.EqualTo(3));
+                Assert.That(seen, Is.EqualTo(expectedVisit));
             }
 
-            private void RemoveDuringIteration(Model model)
+            private static void RemoveDuringIteration(CollectionModel model)
             {
-                var collection = (AdaptiveCollection<int>)model.Subject;
+                var collection = model.Collection;
+                var removed = model.Expected[1];
+                model.Expected.RemoveAt(1);
+
                 var seen = new List<int>();
                 foreach (var value in collection)
                 {
                     seen.Add(value);
+                    if (seen.Count != 1) continue;
 
-                    if (value == 1) collection.Remove(2);
+                    Assert.That(collection.Remove(removed), Is.True);
+                    Assert.That(collection.Contains(removed), Is.False);
                 }
 
-                Assert.That(seen, Is.EqualTo(new[] { 1, 3 }));
-                Assert.That(collection.Count, Is.EqualTo(2));
+                Assert.That(seen, Is.EqualTo(model.Expected));
+            }
+
+            private static void ClearThenAdd(CollectionModel model)
+            {
+                var collection = model.Collection;
+                var expectedFirst = model.Expected[0];
+                var added = model.ExecutionCount + 1;
+                var seen = new List<int>();
+                foreach (var value in collection)
+                {
+                    seen.Add(value);
+                    if (seen.Count != 1) continue;
+
+                    collection.Clear();
+                    collection.Add(added);
+                    model.Expected.Clear();
+                    model.Expected.Add(added);
+                }
+
+                Assert.That(seen, Is.EqualTo(new[] { expectedFirst }));
+            }
+
+            private static void AssertContents(CollectionModel model)
+            {
+                var collection = model.Collection;
+                Assert.That(collection.Count, Is.EqualTo(model.Expected.Count));
+
+                var copied = new int[model.Expected.Count];
+                collection.CopyTo(copied, 0);
+                Assert.That(copied, Is.EqualTo(model.Expected));
+                Assert.That(collection, Is.EqualTo(model.Expected));
             }
         }
 
@@ -87,5 +144,16 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(cancelled, Is.False);
             Assert.That(result.GetLastNode().Model.ExecutionCount, Is.EqualTo(3));
         }
+
+        // U1: Mutations accumulate on the same logical list across successive traversal steps.
+        [Category("RandomContinuous")]
+        [TestCase(false, 0)]
+        [TestCase(false, 1)]
+        [TestCase(false, 2)]
+        [TestCase(true, 0)]
+        [TestCase(true, 1)]
+        [TestCase(true, 2)]
+        public Task RandomContinuousMutations(bool deferred, int seed) =>
+            RandomContinuousTest.RunAsync(new CollectionProject(deferred, continuous: true), seed);
     }
 }

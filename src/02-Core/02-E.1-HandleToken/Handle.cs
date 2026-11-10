@@ -7,13 +7,14 @@ namespace Blackthunder.UniEngine.Core
     {
         // Front
         public string Description { get; set; }
+        public bool IsDisposed { get; private set; } = false;
 
+        // Control
         protected event Action Disposed
         {
             add => SetCallbacks(_disposed + value);
             remove => SetCallbacks(_disposed - value);
         }
-        public bool IsDisposed { get; private set; } = false;
 
         // Internal
         private Action _disposed;
@@ -48,10 +49,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (callbacks == null) return;
 
-                foreach (var entry in callbacks)
+                foreach (Action callback in callbacks)
                 {
-                    var callback = (Action)entry;
-
                     try
                     {
                         callback();

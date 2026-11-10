@@ -124,9 +124,12 @@ namespace BlackThunder.UniEngine.Tests
         {
             public MergeProject() : base(ExecutionMode.Inline) { }
 
-            public override IEnumerable<CompactLab<MergeModel>> CreateCompactLabs(MergeModel model)
+            public override IEnumerable<CompactLab<MergeModel>> CreateCompactLabs(MergeModel model) =>
+                CreateLifecycleLabs(model.ExecutionCount);
+
+            public static IEnumerable<CompactLab<MergeModel>> CreateLifecycleLabs(int step)
             {
-                switch (model.ExecutionCount)
+                switch (step)
                 {
                     case 0:
                         yield return new CompactLab<MergeModel>(
@@ -199,13 +202,31 @@ namespace BlackThunder.UniEngine.Tests
             }
         }
 
+        // UM1-UM9: Continue through repeated lifecycles with the same assertions as the bounded test.
+        [Category("RandomContinuous")]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task MergeLifetimesContinueWithRandomSeed(int seed)
+        {
+            using var project = new EventStreamLifecycleProject<MergeModel>(
+                DisposeCycle,
+                ("", MergeProject.CreateLifecycleLabs));
+            await RandomContinuousTest.RunAsync(project, seed);
+        }
+
         private static void DisposeReplaySubjects(Node<MergeModel> node)
         {
-            node.Model.Merged?.Dispose();
-            node.Model.Left?.Dispose();
-            node.Model.Right?.Dispose();
+            DisposeCycle(node.Model);
 
             foreach (var child in node.Afters) DisposeReplaySubjects(child);
+        }
+
+        private static void DisposeCycle(MergeModel model)
+        {
+            model.Merged?.Dispose();
+            model.Left?.Dispose();
+            model.Right?.Dispose();
         }
     }
 }

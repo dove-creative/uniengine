@@ -14,6 +14,14 @@ namespace BlackThunder.UniEngine.Tests
         {
             var path = InfrastructureProcess.GetOwnedPath(applicationId);
 
+            if (scenario.StartsWith("Continuous.", StringComparison.Ordinal))
+            {
+                ConfigurationContinuousScenario.VerifyHistory(
+                    scenario.Substring("Continuous.".Length).Split(','), applicationId);
+
+                return Task.CompletedTask;
+            }
+
             if (scenario.StartsWith("State.", StringComparison.Ordinal))
             {
                 var stepCount = int.Parse(scenario.Substring("State.".Length));

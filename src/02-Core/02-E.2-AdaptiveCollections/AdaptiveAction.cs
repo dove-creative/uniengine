@@ -14,10 +14,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (var entry in InvocationListCache<Action>.Get(action))
+                foreach (Action callback in InvocationListCache<Action>.Get(action))
                 {
-                    var callback = (Action)entry;
-
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -51,10 +49,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (var entry in InvocationListCache<Action<T>>.Get(action))
+                foreach (Action<T> callback in InvocationListCache<Action<T>>.Get(action))
                 {
-                    var callback = (Action<T>)entry;
-
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -88,10 +84,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (var entry in InvocationListCache<Action<T, U>>.Get(action))
+                foreach (Action<T, U> callback in InvocationListCache<Action<T, U>>.Get(action))
                 {
-                    var callback = (Action<T, U>)entry;
-
                     if (!IsCurrentItemActive) break;
 
                     try
@@ -125,10 +119,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 if (action == null) continue;
 
-                foreach (var entry in InvocationListCache<Action<T, U, V>>.Get(action))
+                foreach (Action<T, U, V> callback in InvocationListCache<Action<T, U, V>>.Get(action))
                 {
-                    var callback = (Action<T, U, V>)entry;
-
                     if (!IsCurrentItemActive) break;
 
                     try

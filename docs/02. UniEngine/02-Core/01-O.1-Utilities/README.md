@@ -19,11 +19,13 @@
 
 ## 구성과 역할
 
-FlagExtensions는 비트 집합을 다루고 ObjectTokenExtensions는 참조형 토큰의 동일성을 확인한다. 각 함수는 전달된 값만 판단하며 토큰의 폐기 상태를 관리하지 않는다.
+FlagExtensions는 int·uint·ulong 비트 집합의 포함 여부와 결합, enum의 ToBits 변환을 제공하고 ObjectTokenExtensions는 참조형 토큰의 동일성을 확인한다. 각 함수는 전달된 값만 판단하며 토큰의 폐기 상태를 관리하지 않는다.
+
+flags enum은 선언의 기반 형식을 강제하지 않고 ulong 비트 표현으로 다룬다. 변환에는 직접 캐스트 대신 ToBits를 사용하여 기반 형식의 비트를 보존하고 상위 비트의 부호 확장을 피한다. ToBits 자체는 `[Flags]` 특성을 요구하지 않는다.
 
 ## 대표 흐름
 
-1. 호출자가 비트 값 또는 비교할 참조를 전달한다.
+1. 호출자가 enum을 ToBits로 변환한 비트 값, 기존 정수 비트 값 또는 비교할 참조를 전달한다.
 2. 도구가 결합·포함 여부 또는 참조 동일성 결과를 반환한다.
 3. 호출자가 결과를 자신의 제어 정책에 사용한다.
 
@@ -31,7 +33,7 @@ FlagExtensions는 비트 집합을 다루고 ObjectTokenExtensions는 참조형 
 
 | 객체·계약 | 역할 |
 | --- | --- |
-| [FlagExtensions](FlagExtensions.md) | int·uint 비트 집합의 포함 여부와 결합을 제공하는 정적 확장 기능이다. |
+| [FlagExtensions](FlagExtensions.md) | int·uint·ulong의 비트 포함·결합과 enum의 ToBits 변환을 제공하는 정적 확장 기능이다. |
 | [ObjectTokenExtensions](ObjectTokenExtensions.md) | 참조형 토큰이 null이 아니면서 같은 객체인지 확인하는 정적 확장 기능이다. |
 
 [Core 구성](../README.md)

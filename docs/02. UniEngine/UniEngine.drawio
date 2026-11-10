@@ -142,12 +142,12 @@
     </mxGraphModel>
   </diagram>
   <diagram id="prA1G4Pz3AnYTuL499Sr" name="Core">
-    <mxGraphModel dx="684" dy="498" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2000" math="0" shadow="0">
+    <mxGraphModel dx="822" dy="599" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="Xivx4OL_eBFlOpBteDVt-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;fillColor=none;" value="" vertex="1">
-          <mxGeometry height="130" width="380" x="320" y="850" as="geometry" />
+          <mxGeometry height="130" width="380" x="320" y="860" as="geometry" />
         </mxCell>
         <mxCell id="7NSUli_bZYJjGUB6mkmI-21" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;fillColor=none;" value="" vertex="1">
           <mxGeometry height="140" width="340" x="320" y="1040" as="geometry" />
@@ -173,7 +173,7 @@
         <mxCell id="L4urmE3jwtN8YcLDkd7_-6" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;defaultLabelBackgroundColor=page;startSize=12;endSize=12;" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <mxPoint x="280" y="1680" as="sourcePoint" />
-            <mxPoint x="280" y="840" as="targetPoint" />
+            <mxPoint x="280" y="720" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="L4urmE3jwtN8YcLDkd7_-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;Flag Extensions&lt;/div&gt;" vertex="1">
@@ -264,31 +264,34 @@
           <mxGeometry height="20" width="280" x="1080" y="1680" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;&lt;b&gt;Event Stream&lt;/b&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="20" width="380" x="320" y="830" as="geometry" />
+          <mxGeometry height="20" width="380" x="320" y="840" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;&lt;b&gt;Event Streams&lt;/b&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="20" width="200" x="480" y="870" as="geometry" />
+          <mxGeometry height="20" width="200" x="480" y="880" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-6" edge="1" parent="1" source="Xivx4OL_eBFlOpBteDVt-3" style="edgeStyle=orthogonalEdgeStyle;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;defaultLabelBackgroundColor=page;startArrow=none;startFill=0;startSize=12;endArrow=open;endFill=0;endSize=12;" target="Xivx4OL_eBFlOpBteDVt-2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;&lt;b&gt;Event Stream&lt;/b&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="20" width="100" x="340" y="870" as="geometry" />
+          <mxGeometry height="20" width="100" x="340" y="880" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;fillColor=none;" value="" vertex="1">
-          <mxGeometry height="70" width="200" x="480" y="890" as="geometry" />
+          <mxGeometry height="70" width="200" x="480" y="900" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;b&gt;Take&lt;/b&gt;" vertex="1">
-          <mxGeometry height="20" width="80" x="490" y="900" as="geometry" />
+          <mxGeometry height="20" width="80" x="490" y="910" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;b&gt;Take While&lt;/b&gt;" vertex="1">
-          <mxGeometry height="20" width="80" x="490" y="930" as="geometry" />
+          <mxGeometry height="20" width="80" x="490" y="940" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;b&gt;Skip&lt;/b&gt;" vertex="1">
-          <mxGeometry height="20" width="80" x="590" y="900" as="geometry" />
+          <mxGeometry height="20" width="80" x="590" y="910" as="geometry" />
         </mxCell>
         <mxCell id="Xivx4OL_eBFlOpBteDVt-11" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;b&gt;Skip While&lt;/b&gt;" vertex="1">
-          <mxGeometry height="20" width="80" x="590" y="930" as="geometry" />
+          <mxGeometry height="20" width="80" x="590" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="ClREaEDUyUguRaoIeXwC-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;&lt;b&gt;Lifecycle Hub&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="120" x="320" y="760" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

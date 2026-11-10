@@ -14,5 +14,12 @@ namespace BlackThunder.UniEngine.Tests
                 "RemainUninitialized",
                 "Initialize",
                 "RejectReinitialization");
+
+        // C1–C5, U1: Verify the one-time transition and path invariants through seeded histories.
+        [Category("RandomContinuous")]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public Task RandomContinuousStateTransitions(int seed) => ConfigurationContinuousScenario.RunAsync(seed);
     }
 }

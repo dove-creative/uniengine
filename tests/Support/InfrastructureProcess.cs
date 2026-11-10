@@ -13,7 +13,7 @@ namespace BlackThunder.UniEngine.Tests
 
 
         // Content
-        public static async Task RunAsync(string scenario)
+        public static async Task RunAsync(string scenario, bool writeOutput = false, int timeoutSeconds = 30)
         {
             var applicationId = ApplicationPrefix + Guid.NewGuid().ToString("N");
             var projectPath = GetOwnedPath(applicationId);
@@ -45,7 +45,7 @@ namespace BlackThunder.UniEngine.Tests
                 var errorTask = process.StandardError.ReadToEndAsync();
                 var exitTask = process.WaitForExitAsync();
 
-                var timedOut = await Task.WhenAny(exitTask, Task.Delay(30_000)) != exitTask;
+                var timedOut = await Task.WhenAny(exitTask, Task.Delay(TimeSpan.FromSeconds(timeoutSeconds))) != exitTask;
                 if (timedOut)
                 {
                     try
@@ -61,7 +61,10 @@ namespace BlackThunder.UniEngine.Tests
                 await exitTask;
                 var output = await outputTask;
                 var error = await errorTask;
-                Assert.That(timedOut, Is.False, scenario + " exceeded 30 seconds.\n" + output + error);
+                if (writeOutput)
+                    TestContext.Out.Write(output);
+
+                Assert.That(timedOut, Is.False, scenario + $" exceeded {timeoutSeconds} seconds.\n" + output + error);
                 Assert.That(process.ExitCode, Is.Zero, scenario + "\n" + output + error);
             }
             finally

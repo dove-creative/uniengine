@@ -64,7 +64,7 @@ namespace Blackthunder.UniEngine.Core
             ((IRegistrable<T>)this).Register(registration, null);
     }
 
-    // Paths start from a stream here, so that EventStream does not depend on EventPath.
+    // Stream entry points and type-specific paths stay here, so EventStream does not depend on EventPath.
     public static class EventPathExtensions
     {
         public static EventPath<T> Where<T>(this EventStream<T> stream, Func<T, bool> predicate) =>
@@ -76,5 +76,28 @@ namespace Blackthunder.UniEngine.Core
             new(stream, PathInfo<T>.Debug(message, logType));
         public static EventPath<T> ForOrder<T, TOrder>(this EventStream<T> stream, TOrder order) where TOrder : Enum =>
             new(stream, PathInfo<T>.Group(Convert.ToInt32(order)));
+        public static EventPath<ulong> ForFlags<TFlags>(this EventStream<ulong> stream, TFlags mask)
+            where TFlags : struct, Enum =>
+            new(stream, PathInfo<ulong>.Flags(GetMask(mask)));
+        public static EventPath<ulong> ForFlags<TFlags>(this EventPath<ulong> path, TFlags mask)
+            where TFlags : struct, Enum =>
+            new(path, PathInfo<ulong>.Flags(GetMask(mask)));
+
+        private static ulong GetMask<TFlags>(TFlags mask) where TFlags : struct, Enum
+        {
+            if (!FlagType<TFlags>.IsFlags)
+                throw new ArgumentException("The mask type must have the Flags attribute.", nameof(mask));
+
+            var bits = mask.ToBits();
+            if (bits == 0)
+                throw new ArgumentException("The mask must contain at least one bit.", nameof(mask));
+
+            return bits;
+        }
+
+        private static class FlagType<TFlags> where TFlags : struct, Enum
+        {
+            internal static readonly bool IsFlags = typeof(TFlags).IsDefined(typeof(FlagsAttribute), false);
+        }
     }
 }

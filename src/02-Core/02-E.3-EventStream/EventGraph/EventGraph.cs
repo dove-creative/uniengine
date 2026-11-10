@@ -14,6 +14,11 @@ namespace Blackthunder.UniEngine.Core
         // Internal
         private const int WhereIndexThreshold = 16;
 
+        // Only ulong paths create flags nodes; the delegate cast does not box published values.
+        private static readonly Func<T, ulong> _readFlags = typeof(T) == typeof(ulong)
+            ? (Func<T, ulong>)(object)new Func<ulong, ulong>(bits => bits)
+            : null;
+
         private Node _root = new();
         private readonly Action _onEmpty;
         // Only wide parents get an index; routing nodes keep their existing size and layout.
@@ -73,6 +78,23 @@ namespace Blackthunder.UniEngine.Core
             for (var child = parent.Children.First; child != null; child = child.Next)
             {
                 if (child is OrderedNode ordered) return ordered;
+            }
+
+            return null;
+        }
+
+        internal Node FindOrAddFlags(Node parent, ulong mask)
+        {
+            var flags = FindFlags(parent) ?? AddChild(parent, new FlagsNode());
+            return flags.Find(mask) ?? AddChild(flags, new FlagsEntry(mask));
+        }
+
+        // The masks of a position share one flags node, in creation order.
+        private static FlagsNode FindFlags(Node parent)
+        {
+            for (var child = parent.Children.First; child != null; child = child.Next)
+            {
+                if (child is FlagsNode flags) return flags;
             }
 
             return null;

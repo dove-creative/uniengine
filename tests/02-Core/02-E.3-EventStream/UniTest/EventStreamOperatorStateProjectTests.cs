@@ -201,14 +201,17 @@ namespace BlackThunder.UniEngine.Tests
 
             public OperatorProject(OperatorKind kind) : base(ExecutionMode.Inline) => _kind = kind;
 
-            public override IEnumerable<CompactLab<OperatorModel>> CreateCompactLabs(OperatorModel model)
+            public override IEnumerable<CompactLab<OperatorModel>> CreateCompactLabs(OperatorModel model) =>
+                CreateLifecycleLabs(model.ExecutionCount, _kind);
+
+            public static IEnumerable<CompactLab<OperatorModel>> CreateLifecycleLabs(int step, OperatorKind kind)
             {
-                switch (model.ExecutionCount)
+                switch (step)
                 {
                     case 0:
                         yield return new CompactLab<OperatorModel>(
                             "PrimeDirectInput",
-                            actor: state => state.PrimeDirectInput(_kind),
+                            actor: state => state.PrimeDirectInput(kind),
                             asserter: state => state.AssertPrimed());
                         break;
                     case 1:
@@ -234,9 +237,9 @@ namespace BlackThunder.UniEngine.Tests
                             "PublishRemaining",
                             actor: state => state.Source.OnNext(3),
                             asserter: state => state.AssertAfterPublication(),
-                            toUncontinuable: _kind == OperatorKind.Take);
+                            toUncontinuable: kind == OperatorKind.Take);
 
-                        if (_kind == OperatorKind.TakeWhile || _kind == OperatorKind.SkipWhile)
+                        if (kind == OperatorKind.TakeWhile || kind == OperatorKind.SkipWhile)
                         {
                             yield return new CompactLab<OperatorModel>(
                                 "FailCondition",
@@ -246,7 +249,7 @@ namespace BlackThunder.UniEngine.Tests
                         }
                         break;
                     case 5:
-                        if (_kind == OperatorKind.TakeWhile)
+                        if (kind == OperatorKind.TakeWhile)
                         {
                             yield return new CompactLab<OperatorModel>(
                                 "CloseCondition",
@@ -256,7 +259,7 @@ namespace BlackThunder.UniEngine.Tests
                         }
                         else
                         {
-                            var publishAfterOpen = _kind == OperatorKind.SkipWhile;
+                            var publishAfterOpen = kind == OperatorKind.SkipWhile;
                             yield return new CompactLab<OperatorModel>(
                                 publishAfterOpen ? "PublishAfterOpenAndRelease" : "ReleaseLast",
                                 actor: state => state.ReleaseLast(publishAfterOpen),
@@ -312,12 +315,33 @@ namespace BlackThunder.UniEngine.Tests
             }
         }
 
+        // US1-US6: Continue through repeated lifecycles with the same assertions as the bounded test.
+        [Category("RandomContinuous")]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task StatefulOperatorLifetimesContinueWithRandomSeed(int seed)
+        {
+            using var project = new EventStreamLifecycleProject<OperatorModel>(
+                DisposeCycle,
+                ("Take", step => OperatorProject.CreateLifecycleLabs(step, OperatorKind.Take)),
+                ("Skip", step => OperatorProject.CreateLifecycleLabs(step, OperatorKind.Skip)),
+                ("TakeWhile", step => OperatorProject.CreateLifecycleLabs(step, OperatorKind.TakeWhile)),
+                ("SkipWhile", step => OperatorProject.CreateLifecycleLabs(step, OperatorKind.SkipWhile)));
+            await RandomContinuousTest.RunAsync(project, seed);
+        }
+
         private static void DisposeReplaySubjects(Node<OperatorModel> node)
         {
-            node.Model.Operator?.Dispose();
-            node.Model.Source?.Dispose();
+            DisposeCycle(node.Model);
 
             foreach (var child in node.Afters) DisposeReplaySubjects(child);
+        }
+
+        private static void DisposeCycle(OperatorModel model)
+        {
+            model.Operator?.Dispose();
+            model.Source?.Dispose();
         }
 
         [TearDown]

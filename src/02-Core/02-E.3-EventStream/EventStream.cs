@@ -225,6 +225,7 @@ namespace Blackthunder.UniEngine.Core
                 {
                     PathNodeType.Group => _graph.FindOrAddGroup(node, info.Order),
                     PathNodeType.Where => _graph.FindOrAddWhere(node, info.Predicate),
+                    PathNodeType.Flags => _graph.FindOrAddFlags(node, info.Mask),
                     _ => _graph.AddDebug(node, info.Message, info.LogType)
                 };
             }

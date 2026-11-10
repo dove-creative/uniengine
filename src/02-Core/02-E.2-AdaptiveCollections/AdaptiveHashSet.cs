@@ -84,7 +84,8 @@ namespace Blackthunder.UniEngine.Core
 
         void IEnumerationSource<T>.EndEnumeration(long enumerationId)
         {
-            if (!_isIterating || enumerationId != _enumerationId) return;
+            if (!_isIterating || enumerationId != _enumerationId)
+                return;
 
             try
             {

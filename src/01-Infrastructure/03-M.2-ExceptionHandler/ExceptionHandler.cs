@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Runtime.ExceptionServices;
 
 namespace BlackThunder.UniEngine.Infrastructure
@@ -38,7 +37,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             if (action == null)
                 return;
 
-            foreach (var handler in action.GetInvocationList().Cast<Action>())
+            foreach (Action handler in action.GetInvocationList())
             {
                 try
                 {
@@ -56,7 +55,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             if (action == null)
                 return;
 
-            foreach (var handler in action.GetInvocationList().Cast<Action<T>>())
+            foreach (Action<T> handler in action.GetInvocationList())
             {
                 try
                 {
@@ -74,7 +73,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             if (action == null)
                 return;
 
-            foreach (var handler in action.GetInvocationList().Cast<Action<T1, T2>>())
+            foreach (Action<T1, T2> handler in action.GetInvocationList())
             {
                 try
                 {
@@ -92,7 +91,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             if (action == null)
                 return;
 
-            foreach (var handler in action.GetInvocationList().Cast<Action<T1, T2, T3>>())
+            foreach (Action<T1, T2, T3> handler in action.GetInvocationList())
             {
                 try
                 {
@@ -115,7 +114,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             if (action == null)
                 return;
 
-            foreach (var handler in action.GetInvocationList().Cast<Action<T1, T2, T3, T4>>())
+            foreach (Action<T1, T2, T3, T4> handler in action.GetInvocationList())
             {
                 try
                 {

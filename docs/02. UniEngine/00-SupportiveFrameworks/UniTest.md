@@ -27,5 +27,6 @@ UniTest는 여러 단계에 걸친 상태 전이를 하나의 실행 흐름으�
 ## 참조
 
 테스트 폴더와 문서의 이름은 UniTest의 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/3df16ae4785f73f1b15569e99a198b20a7be7e94/docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md) 기준을 따른다.
+UniEngine의 기본 검증 범위, 랜덤 연속 테스트의 seed·깊이와 실행 중 확인 규칙은 [테스트 안내](../../../tests/README.md)의 테스트 작성 기준 절을 따른다.
 
 [패키지 문서](../../../packages/README.md) · [보조 프레임워크](README.md)

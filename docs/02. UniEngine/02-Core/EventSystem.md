@@ -26,7 +26,8 @@
 | [Handle·Token](02-E.1-HandleToken/README.md) | 연결 해제나 정리 동작을 폐기에 묶는다. |
 | [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md) | 순회 중 변경과 반영 시점을 관리한다. |
 | [EventStream](02-E.3-EventStream/README.md) | 구독, 값·완료·오류 전파, 순서·조건·연산자와 연결 수명을 관리한다. |
-| [EventHub](03-E.1-EventHub/README.md) | 객체별 연결, Sleep·Awake, 갱신과 폐기 알림을 관리한다. |
+| [LifecycleHub](03-E.1-LifecycleHub/README.md) | 객체별 연결과 폐기 완료 알림을 관리한다. |
+| [EventHub](03-E.2-EventHub/README.md) | 생애주기 계약을 확장하여 객체별 연결, Sleep·Awake, 갱신과 폐기 전후 알림을 관리한다. |
 
 ## 연결과 전파
 
@@ -34,7 +35,7 @@ Subscribe는 연결 해제 핸들을 반환한다. Take·Skip·Branch·Merge가 
 
 EventStream은 전파 중 추가한 구독을 다음 전파부터 호출하고, 해제한 구독은 같은 전파에서도 아직 차례가 오지 않았다면 호출하지 않는다. 현재 실행 중인 콜백을 강제로 중단하지는 않는다. EventStream은 모든 순서 그룹에 같은 등록 시점을 적용한다. 앞 그룹에서 추가한 뒤 그룹의 구독도 다음 전파부터 적용된다.
 
-EventHub는 연결 수신자와 직접 Updated 구독자를 내부 스트림의 두 순서 그룹에 등록한다. 콜백 설정의 스냅샷과 객체별 연결 정보는 Hub가, 실제 갱신 전파와 예외 보고는 스트림이 담당한다.
+EventHub는 모든 리스너와 직접 Updated 구독을 내부 스트림의 그래프 하나에 등록한다. 루트의 직접 구독과 리스너 콜백은 등록 순서대로 섞이고, Builder의 Where·Debug는 그 아래 경로를 구성한다. 같은 위치의 같은 Where 조건은 리스너가 달라도 공유된다. 객체별 구독 핸들과 생애주기는 Hub가, 갱신 전파·변경 반영·실패한 구독 해제와 예외 보고는 스트림이 담당한다.
 
 ## 실패와 폐기
 
@@ -42,7 +43,7 @@ EventStream은 실패한 구독이나 조건의 하위를 해제한 뒤 Exceptio
 
 폐기 요청 후 새 전파·연결은 거부한다. 반복 Dispose와 완료 후 해제는 안전하게 무시한다. EventStream의 완료·오류 입력은 통지 후 폐기로 이어지며 명시적인 Dispose가 완료 이벤트를 대신 발생시키지는 않는다.
 
-각 객체의 알림 시점은 별도로 확인해야 한다. Handle은 콜백 전에 IsDisposed를 전환한다. EventHub는 Disposing과 Disposed 사이에 전환한다. LifecycleHub는 완료 상태를 먼저 전환하고 스냅샷을 통지한다. 생애주기 콜백 도중 예외가 재전파되면 뒤의 통지가 생략될 수 있다.
+각 객체의 알림 시점은 별도로 확인해야 한다. Handle은 콜백 전에 IsDisposed를 전환한다. EventHub는 Disposing과 Disposed 사이에 전환한다. LifecycleHub는 완료 상태를 먼저 전환하고 연결별 완료 알림을 통지한다. 생애주기 콜백 도중 예외가 재전파되면 뒤의 통지가 생략될 수 있다.
 
 설계 원칙은 [이벤트](../../01.%20Concepts/04.%20이벤트.md)와 [객체 활동과 연결 원칙](../../01.%20Concepts/03.%20객체%20활동과%20연결%20원칙.md)을 따른다. 재진입 정책은 객체별로 다르며, AdaptiveCollection과 이를 사용하는 EventStream 계열은 중첩 순회를 거부하고 EventHub.Update는 재진입 호출을 생략한다.
 

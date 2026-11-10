@@ -134,7 +134,8 @@ namespace Blackthunder.UniEngine.Core
 
         void IEnumerationSource<KeyValuePair<TKey, TValue>>.EndEnumeration(long enumerationId)
         {
-            if (!_isIterating || enumerationId != _enumerationId) return;
+            if (!_isIterating || enumerationId != _enumerationId)
+                return;
 
             try
             {
