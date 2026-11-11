@@ -177,7 +177,7 @@ Selected: 3
 Mirror: 3
 ```
 
-Positive는 두 번째 조건을 만들어도 양수 판정 그대로이다. Selected를 공유한 두 리스너는 같은 WhenEntry를 공유한다. Positive.When(3)을 따로 만들어도 부모와 target이 같으므로 같은 항목이다. 루트의 OnUpdated(3, callback) 단축형은 EventCondition.When(3)과 항목을 공유하지만, 양수 조건 아래의 Selected와는 부모가 달라 공유하지 않는다. 같은 연결에서 동일한 콜백을 같은 target이나 동등한 EventCondition으로 다시 등록하면 InvalidOperationException이다. Debug를 추가할 때도 원본은 바뀌지 않으며 로그 단계 자체는 공유하지 않는다.
+Positive는 두 번째 조건을 만들어도 양수 판정 그대로이다. Selected를 공유한 두 리스너는 같은 WhenNode의 행을 공유한다. Positive.When(3)을 따로 만들어도 부모와 target이 같으므로 같은 항목이다. 루트의 OnUpdated(3, callback) 단축형은 EventCondition.When(3)과 항목을 공유하지만, 양수 조건 아래의 Selected와는 부모가 달라 공유하지 않는다. 같은 연결에서 동일한 콜백을 같은 target이나 동등한 EventCondition으로 다시 등록하면 InvalidOperationException이다. Debug를 추가할 때도 원본은 바뀌지 않으며 로그 단계 자체는 공유하지 않는다.
 
 참조 형식과 Nullable&lt;T&gt;의 null target도 When으로 비교할 수 있다. target 객체의 Equals·GetHashCode 결과는 등록 뒤 바꾸지 않아야 한다. ulong target은 전체 값의 동등성을 비교하므로 OnFlags의 공통 비트 판정과 다르다. When의 성능은 측정하지 않았고 Unity Mono·IL2CPP에서의 할당도 검증하지 않았다.
 
@@ -218,7 +218,7 @@ public static class Program
 }
 ```
 
-log를 먼저 구독했으므로 Log가 먼저 호출된다. 직접 Updated와 조건을 생략한 OnUpdated는 같은 루트에 등록되어 등록 순서대로 섞여 호출된다. 조건·로그의 자식 경로는 루트 구독을 모두 호출한 뒤 생성 순서대로 방문한다.
+log를 먼저 구독했으므로 Log가 먼저 호출된다. 직접 Updated와 조건을 생략한 OnUpdated는 같은 루트에 등록되어 등록 순서대로 섞여 호출된다. 조건·로그의 자식 노드는 루트 구독을 모두 호출한 뒤 노드 생성 순서대로 방문한다. 같은 위치의 Where 조건들은 WhereNode 하나의 행으로 모여 그 노드의 차례에 등록 순서대로 방문한다.
 
 ```text
 Connections: 3

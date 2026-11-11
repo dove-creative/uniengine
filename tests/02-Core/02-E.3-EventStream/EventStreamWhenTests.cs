@@ -69,11 +69,11 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(stream.NodeCount, Is.Zero);
             path.Subscribe(_ => { });
             stream.When(new ReferenceKey(1)).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             stream.When(new ReferenceKey(2)).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             path.When(new ReferenceKey(1)).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(5));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
         }
 
         [Test]
@@ -85,7 +85,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.When(null).Subscribe(values.Add);
             stream.When("value").Subscribe(values.Add);
 
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             stream.OnNext(null);
             stream.OnNext("value");
             Assert.That(values, Is.EqualTo(new string[] { null, null, "value" }));
@@ -158,7 +158,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.ForOrder(Phase.Update).When(1).Subscribe(_ => calls.Add("update"));
             stream.ForOrder(Phase.Update).When(1).Subscribe(_ => calls.Add("update-again"));
 
-            Assert.That(stream.NodeCount, Is.EqualTo(7));
+            Assert.That(stream.NodeCount, Is.EqualTo(3));
             stream.OnNext(1);
             Assert.That(calls, Is.EqualTo(new[] { "update", "update-again", "render" }));
         }
@@ -251,7 +251,7 @@ namespace BlackThunder.UniEngine.Tests
             calls.Clear();
             stream.OnNext(target);
             Assert.That(calls, Is.EqualTo(new[] { "replacement", "sibling" }));
-            Assert.That(stream.NodeCount, Is.EqualTo(4));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
         }
 
         [Test]
@@ -285,16 +285,16 @@ namespace BlackThunder.UniEngine.Tests
             var first = stream.When(target).Subscribe(_ => { });
             var duplicate = stream.When(target).Subscribe(_ => { });
             var second = stream.When("other").Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             first.Dispose();
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             duplicate.Dispose();
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             var values = new List<string>();
             var replacement = stream.When(target).Subscribe(values.Add);
             stream.OnNext(target);
             Assert.That(values, Is.EqualTo(new[] { target }));
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             second.Dispose();
             replacement.Dispose();
             Assert.That(stream.NodeCount, Is.Zero);
@@ -302,7 +302,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.When(target).Subscribe(values.Add);
             stream.OnNext(target);
             Assert.That(values, Is.EqualTo(new[] { target, target }));
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -311,8 +311,8 @@ namespace BlackThunder.UniEngine.Tests
             using var parent = new EventStream<int>();
             using var branch = parent.When(1).Branch();
             var subscription = branch.When(1).Subscribe(_ => { });
-            Assert.That(parent.NodeCount, Is.EqualTo(3));
-            Assert.That(branch.NodeCount, Is.EqualTo(2));
+            Assert.That(parent.NodeCount, Is.EqualTo(2));
+            Assert.That(branch.NodeCount, Is.EqualTo(1));
 
             subscription.Dispose();
 
@@ -410,7 +410,7 @@ namespace BlackThunder.UniEngine.Tests
             var calls = new List<string>();
             stream.When(1).Subscribe(value => calls.Add($"when:{value}"));
             stream.ForFlags(EventKinds.First).Subscribe(value => calls.Add($"flags:{value}"));
-            Assert.That(stream.NodeCount, Is.EqualTo(4));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
 
             stream.OnNext(1);
             stream.OnNext(3);
@@ -419,7 +419,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void EachWhenOperationConsumesOnePathDepthDespiteItsTwoGraphNodes()
+        public void EachWhenOperationConsumesOnePathDepthAndOneGraphNode()
         {
             using var source = new EventStream<int>();
             var path = source.When(1);
@@ -427,7 +427,7 @@ namespace BlackThunder.UniEngine.Tests
             var values = new List<int>();
             using var subscription = path.Subscribe(values.Add);
             Assert.That(path.Depth, Is.EqualTo(256));
-            Assert.That(source.NodeCount, Is.EqualTo(512));
+            Assert.That(source.NodeCount, Is.EqualTo(256));
             Assert.Throws<InvalidOperationException>(() => path.When(1));
 
             source.OnNext(1);
@@ -510,7 +510,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(Assert.Throws<ApplicationException>(() =>
                 stream.When(new ReferenceKey(1)).Subscribe(_ => { })), Is.SameAs(failure));
             Assert.That(subscription.IsDisposed, Is.False);
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             target.EqualityFailure = null;
             var input = new ReferenceKey(1);
             stream.OnNext(input);

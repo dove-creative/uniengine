@@ -253,11 +253,12 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void FlagsEntriesStayGroupedInCreationOrderAfterRootSubscriptions()
+        public void WhereAndFlagsRowsStayGroupedInNodeCreationOrderAfterRootSubscriptions()
         {
             using var hub = new EventHub<ulong>(new object());
             var calls = new List<string>();
             var first = hub.Connect(new object());
+            first.OnUpdated(_ => true, () => calls.Add("where-first"));
             first.OnFlags(Changes.Location, () => calls.Add("location"));
             first.OnUpdated(_ => true, () => calls.Add("where"));
             var second = hub.Connect(new object());
@@ -268,7 +269,10 @@ namespace BlackThunder.UniEngine.Tests
 
             hub.Update(3);
 
-            Assert.That(calls, Is.EqualTo(new[] { "root", "direct", "location", "location-again", "shape", "where" }));
+            Assert.That(calls, Is.EqualTo(new[]
+            {
+                "root", "direct", "where-first", "where", "location", "location-again", "shape"
+            }));
         }
 
         [Test]

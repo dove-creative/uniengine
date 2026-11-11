@@ -44,7 +44,7 @@ namespace BlackThunder.UniEngine.Tests
             public void AssertRegistered()
             {
                 Assert.That(_deliveries, Is.EqualTo(new[] { "shape", "location", "both" }));
-                Assert.That(Source.NodeCount, Is.EqualTo(4));
+                Assert.That(Source.NodeCount, Is.EqualTo(1));
                 Assert.That(_handles.All(handle => !handle.IsDisposed), Is.True);
                 Assert.That(_mutationsPerformed, Is.Zero);
                 AssertActive();
@@ -101,13 +101,7 @@ namespace BlackThunder.UniEngine.Tests
 
             private void AssertMutationState()
             {
-                var expectedNodes = _mutation switch
-                {
-                    Mutation.Add => 5,
-                    Mutation.Replace => 4,
-                    _ => 2
-                };
-                Assert.That(Source.NodeCount, Is.EqualTo(expectedNodes));
+                Assert.That(Source.NodeCount, Is.EqualTo(1));
                 Assert.That(_mutationsPerformed, Is.EqualTo(1));
                 Assert.That(_shape.IsDisposed, Is.EqualTo(_mutation == Mutation.Remove));
                 Assert.That(_location.IsDisposed, Is.EqualTo(_mutation != Mutation.Add));

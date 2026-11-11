@@ -14,7 +14,8 @@ EventStream은 값을 받아 경로 그래프를 따라 구독자에게 나눠 �
 
 - EventStream은 값을 받는 입구와 그래프를 가진다. 어떤 스트림이든 OnNext로 값을 직접 받을 수 있다.
 - EventPath는 Where, When, ForFlags, Debug, ForOrder로 만든 경로이다. 경로를 만드는 동안 그래프에 구독이 생기지 않는다.
-- 조건 대리자는 Where 노드의 공유 기준이다. 같은 부모 아래 메서드와 대상이 같은 대리자를 쓴 Where만 합쳐진다.
+- 키 연산은 같은 위치마다 WhereNode·WhenNode·FlagsNode·OrderedNode를 종류별로 하나씩 두고 그 안의 키 행을 공유한다. 행은 키와 뒤의 연결을 가지며, 다음 노드는 연결이 참조하는 별도 노드이다.
+- 조건 대리자는 Where 행의 공유 기준이다. 같은 부모 아래 메서드와 대상이 같은 대리자를 쓴 Where만 합쳐진다.
 - When은 EqualityComparer&lt;T&gt;.Default로 값 전체를 비교하며 같은 부모 아래 동등한 target의 항목을 공유한다. null target도 유효하지만 등록 후 Equals·GetHashCode 결과가 달라지는 target은 지원하지 않는다.
 - ForFlags는 값과 마스크에 공통 비트가 하나라도 있는 경로만 통과시킨다. 같은 부모 아래 마스크 비트가 같으면 enum 형식과 관계없이 항목을 공유한다.
 
@@ -25,10 +26,10 @@ Take·TakeWhile·Skip·SkipWhile·Branch·Merge는 경로 노드가 아니라 �
 1. EventStream을 만들거나 외부 `IObservable<T>`를 생성자에 전달한다. 외부 공급원의 수명은 호출자에게 있다.
 2. Where, When, ForFlags, Debug, ForOrder로 경로를 만들거나 Take, Skip, Branch, Merge로 새 스트림을 시작한다.
 3. Subscribe가 그 지점에 구독을 등록하고 개별 Handle을 반환한다. 새 스트림은 첫 구독 때 상위에 연결된다.
-4. 값은 각 노드의 구독자를 등록 순서로 방문한 뒤 자식을 깊이 우선으로 방문한다. 조건이 거짓이면 그 아래의 구독과 조건을 모두 건너뛴다.
-5. 마지막 구독을 해제하면 빈 노드를 루트 방향으로 제거한다. 사용자가 만든 EventStream은 다시 구독할 수 있고, 연산자·Branch·Merge가 만든 스트림은 함께 폐기된다.
+4. 값은 각 연결의 Gate 구독자를 구독 순서로 방문한 뒤 자식 노드를 생성 순서로 깊이 우선 방문한다. Where·Flags 행은 등록·생성 순서, Order 행은 순서 값 순서이며 When은 일치하는 행 하나만 방문한다. 조건이 거짓이면 그 행 뒤의 연결을 건너뛴다.
+5. 마지막 구독을 해제하면 빈 행과 노드를 루트 방향으로 제거한다. 사용자가 만든 EventStream은 다시 구독할 수 있고, 연산자·Branch·Merge가 만든 스트림은 함께 폐기된다.
 
-완료와 오류는 조건을 평가하지 않고 모든 활성 구독에 전달한다. Dispose는 통지 없이 연결을 해제한다. 값 전파·구독·해제는 같은 스레드에서 수행하는 동기식 작업이다.
+같은 위치의 Where(a), ForFlags(m), Where(b)는 a, b행 → flags 순서로 방문한다. 같은 종류의 키 행은 해당 노드의 차례에 모인다. 완료·오류·폐기도 Gate → 자식 노드 → 각 노드의 행 순서를 따르며 키와 관계없이 모든 행에 전달한다. Dispose는 통지 없이 연결을 해제한다. 값 전파·구독·해제는 같은 스레드에서 수행하는 동기식 작업이다.
 
 ## 모듈 안내
 

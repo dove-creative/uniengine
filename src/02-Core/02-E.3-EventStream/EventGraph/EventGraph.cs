@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using BlackThunder.UniEngine.Infrastructure;
 
@@ -12,7 +11,7 @@ namespace Blackthunder.UniEngine.Core
         internal bool IsPublishing { get; private set; }
 
         // Internal
-        private const int WhereIndexThreshold = 16;
+        private const int RowIndexThreshold = 16;
 
         // Only ulong paths create flags nodes; the delegate cast does not box published values.
         private static readonly Func<T, ulong> _readFlags = typeof(T) == typeof(ulong)
@@ -21,8 +20,6 @@ namespace Blackthunder.UniEngine.Core
 
         private Node _root = new();
         private readonly Action _onEmpty;
-        // Only wide parents get an index; routing nodes keep their existing size and layout.
-        private Dictionary<Node, Dictionary<Func<T, bool>, WhereNode>> _whereIndexes;
         private long _lastRegistration;
         private bool _closed;
 
@@ -36,148 +33,81 @@ namespace Blackthunder.UniEngine.Core
 
         // Starts a registration at the root. Nodes added from here on stay invisible
         // to a publication that is already running.
-        internal Node BeginRegistration()
+        internal Connection BeginRegistration()
         {
             if (_closed) throw new ObjectDisposedException("EventStream");
 
             _lastRegistration++;
-            return _root;
+            return _root.Connection;
         }
 
         internal Handle Subscribe(
-            Node node,
+            Connection node,
             Action<T> updated,
             Action completed,
             Action<Exception> errored,
             IGraphObserver<T> input = null) =>
             Attach(FindGate(node), updated, completed, errored, input);
 
-        internal Handle Connect(Node node, IGraphObserver<T> input)
+        internal Handle Connect(Connection node, IGraphObserver<T> input)
         {
             var gate = AddChild(node, new OutputGate(isConnection: true));
             return Attach(gate, input.OnNext, input.OnCompleted, input.OnError, input);
         }
 
-        // Node operations for paths
-        internal Node FindOrAddGroup(Node parent, int order)
+        // Path steps return the connection owned by a row or a keyless node.
+        internal Connection FindOrAddGroup(Connection parent, int order)
         {
-            var ordered = FindOrdered(parent) ?? AddChild(parent, new OrderedNode());
-            var group = ordered.Find(order);
-
-            if (group != null) return group;
-
-            group = AddChild(ordered, new Node(), ordered.FindNext(order));
-            ordered.Add(order, group);
-
-            return group;
+            var node = Find<OrderedNode>(parent) ?? AddChild(parent, new OrderedNode());
+            return node.FindOrAdd(order, _lastRegistration);
         }
 
-        // The groups of a position share one ordered node.
-        private static OrderedNode FindOrdered(Node parent)
+        internal Connection FindOrAddFlags(Connection parent, ulong mask)
+        {
+            var node = Find<FlagsNode>(parent) ?? AddChild(parent, new FlagsNode());
+            return node.FindOrAdd(mask, _lastRegistration);
+        }
+
+        internal Connection FindOrAddWhere(Connection parent, Func<T, bool> predicate)
+        {
+            var node = Find<WhereNode>(parent) ?? AddChild(parent, new WhereNode());
+            return node.FindOrAdd(predicate, _lastRegistration);
+        }
+
+        internal Connection FindOrAddWhen(Connection parent, T target)
+        {
+            var node = Find<WhenNode>(parent) ?? new WhenNode();
+            // Compare before attaching a new node, so failed registration leaves no empty child.
+            var connection = node.FindOrAdd(target, _lastRegistration);
+            if (node.Parent == null) AddChild(parent, node);
+            return connection;
+        }
+
+        internal Connection AddDebug(Connection parent, string message, LogLevel logType) =>
+            AddChild(parent, new DebugNode(message, logType)).Connection;
+
+        private static TNode Find<TNode>(Connection parent) where TNode : NodeBase
         {
             for (var child = parent.Children.First; child != null; child = child.Next)
             {
-                if (child is OrderedNode ordered) return ordered;
+                if (child is TNode node) return node;
             }
 
             return null;
         }
 
-        internal Node FindOrAddFlags(Node parent, ulong mask)
-        {
-            var flags = FindFlags(parent) ?? AddChild(parent, new FlagsNode());
-            return flags.Find(mask) ?? AddChild(flags, new FlagsEntry(mask));
-        }
-
-        // The masks of a position share one flags node, in creation order.
-        private static FlagsNode FindFlags(Node parent)
-        {
-            for (var child = parent.Children.First; child != null; child = child.Next)
-            {
-                if (child is FlagsNode flags) return flags;
-            }
-
-            return null;
-        }
-
-        internal Node FindOrAddWhere(Node parent, Func<T, bool> predicate) =>
-            FindWhere(parent, predicate) ?? AddChild(parent, new WhereNode(predicate));
-
-        internal Node FindOrAddWhen(Node parent, T target)
-        {
-            var when = FindWhen(parent) ?? new WhenNode();
-            var entry = when.Find(target);
-            if (entry != null) return entry;
-
-            entry = new WhenEntry(target);
-            // Compare before attaching anything, so a failed lookup or insertion leaves no empty node.
-            when.Add(entry);
-            if (when.Parent == null) AddChild(parent, when);
-
-            return AddChild(when, entry);
-        }
-
-        // The targets of a position share one when node, in creation order.
-        private static WhenNode FindWhen(Node parent)
-        {
-            for (var child = parent.Children.First; child != null; child = child.Next)
-            {
-                if (child is WhenNode when) return when;
-            }
-
-            return null;
-        }
-
-        internal Node AddDebug(Node parent, string message, LogLevel logType) =>
-            AddChild(parent, new DebugNode(message, logType));
-
-        // Small parents avoid hashing. Promote only when a new condition would exceed the scan limit.
-        private WhereNode FindWhere(Node parent, Func<T, bool> predicate)
-        {
-            if (_whereIndexes != null && _whereIndexes.TryGetValue(parent, out var index))
-                return index.TryGetValue(predicate, out var existing) ? existing : null;
-
-            var count = 0;
-            for (var child = parent.Children.First; child != null; child = child.Next)
-            {
-                if (!(child is WhereNode whereNode)) continue;
-                if (whereNode.Predicate == predicate) return whereNode;
-                count++;
-            }
-
-            if (count >= WhereIndexThreshold) IndexWhere(parent, count);
-
-            return null;
-        }
-
-        private void IndexWhere(Node parent, int count)
-        {
-            var index = new Dictionary<Func<T, bool>, WhereNode>(count + 1);
-            for (var child = parent.Children.First; child != null; child = child.Next)
-            {
-                if (child is WhereNode whereNode) index.Add(whereNode.Predicate, whereNode);
-            }
-
-            _whereIndexes ??= new Dictionary<Node, Dictionary<Func<T, bool>, WhereNode>>();
-            _whereIndexes.Add(parent, index);
-        }
-
-        // Subscribers run before the children of their node, so the shared gate stays the first child.
-        private OutputGate FindGate(Node node) =>
-            node.Children.First is OutputGate { IsConnection: false } gate
+        // The shared gate is the first child; stream connections retain their creation order.
+        private OutputGate FindGate(Connection connection) =>
+            connection.Children.First is OutputGate { IsConnection: false } gate
                 ? gate
-                : AddChild(node, new OutputGate(isConnection: false), node.Children.First);
+                : AddChild(connection, new OutputGate(isConnection: false), connection.Children.First);
 
-        private TChild AddChild<TChild>(NodeBase parent, TChild child, NodeChild before = null)
+        private TChild AddChild<TChild>(Connection parent, TChild child, NodeChild before = null)
             where TChild : NodeChild
         {
             child.Registration = _lastRegistration;
             child.Parent = parent;
             parent.Children.Insert(child, before);
-
-            if (_whereIndexes != null && child is WhereNode whereNode
-                && _whereIndexes.TryGetValue((Node)parent, out var index))
-                index.Add(whereNode.Predicate, whereNode);
 
             if (CountsAsNode(child)) NodeCount++;
 
@@ -213,9 +143,14 @@ namespace Blackthunder.UniEngine.Core
             return subscription.Handle;
         }
 
-        internal void CancelRegistration(Node node)
+        internal void CancelRegistration(Connection connection)
         {
-            Prune(node);
+            if (connection.IsEmpty)
+            {
+                connection.Owner.Remove();
+                Prune(connection.Owner.Node);
+            }
+
             if (!_closed && _root.IsEmpty) _onEmpty?.Invoke();
         }
 
@@ -225,26 +160,13 @@ namespace Blackthunder.UniEngine.Core
             {
                 var parent = child.Parent;
                 parent.Children.Remove(child);
-
-                if (parent is OrderedNode ordered && child is Node group) ordered.Remove(group);
-                if (parent is WhenNode when && child is WhenEntry entry) when.Remove(entry);
-                if (_whereIndexes != null && child is WhereNode whereNode
-                    && _whereIndexes.TryGetValue((Node)parent, out var index))
-                {
-                    index.Remove(whereNode.Predicate);
-                    // Keep a shrunken index until its last condition leaves, avoiding promotion churn.
-                    if (index.Count == 0)
-                    {
-                        _whereIndexes.Remove((Node)parent);
-                        if (_whereIndexes.Count == 0) _whereIndexes = null;
-                    }
-                }
-
                 child.Parent = null;
 
                 if (CountsAsNode(child)) NodeCount--;
+                if (!parent.IsEmpty) return;
 
-                child = parent;
+                parent.Owner.Remove();
+                child = parent.Owner.Node;
             }
         }
 

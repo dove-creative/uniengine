@@ -32,7 +32,7 @@ IEventHubBuilder는 [ILifecycleHubBuilder](../03-E.1-LifecycleHub/ILifecycleHubB
 | 폐기 전 알림 | `OnDisposing(Action)`, `OnDisposing(Action<object>)` | 같은 인자 계약이다. |
 | 폐기 후 알림 | `OnDisposed(Action)`, `OnDisposed(Action<object>)` | 같은 인자 계약이다. |
 
-형식 없는 계약은 target과 EventCondition 오버로드를 제공하지 않는다. target이 object이면 다른 조건 객체도 값 비교 인자로 조용히 바인딩될 수 있기 때문이다. 형식 있는 target 단축형은 EventCondition.When(target) 한 단계와 같으며, 같은 부모 아래 동등한 target은 WhenEntry를 공유한다. 여러 단계의 조건은 형식 있는 계약에서 [EventCondition](EventCondition.md)으로 만든다. Where·When·Debug는 Builder의 메서드가 아니다.
+형식 없는 계약은 target과 EventCondition 오버로드를 제공하지 않는다. target이 object이면 다른 조건 객체도 값 비교 인자로 조용히 바인딩될 수 있기 때문이다. 형식 있는 target 단축형은 EventCondition.When(target) 한 단계와 같으며, 같은 부모 아래 동등한 target은 WhenNode의 행을 공유한다. 여러 단계의 조건은 형식 있는 계약에서 [EventCondition](EventCondition.md)으로 만든다. Where·When·Debug는 Builder의 메서드가 아니다.
 
 EventHubBuilderExtensions의 OnFlags는 `where TFlags : struct, Enum` 제약을 가진다. EventHub&lt;ulong&gt;에서 반환한 Builder에 등록하고 같은 인스턴스를 반환한다. 마스크는 `[Flags]` enum이며 ulong 마스크를 직접 받거나 enum 페이로드의 허브에서 호출하는 오버로드는 없다. null Builder는 ArgumentNullException이고, EventHubBuilder&lt;ulong&gt;이 아닌 별도 인터페이스 구현은 NotSupportedException이다.
 

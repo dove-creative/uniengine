@@ -92,8 +92,8 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(1);
 
             Assert.That(calls, Is.EqualTo(new[] { "update", "render" }));
-            // The Where node, the ordered node of its position and one node per order.
-            Assert.That(stream.NodeCount, Is.EqualTo(4));
+            // Rows do not count as nodes: only WhereNode and OrderedNode remain.
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
         }
     }
 }

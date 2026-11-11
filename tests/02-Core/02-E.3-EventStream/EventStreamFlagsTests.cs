@@ -77,14 +77,14 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(stream.NodeCount, Is.Zero);
 
             shape.Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             stream.ForFlags(GeoEvents.Shape).Subscribe(_ => { });
             stream.ForFlags(RouteEvents.Shape).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             stream.ForFlags(GeoEvents.Location).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             shape.ForFlags(RouteEvents.Shape).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(5));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
         }
 
         [TestCase(false)]
@@ -135,7 +135,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.ForOrder(Phase.Update).ForFlags(GeoEvents.Shape).Subscribe(_ => calls.Add("update"));
             stream.ForOrder(Phase.Update).ForFlags(RouteEvents.Shape).Subscribe(_ => calls.Add("update-again"));
 
-            Assert.That(stream.NodeCount, Is.EqualTo(7));
+            Assert.That(stream.NodeCount, Is.EqualTo(3));
             stream.OnNext(1);
 
             Assert.That(calls, Is.EqualTo(new[] { "update", "update-again", "render" }));
@@ -205,7 +205,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(3);
 
             Assert.That(calls, Is.EqualTo(new[] { "current", "remaining", "remaining" }));
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -224,7 +224,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(1);
 
             Assert.That(calls, Is.EqualTo(new[] { "first" }));
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -259,12 +259,12 @@ namespace BlackThunder.UniEngine.Tests
             var first = stream.ForFlags(GeoEvents.Shape).Subscribe(_ => { });
             var duplicate = stream.ForFlags(RouteEvents.Shape).Subscribe(_ => { });
             var second = stream.ForFlags(GeoEvents.Location).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
 
             first.Dispose();
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             duplicate.Dispose();
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             second.Dispose();
             Assert.That(stream.NodeCount, Is.Zero);
             Assert.That(stream.IsDisposed, Is.False);
@@ -273,7 +273,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.ForFlags(GeoEvents.Shape).Subscribe(values.Add);
             stream.OnNext(1);
             Assert.That(values, Is.EqualTo(new[] { 1UL }));
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -282,8 +282,8 @@ namespace BlackThunder.UniEngine.Tests
             using var parent = new EventStream<ulong>();
             using var branch = parent.ForFlags(GeoEvents.Shape).Branch();
             var subscription = branch.ForFlags(GeoEvents.Location).Subscribe(_ => { });
-            Assert.That(parent.NodeCount, Is.EqualTo(3));
-            Assert.That(branch.NodeCount, Is.EqualTo(2));
+            Assert.That(parent.NodeCount, Is.EqualTo(2));
+            Assert.That(branch.NodeCount, Is.EqualTo(1));
 
             subscription.Dispose();
 
@@ -394,7 +394,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void EachFlagsOperationConsumesOnePathDepthDespiteItsTwoGraphNodes()
+        public void EachFlagsOperationConsumesOnePathDepthAndOneGraphNode()
         {
             using var source = new EventStream<ulong>();
             var path = source.ForFlags(GeoEvents.Shape);
@@ -403,7 +403,7 @@ namespace BlackThunder.UniEngine.Tests
             var values = new List<ulong>();
             using var subscription = path.Subscribe(values.Add);
             Assert.That(path.Depth, Is.EqualTo(256));
-            Assert.That(source.NodeCount, Is.EqualTo(512));
+            Assert.That(source.NodeCount, Is.EqualTo(256));
             Assert.Throws<InvalidOperationException>(() => path.ForFlags(GeoEvents.Shape));
             source.OnNext(1);
 

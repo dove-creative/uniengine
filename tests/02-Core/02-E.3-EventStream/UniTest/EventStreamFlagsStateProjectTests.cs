@@ -89,8 +89,8 @@ namespace BlackThunder.UniEngine.Tests
             public void AssertActive(bool firstReleased, bool enabled)
             {
                 AssertValues(firstReleased);
-                Assert.That(Source.NodeCount, Is.EqualTo(3));
-                Assert.That(Branch.NodeCount, Is.EqualTo(8));
+                Assert.That(Source.NodeCount, Is.EqualTo(2));
+                Assert.That(Branch.NodeCount, Is.EqualTo(3));
                 Assert.That(Source.IsDisposed || Branch.IsDisposed, Is.False);
                 Assert.That(Branch.Enabled, Is.EqualTo(enabled));
                 Assert.That(_first.IsDisposed, Is.EqualTo(firstReleased));
@@ -119,7 +119,7 @@ namespace BlackThunder.UniEngine.Tests
                     case "ReleaseAll":
                         _alias.Dispose();
                         _nodesAfterGroupRelease = Branch.NodeCount;
-                        _aliveAfterGroupRelease = !Branch.IsDisposed && Source.NodeCount == 3;
+                        _aliveAfterGroupRelease = !Branch.IsDisposed && Source.NodeCount == 2;
                         _render.Dispose();
                         _nodesWithUnmatchedOnly = Branch.NodeCount;
                         _aliveWithUnmatchedOnly = !Branch.IsDisposed && !_unmatched.IsDisposed;
@@ -156,9 +156,9 @@ namespace BlackThunder.UniEngine.Tests
                 if (ending == "ReleaseAll")
                 {
                     Assert.That(_aliveAfterGroupRelease && _aliveWithUnmatchedOnly, Is.True);
-                    Assert.That(_nodesAfterGroupRelease, Is.EqualTo(5));
-                    Assert.That(_nodesWithUnmatchedOnly, Is.EqualTo(4));
-                    Assert.That(_freshNodes, Is.EqualTo(2));
+                    Assert.That(_nodesAfterGroupRelease, Is.EqualTo(2));
+                    Assert.That(_nodesWithUnmatchedOnly, Is.EqualTo(2));
+                    Assert.That(_freshNodes, Is.EqualTo(1));
                     Assert.That(_afterRelease, Is.EqualTo(new[] { 1UL }));
                 }
                 else

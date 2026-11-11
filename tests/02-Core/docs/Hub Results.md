@@ -4,6 +4,7 @@ EventHub 경로 이전 당시의 통합 검증과 두 Hub 모듈 분리 이후�
 
 ## 목차
 
+- EventStream 키 행 구조의 EventHub 회귀 검증
 - 실행 환경과 결과
 - 확인한 변경 계약
 - 기존 동작과 할당
@@ -19,6 +20,24 @@ EventHub 경로 이전 당시의 통합 검증과 두 Hub 모듈 분리 이후�
 - EventHub 비트 조건 경로
 - EventHubBuilder 허브 의존성 분리
 - EventHub 조건·콜백 결합형 등록
+
+## EventStream 키 행 구조의 EventHub 회귀 검증
+
+2026-11-11에 EventStream의 키 연산을 위치별 노드와 키 행으로 재편한 뒤 EventHub를 검증했다. Where와 Flags가 같은 위치에 섞이면 종류 노드의 생성 순서를 따르고, 각 노드 안에서는 행 생성 순서를 따른다. Where(a)→Flags(m)→Where(b) 등록은 a·b→flags 순서이다. 루트·직접 Updated 구독은 기존처럼 등록 순으로 먼저 호출한다.
+
+EventHubFlagsTests의 기존 묶음 순서 사례를 WhereAndFlagsRowsStayGroupedInNodeCreationOrderAfterRootSubscriptions로 보강하여 위 순서를 확인했다. EventHub Tables·Plans도 같은 규칙과 새 테스트 이름으로 갱신했다. EventHubTests의 기존 루트·손자 순서와 리스너별 공유·해제·실패·할당 회귀는 그대로 통과했다.
+
+| 실행 범위 | 통과 / 실행 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| EventStream·EventHub 선택 실행 | 490 / 490 | 0 | 0 |
+| 최종 전체 테스트 | 1,059 / 1,059 | 0 | 0 |
+| 전체 실행 중 EventHub | 172 / 172 | 0 | 0 |
+
+선택 실행 후 추가한 Debug 실패 회귀는 최종 전체 실행에 포함했다. Release 본체 빌드는 경고·오류 0건이며 전체 테스트 시간은 약 1분 23초이다. 최초 샌드박스 선택 실행은 testhost가 진행하지 않아 중단했으며 유효한 통과 수에서 제외했다.
+
+EventHub 랜덤 연속 검증은 seed 0·1·2가 각각 독립 상태에서 깊이 100/100에 도달했다. 실제 실행시간은 각각 11.562 ms, 2.453 ms, 3.791 ms이며 모두 통과했다. 실제 단계 이력은 [전체 TRX](../../bin/TestResults/EventStreamKeyRows/stage1-full.trx)의 CombinedRegistrationsContinueWithRandomSeed StdOut에 있다. 전체 명령·EventStream 세부 결과는 [키 행 검증 결과](../02-E.3-EventStream/docs/03.%20Results.md)에 기록했다.
+
+Unity Mono·IL2CPP 할당·스택 여유와 EventHub 자체의 벤치마크는 이번 검증 범위에 포함하지 않는다.
 
 ## 실행 환경과 결과
 

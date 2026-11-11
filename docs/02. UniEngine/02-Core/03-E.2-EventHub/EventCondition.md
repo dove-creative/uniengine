@@ -17,9 +17,9 @@
 
 | 단계 | 입력과 의미 | 스트림 경로 |
 | --- | --- | --- |
-| Where | `Func<T, bool>`이 true일 때 다음 단계로 전달한다. | Where 노드이다. |
-| When | target과 값을 EqualityComparer&lt;T&gt;.Default로 비교한다. | 같은 부모의 동등한 target이 공유하는 WhenEntry이며 WhenNode 아래에 모인다. |
-| Flags | ulong 값과 `[Flags]` enum 마스크의 공통 비트가 하나라도 있을 때 통과한다. | 기존 Flags 노드이며 원래 ulong 값을 유지한다. |
+| Where | `Func<T, bool>`이 true일 때 다음 단계로 전달한다. | 같은 위치의 WhereNode 안에서 동등한 대리자가 공유하는 행이다. |
+| When | target과 값을 EqualityComparer&lt;T&gt;.Default로 비교한다. | 같은 위치의 WhenNode 안에서 동등한 target이 공유하는 행이다. |
+| Flags | ulong 값과 `[Flags]` enum 마스크의 공통 비트가 하나라도 있을 때 통과한다. | 같은 위치의 FlagsNode 안에서 같은 마스크 비트가 공유하는 행이며 원래 ulong 값을 유지한다. |
 | Debug | 메시지와 로그 수준으로 통과한 값을 기록한다. 기본값은 `"Debug"`, LogLevel.Log이다. | 공유하지 않는 Debug 노드이다. |
 
 ## 동작 흐름
@@ -51,7 +51,7 @@ builder.OnUpdated(selected, OnSelected);
 
 같은 연결에서 콜백 형식과 원본 콜백 대리자도 같으면 중복을 거부한다. 따라서 target 단축형과 같은 값의 When 조건, 따로 만든 같은 값의 When 조건은 같은 콜백으로 함께 등록할 수 없다. 조건이나 콜백 형식이 다르면 별도 등록이다.
 
-노드 공유는 EventStream의 규칙을 따른다. 같은 위치의 같은 조건 대리자, 동등한 target, 같은 마스크 비트는 리스너가 달라도 공유하고 Debug는 공유하지 않는다. target 단축형과 별도로 만든 같은 값의 When 조건도 같은 WhenEntry를 공유한다. 부모나 순서 그룹이 다르면 공유하지 않는다. 같은 위치의 target들은 WhenNode 하나에 묶이고, 다른 형제와의 순서는 그 묶음의 생성 순서이다. 발행 값에 해당하는 항목 하나만 방문한다.
+행 공유는 EventStream의 규칙을 따른다. 같은 위치의 같은 조건 대리자, 동등한 target, 같은 마스크 비트는 리스너가 달라도 공유하고 Debug는 공유하지 않는다. target 단축형과 별도로 만든 같은 값의 When 조건도 같은 WhenNode의 행을 공유한다. 부모나 순서 그룹이 다르면 공유하지 않는다. 키 연산은 종류별 노드 하나에 모이며, 다른 형제와의 순서는 그 노드의 생성 순서이다. Where·Flags 행은 등록·생성 순서이고 When은 발행 값에 해당하는 행 하나만 방문한다. 따라서 같은 위치의 Where(a), Flags(m), Where(b)는 a, b행 → flags 순서이다.
 
 ## 설계 기준과 고려사항
 
@@ -60,8 +60,8 @@ builder.OnUpdated(selected, OnSelected);
 - 최대 깊이는 256단계이다. 이를 넘기는 단계 추가는 기존 스트림 경로와 같은 제한으로 거부한다.
 - 불변성은 단계 목록과 재사용을 보장한다. 대리자가 캡처한 외부 상태나 target 객체 자체를 복제하거나 불변으로 만들지는 않는다. 등록 뒤 target의 Equals·GetHashCode 결과가 바뀌는 경우는 지원하지 않는다.
 - 조건은 허브 연결과 독립적으로 만들 수 있다. Builder의 단축형과 OnFlags 호출 안에서 이루어지는 조건 생성·검증은 연결 수명 검사 뒤에 수행한다.
-- When의 발행 중 비교 예외는 같은 위치의 WhenNode와 모든 target 하위를 통지 없이 해제하고 ExceptionHandler.Report로 보고한다. 형제 경로는 계속 방문한다. 등록 중 비교 예외는 등록 호출자에게 전파하고 실패한 등록으로 새로 만든 빈 노드는 남기지 않는다.
-- EventStream·EventPath의 When 경로를 사용하며 Where·Debug·ForFlags의 기존 계약은 유지한다. ulong의 When은 전체 값 비교이므로 Flags와 함께 사용해도 서로 다른 경로이다.
+- Where 조건 예외는 그 행의 연결만 통지 없이 해제하며 같은 WhereNode의 다른 행은 유지한다. When의 발행 중 비교 예외는 같은 위치의 WhenNode와 모든 target 행의 연결을 통지 없이 해제하고 ExceptionHandler.Report로 보고한다. 형제 경로는 계속 방문한다. 등록 중 비교 예외는 등록 호출자에게 전파하고 실패한 등록으로 새로 만든 빈 행과 노드는 남기지 않는다.
+- EventStream·EventPath의 키 행 공유와 방문 순서 계약을 따른다. ulong의 When은 전체 값 비교이므로 Flags와 함께 사용해도 서로 다른 경로이다.
 - When의 성능은 측정하지 않았으며 Unity Mono·IL2CPP에서의 할당도 검증하지 않았다.
 
 [Builder 계약](IEventHubBuilder.md) · [사용 예제](Usage.md) · [모듈 구성](README.md)

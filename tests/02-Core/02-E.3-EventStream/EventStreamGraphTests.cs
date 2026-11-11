@@ -29,13 +29,13 @@ namespace BlackThunder.UniEngine.Tests
             var duplicate = stream.Where(equal).Subscribe(_ => { });
             Assert.That(stream.NodeCount, Is.EqualTo(1));
             var separate = stream.Where(sameBody).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             var nested = path.Where(sameBody).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
 
             direct.Dispose();
             duplicate.Dispose();
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
             nested.Dispose();
             Assert.That(stream.NodeCount, Is.EqualTo(1));
             separate.Dispose();
@@ -51,7 +51,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.Where(Above(1)).Subscribe(_ => { });
             stream.Where(Above(1)).Subscribe(_ => { });
 
-            Assert.That(stream.NodeCount, Is.EqualTo(2));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         // Many siblings must still share only equal delegates.
@@ -67,9 +67,9 @@ namespace BlackThunder.UniEngine.Tests
             stream.Where(IsPositive).Subscribe(_ => { });
             Assert.That(stream.NodeCount, Is.EqualTo(nodes));
             stream.Where(IsNegative).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(nodes + 1));
+            Assert.That(stream.NodeCount, Is.EqualTo(nodes));
             stream.Where(Above(0)).Subscribe(_ => { });
-            Assert.That(stream.NodeCount, Is.EqualTo(nodes + 2));
+            Assert.That(stream.NodeCount, Is.EqualTo(nodes));
         }
 
         // The shared gate is created after these children and must still run before them.
@@ -104,7 +104,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.Where(prefix).Where(left).Subscribe(_ => deliveries++);
             stream.Where(prefix).Where(left).Subscribe(_ => deliveries++);
             stream.Where(prefix).Where(right).Subscribe(_ => deliveries++);
-            Assert.That(stream.NodeCount, Is.EqualTo(3));
+            Assert.That(stream.NodeCount, Is.EqualTo(2));
 
             stream.OnNext(0);
             Assert.That((prefixChecks, leftChecks, rightChecks, deliveries), Is.EqualTo((1, 0, 0, 0)));
@@ -177,7 +177,7 @@ namespace BlackThunder.UniEngine.Tests
 
             expected.Add(4);
             Assert.That(visited, Is.EqualTo(expected));
-            Assert.That(stream.NodeCount, Is.EqualTo(filters.Length));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         // Take

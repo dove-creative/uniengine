@@ -197,10 +197,10 @@ namespace Blackthunder.UniEngine.Core
             new(this, PathInfo<T>.Where(predicate));
         public EventPath<T> When(T target) =>
             new(this, PathInfo<T>.When(target));
-        public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
-            new(this, PathInfo<T>.Debug(message, logType));
         public EventPath<T> ForOrder<TOrder>(TOrder order) where TOrder : Enum =>
             new(this, PathInfo<T>.Group(Convert.ToInt32(order)));
+        public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
+            new(this, PathInfo<T>.Debug(message, logType));
 
         // Subscriptions
         public IDisposable Subscribe(Action<T> updated) =>

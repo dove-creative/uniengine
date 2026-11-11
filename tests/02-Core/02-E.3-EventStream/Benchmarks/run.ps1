@@ -117,5 +117,15 @@ try {
     Write-Host "Results: $Output"
 }
 finally {
-    Remove-Item -Recurse -Force -Path $work -ErrorAction SilentlyContinue
+    $tempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('\', '/')
+    $resolvedWork = [System.IO.Path]::GetFullPath($work)
+    $workParent = [System.IO.Path]::GetDirectoryName($resolvedWork)
+    $workName = [System.IO.Path]::GetFileName($resolvedWork)
+    if ($workParent.Equals($tempRoot, [System.StringComparison]::OrdinalIgnoreCase) -and
+        $workName -match '^eventstream-bench-[0-9a-f]{32}$') {
+        Remove-Item -Recurse -Force -LiteralPath $resolvedWork -ErrorAction SilentlyContinue
+    }
+    else {
+        throw "Refusing to remove an unexpected benchmark directory: $resolvedWork"
+    }
 }

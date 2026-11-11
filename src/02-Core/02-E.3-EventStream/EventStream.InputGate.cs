@@ -37,7 +37,8 @@ namespace Blackthunder.UniEngine.Core
             // Upstream signals
             public void OnNext(T value)
             {
-                if (!_finished && !_stream._isTerminating) _stream.OnNext(value);
+                if (!_finished && !_stream._isTerminating)
+                    _stream.OnNext(value);
             }
 
             public void OnCompleted()

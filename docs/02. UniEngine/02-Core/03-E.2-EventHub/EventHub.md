@@ -28,15 +28,17 @@ Connection은 내부 연결 계약 IEventHubConnection으로 Builder에 수명 �
 
 ## 동작 흐름
 
-Connect는 새 연결을 만들고 그 연결의 Builder를 반환한다. 기존 키로 다시 Connect하면 InvalidOperationException이다. 직접 +=는 같은 키의 Connection이 있으면 해당 이벤트 등록을 추가한다. OnUpdated는 조건과 콜백을 함께 받으며, 조건을 생략한 등록과 직접 Updated 구독은 루트에 둔다. 값 비교·조건 대리자는 한 단계 조건이고, EventCondition은 여러 단계를 루트부터 조합한다. 모든 등록은 같은 Builder를 반환한다. 리스너별 Branch와 별도 순서 그룹은 없으며, 같은 위치의 같은 조건 대리자는 리스너가 달라도 Where 노드 하나를 공유한다.
+Connect는 새 연결을 만들고 그 연결의 Builder를 반환한다. 기존 키로 다시 Connect하면 InvalidOperationException이다. 직접 +=는 같은 키의 Connection이 있으면 해당 이벤트 등록을 추가한다. OnUpdated는 조건과 콜백을 함께 받으며, 조건을 생략한 등록과 직접 Updated 구독은 루트에 둔다. 값 비교·조건 대리자는 한 단계 조건이고, EventCondition은 여러 단계를 루트부터 조합한다. 모든 등록은 같은 Builder를 반환한다. 리스너별 Branch와 별도 순서 그룹은 없으며, 같은 위치의 같은 조건 대리자는 리스너가 달라도 WhereNode의 행 하나를 공유한다.
 
-OnUpdated(target, callback)과 EventCondition.When(target)은 내부 스트림의 When 경로를 사용한다. 같은 부모 아래 동등한 target은 리스너나 조건 인스턴스가 달라도 WhenEntry 하나를 공유한다. EqualityComparer&lt;TEventArgs&gt;.Default로 비교하며 참조 형식과 Nullable&lt;T&gt;의 null도 유효한 target이다. 같은 위치의 target들은 WhenNode 하나에 모이고 발행 값과 일치하는 항목 하나만 방문한다. 다른 형제와의 순서는 WhenNode가 생성된 위치를 따른다.
+OnUpdated(target, callback)과 EventCondition.When(target)은 내부 스트림의 When 경로를 사용한다. 같은 부모 아래 동등한 target은 리스너나 조건 인스턴스가 달라도 WhenNode의 행 하나를 공유한다. EqualityComparer&lt;TEventArgs&gt;.Default로 비교하며 참조 형식과 Nullable&lt;T&gt;의 null도 유효한 target이다. 같은 위치의 target들은 WhenNode 하나에 모이고 발행 값과 일치하는 항목 하나만 방문한다. 다른 형제와의 순서는 WhenNode가 생성된 위치를 따른다.
 
 ulong 허브의 OnFlags와 EventCondition.Flags는 내부 스트림의 비트 조건 경로를 사용한다. 값과 마스크의 공통 비트가 하나라도 있을 때 통과하며 원래 ulong 값을 전달한다. OnUpdated의 ulong target은 전체 값의 동등성을 비교하므로 비트 조건과 구분한다. 같은 부모 위치의 마스크 비트는 enum 형식과 리스너가 달라도 공유한다. 같은 위치의 모든 마스크 항목은 FlagsNode 하나에 묶이며, 다른 자식 경로와의 순서는 그 묶음이 처음 생성된 위치를 따른다. 묶음 안에서는 마스크 항목의 생성 순서대로 방문한다.
 
-Update는 스트림의 그래프 순서로 전파한다. 같은 위치의 구독을 등록 순서대로 먼저 호출하고 자식 경로를 생성 순서대로 방문한다. 한 리스너의 콜백을 묶어 호출하지 않으며, 루트에서는 리스너 콜백과 직접 구독이 등록 순서대로 섞인다. 전파 중 추가한 구독·경로는 다음 갱신부터 보이고 해제와 Disconnect는 즉시 반영된다. Update는 해제된 구독을 찾기 위해 모든 연결이나 등록을 훑지 않는다.
+Update는 스트림의 그래프 순서로 전파한다. 연결 하나에서 Gate의 구독을 등록 순서대로 먼저 호출하고 WhereNode·FlagsNode·WhenNode·OrderedNode·Debug·스트림 연결 자식을 생성 순서대로 방문한다. 같은 위치의 키 연산은 종류별 노드 하나에 모이며, Where·Flags 행은 등록·생성 순서, Order 행은 순서 값 순서이고 When은 일치하는 행 하나만 방문한다. Where(a), OnFlags(m), Where(b) 조건을 같은 위치에 등록하면 a, b행 → flags 순서이다. 이전의 a → flags → b 순서는 유지하지 않는다.
 
-갱신 콜백이 실패하면 스트림이 그 구독 하나만 해제하고 ExceptionHandler.Report에 보고한다. 같은 연결의 나머지 갱신·생애주기 등록은 유지된다. 처리기가 없거나 보고가 예외를 던져도 다른 구독을 방문한 뒤 첫 보고 예외를 Update 호출자에게 전달한다. Where·Debug 단계의 실패는 해당 경로 아래 구독을 해제한다. When의 비교 실패는 같은 위치의 WhenNode와 모든 target 경로를 통지 없이 해제하며 형제 경로는 계속 방문한다. Connection은 실패 원인과 관계없이 구독 핸들의 해제 알림으로 등록을 즉시 정리한다. 갱신 등록과 생애주기 등록이 모두 사라지면 Update 중이라도 연결 키를 그 자리에서 제거하며, 이후 -=나 Disconnect는 안전하다. 아직 등록한 적 없는 빈 Connect 연결은 유지한다.
+한 리스너의 콜백을 묶어 호출하지 않으며, 루트에서는 리스너 콜백과 직접 구독이 등록 순서대로 섞인다. 전파 중 추가한 구독·행·노드는 다음 갱신부터 보이고 해제와 Disconnect는 즉시 반영된다. 제거한 뒤 같은 키로 다시 만든 행도 이번 Update에서는 호출하지 않으며 현재 행이나 다음 행을 제거해도 남은 행과 형제를 계속 방문한다. 스트림 그래프의 완료·오류·폐기도 같은 순서로 키와 관계없이 모든 행을 정리한다. 이는 아래의 허브 Disposing·Disposed 알림 순서와 별개의 계약이다. Update는 해제된 구독을 찾기 위해 모든 연결이나 등록을 훑지 않는다.
+
+갱신 콜백이 실패하면 스트림이 그 구독 하나만 해제하고 ExceptionHandler.Report에 보고한다. 같은 연결의 나머지 갱신·생애주기 등록은 유지된다. 처리기가 없거나 보고가 예외를 던져도 다른 구독을 방문한 뒤 첫 보고 예외를 Update 호출자에게 전달한다. Where 조건 실패는 해당 행의 연결만 해제하며 같은 WhereNode의 다른 행은 유지한다. Debug 로그 실패는 그 Debug의 연결을 해제한다. When의 비교 실패는 같은 위치의 WhenNode와 모든 target 행의 연결을 통지 없이 해제하며 형제 경로는 계속 방문한다. Connection은 실패 원인과 관계없이 구독 핸들의 해제 알림으로 등록을 즉시 정리한다. 갱신 등록과 생애주기 등록이 모두 사라지면 Update 중이라도 연결 키를 그 자리에서 제거하며, 이후 -=나 Disconnect는 안전하다. 아직 등록한 적 없는 빈 Connect 연결은 유지한다.
 
 실패 직후에도 생애주기 콜백이나 다른 갱신 등록이 남아 있는 연결은 같은 경로에 같은 콜백을 다시 등록할 수 있다. 비어서 제거된 연결의 Builder는 같은 Update 안에서도 다시 등록할 수 없다. 직접 +=는 대리자 키로 새 연결을 만들 수 있으며, 그 새 구독은 다음 Update부터 호출된다.
 
@@ -49,7 +51,7 @@ Sleep에서 반환하거나 연결한 Token을 폐기하면 Awake가 호출된�
 - 정상 폐기는 모든 연결의 Disposing → IsDisposed 전환 → 모든 연결의 Disposed 순서이다. 같은 연결·단계 안에서는 오버로드와 관계없이 등록 순서로 호출한다. 연결 간 순서와 직접 구독의 우선순위는 보장하지 않는다.
 - 직접 구독과 Builder 모두 전달한 대리자 전체가 등록 하나이다. 멀티캐스트의 항목 하나가 실패하면 그 등록 전체를 해제하고 나머지 항목을 생략한다. 앞 항목에서 -=·Disconnect·Dispose를 호출하여 해제한 경우에도 남은 항목을 건너뛴다.
 - 같은 연결·콜백 형식에서 원본 대리자와 조건의 단계별 값이 같은 갱신 등록은 InvalidOperationException으로 거부한다. 단축형과 동등한 한 단계 EventCondition도 중복이다. 조건 없음은 루트끼리만 같다. typed/object Updated는 별도 형식이며 서로 중복 판정하거나 교차 해제하지 않는다. 생애주기 중복은 조건과 무관하다.
-- 중복 판정은 연결·콜백 형식·원본 대리자·조건을 함께 비교하고 노드 공유는 경로 위치와 조건을 비교한다. target 단축형과 별도로 만든 동등한 When은 같은 위치의 WhenEntry를 공유한다. 같은 target 값으로 같은 콜백을 중복 등록하는 규칙은 그대로 거부하며 Debug 노드는 공유하지 않는다.
+- 중복 판정은 연결·콜백 형식·원본 대리자·조건을 함께 비교하고 노드 공유는 경로 위치와 조건을 비교한다. target 단축형과 별도로 만든 동등한 When은 같은 위치의 WhenNode의 행을 공유한다. 같은 target 값으로 같은 콜백을 중복 등록하는 규칙은 그대로 거부하며 Debug 노드는 공유하지 않는다.
 - 등록 뒤 target의 Equals·GetHashCode 결과가 바뀌는 경우는 지원하지 않는다. 등록 중 비교 예외는 호출자에게 전파하며 실패한 등록으로 새로 만든 빈 경로는 남기지 않는다.
 - 등록은 연결 수명 → 조건 인자 → null 콜백 순서로 검사한다. null 조건은 ArgumentNullException, 잘못된 비트 마스크는 ArgumentException이며 기존 등록을 유지한다. 유효한 조건의 null 콜백은 등록 없이 무시한다.
 - -=는 대리자 키의 연결에서 해당 이벤트의 일치하는 등록만 제거한다. Updated는 루트 경로의 같은 콜백 형식에 한정한다. 멀티캐스트는 같은 묶음으로 해제하며 부분 해제하지 않는다. Disconnect(key)는 연결 전체를 제거한다.

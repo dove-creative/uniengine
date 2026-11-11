@@ -34,7 +34,7 @@ namespace BlackThunder.UniEngine.Tests
 
             stream.OnNext(1);
 
-            Assert.That(stream.NodeCount, Is.EqualTo(count + 3));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             Assert.That(probe.Checks, Is.EqualTo(2));
             Assert.That(calls, Is.EqualTo(4));
         }
@@ -64,7 +64,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That((leftCalls, rightCalls, probe.Checks), Is.EqualTo((3, 0, 4)));
             stream.OnNext(-1);
             Assert.That((leftCalls, rightCalls, probe.Checks), Is.EqualTo((3, 1, 6)));
-            Assert.That(stream.NodeCount, Is.EqualTo(133));
+            Assert.That(stream.NodeCount, Is.EqualTo(3));
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(calls, Is.Empty);
             stream.OnNext(2);
             Assert.That(calls, Is.EqualTo(new[] { "replacement", "shared" }));
-            Assert.That(stream.NodeCount, Is.EqualTo(65));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -130,13 +130,13 @@ namespace BlackThunder.UniEngine.Tests
                 stream.OnNext(1);
                 Assert.That(failed.IsDisposed, Is.True);
                 Assert.That(reports, Is.EqualTo(new[] { failure }));
-                Assert.That(stream.NodeCount, Is.EqualTo(64));
+                Assert.That(stream.NodeCount, Is.EqualTo(1));
 
                 path.Subscribe(_ => calls++);
                 stream.Where(predicate).Subscribe(_ => calls++);
                 stream.OnNext(2);
                 Assert.That(calls, Is.EqualTo(2));
-                Assert.That(stream.NodeCount, Is.EqualTo(65));
+                Assert.That(stream.NodeCount, Is.EqualTo(1));
             }
             finally
             {
@@ -155,7 +155,7 @@ namespace BlackThunder.UniEngine.Tests
             GC.Collect();
 
             Assert.That(target.IsAlive, Is.False);
-            Assert.That(stream.NodeCount, Is.EqualTo(64));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
             GC.KeepAlive(stream);
         }
 
