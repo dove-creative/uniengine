@@ -14,6 +14,11 @@ EventHub 경로 이전 당시의 통합 검증과 두 Hub 모듈 분리 이후�
 - LifecycleHub 구독 저장소 통합
 - EventHub 등록 경로 통합
 - 중복 등록 예외와 메시지 정리
+- EventHub 구독 해제 알림 전환
+- EventHub Connection 정리
+- EventHub 비트 조건 경로
+- EventHubBuilder 허브 의존성 분리
+- EventHub 조건·콜백 결합형 등록
 
 ## 실행 환경과 결과
 
@@ -189,3 +194,244 @@ dotnet test tests/UniEngine.Tests.csproj -c Release --no-restore --logger 'trx;L
 | 전체 테스트 프로젝트 | 799 / 799 통과 | 0 | 0 |
 
 공개 예외 형식이 바뀌므로 전체 Release 테스트를 실행했다. LifecycleHubTests에서 중복 등록을 확인하던 세 사례의 기대 예외를 InvalidOperationException으로 바꿨으며 사례 수는 그대로이다.
+
+## EventHub 구독 해제 알림 전환
+
+2026-11-11에 EventHub의 매 갱신 후 구독 정리 순회를 Handle의 해제 알림으로 대체했다. 작업 시작 시 존재하던 EventHub.Order.cs 분리와 EventHub.cs 편집, 컨벤션 서브모듈의 변경은 보존했다.
+
+### 구조와 동작
+
+- Handle.Disposed의 접근 수준을 protected에서 protected internal로 넓혔다. 같은 어셈블리의 Order가 스트림 구독 핸들에 해제 알림을 등록한다.
+- Order의 갱신 등록 목록은 `List<UpdateSubscription>`에서 `LinkedList<UpdateSubscription>`으로 바꿨다. 등록 순서와 -=의 첫 일치 규칙을 유지하면서 알림이 가리키는 노드를 O(1)에 제거한다. 제거한 노드의 값도 비워 알림 람다가 실패 콜백 대상을 붙잡지 않게 한다.
+- 이미 폐기된 핸들은 알림을 추가하지 않고 같은 등록 정리 경로로 즉시 처리한다. 갱신 등록과 생애주기 콜백이 모두 사라진 연결은 Update 중이라도 즉시 제거한다. 아직 등록한 적 없는 빈 Connect 연결은 유지한다.
+- 마지막 갱신 실패로 끊긴 Builder는 같은 Update 안에서도 InvalidOperationException으로 재등록을 거부한다. 직접 +=는 대리자 키로 새 연결을 만들며 다음 Update부터 호출한다. 생애주기 콜백이 남은 연결에서는 같은 경로의 같은 갱신 콜백을 다시 등록할 수 있다.
+- PruneUpdateSubscriptions·PruneUpdates와 Update·AddUpdated·RemoveUpdated·RemoveLifecycleCallback의 관련 호출을 제거했다. -=는 핸들을 폐기하고 목록 제거는 알림 한 경로에 맡긴다.
+- Order.Clear는 연결 상태를 먼저 끊으므로 핸들 폐기 알림이 순회 중인 목록을 바꾸지 않는다. 허브의 폐기 요청·폐기 진행·폐기 완료 상태에서는 알림을 무시하고 ReleaseReferences가 목록을 정리한다.
+- Order는 Handle을 상속하지 않는다. 기존 IsConnected와 Clear만으로 연결 해제와 순회 보호를 표현할 수 있으며, 별도의 폐기 콜백 수명은 필요하지 않기 때문이다.
+
+실패 감지·보고·갱신 구독 해제는 계속 EventStream이 담당한다. 허브에 갱신 콜백이나 조건을 감싸는 예외 처리를 추가하지 않았다. 생애주기 콜백 실패의 연결 전체 해제와 허브의 보고도 유지한다.
+
+### 테스트와 빌드
+
+NUnit 직접 사례 6개 메서드·11개 실행 조합을 추가했다.
+
+| 추가 사례 | 실행 조합 | 확인한 계약 |
+| --- | ---: | --- |
+| AlreadyDisposedSubscriptionIsReleasedWhenRegistered | 2 | 이미 폐기된 핸들의 즉시 정리와 생애주기 등록 유무에 따른 연결 수명이다. |
+| LastDirectUpdateRemovalDisconnectsImmediatelyDuringUpdate | 2 | typed·object 직접 -=로 마지막 등록을 제거한 직후 HasListener가 false이며 Builder가 무효화되는 계약이다. |
+| LifecycleConnectedListenerCanReregisterAFailedCallbackOnTheSamePathDuringUpdate | 3 | typed·object·인자 없는 콜백 실패 뒤 같은 경로의 재등록과 다음 갱신 전달이다. |
+| FailedWhereImmediatelyDisconnectsEmptyListenersAndKeepsLifecycleConnections | 1 | 공유 Where 실패 직후 같은 Update에서 빈 연결 제거·생애주기 연결 유지·남은 연결의 재등록을 확인한 것이다. |
+| LifecycleConnectedOrderDoesNotRetainAFailedCallbackTarget | 1 | 연결이 생애주기 등록으로 남아 있어도 실패 콜백 대상은 수거되는 계약이다. |
+| SubscriptionDisposalNotifiesEveryLifecycleConnection | 2 | 일반 폐기와 Update 중 폐기에서 모든 연결의 Disposing·Disposed 알림을 유지하는 계약이다. |
+
+기존 FailedUpdateCanBeRegisteredAgainDuringTheSameUpdate(false)의 기대값만 바꿨다. 마지막 갱신 실패로 즉시 끊긴 Builder의 재등록은 InvalidOperationException이며 다음 갱신에서도 콜백을 실행하지 않는다. 직접 구독 조합은 같은 Update의 재등록을 허용하고 다음 갱신부터 호출한다. 나머지 기존 테스트 기대값은 변경하지 않았다.
+
+| 실행 범위 | 결과 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| 본체 솔루션 Release 빌드 | 성공, 경고 2·오류 0 | 0 | 해당 없음 |
+| 전체 실행에 포함된 EventHubTests | 116 / 116 통과 | 0 | 0 |
+| 전체 실행에 포함된 LifecycleHubTests | 18 / 18 통과 | 0 | 0 |
+| 전체 테스트 프로젝트 | 899 / 899 통과 | 0 | 0 |
+
+Windows·.NET SDK 10.0.403에서 실행했다. 본체 빌드의 두 경고는 api.nuget.org의 취약성 정보 조회 실패인 NU1900이다. 전체 테스트의 복원·빌드에서도 같은 경고가 나타났다. 첫 전체 실행 시도는 새 object Builder 테스트에서 int 전용 검증 도우미를 호출한 CS1503으로 컴파일 단계에서 중단되었다. 해당 단언의 형식을 수정한 최종 실행은 1분 30초에 899개 모두 통과했다. 테스트는 testhost와 자식 프로세스 실행이 가능한 일반 실행 환경에서 수행했다.
+
+기존 첫·반복 Update와 폐기 순회의 관리 힙 할당 0 B 검증, FailedSubscriptionsDoNotRetainTheirCallbackTargets의 두 조합도 모두 통과했다. 등록 시점의 람다·연결 리스트 노드 할당, object 경로의 값 형식 박싱과 Debug 출력 비용은 무할당 보장에 포함하지 않는다.
+
+```powershell
+dotnet build src/UniEngine.sln -c Release
+dotnet test tests/UniEngine.Tests.csproj -c Release --logger 'trx;LogFileName=All.trx' --results-directory tests/bin/TestResults/EventHubDisposalNotifications
+```
+
+최종 결과는 tests/bin/TestResults/EventHubDisposalNotifications/All.trx이다. 실패한 컴파일 시도는 통과 수에 포함하지 않는다.
+
+### 성능 확인
+
+변경 전은 커밋 2a66c2d06ed03d44e5566a06c1b84d74821aa497의 소스이며, 변경 후는 이 작업 트리의 소스를 임시 폴더로 복제한 것이다. 같은 C# 측정 프로그램을 각각의 Release DLL에 연결했다. 두 실행의 측정 프로그램 DLL은 SHA256가 같으며, 프로그램과 비교용 소스는 저장소 밖 임시 폴더에 두었다.
+
+측정 환경은 Intel Core i7-14650HX, Windows, .NET 10.0.14 x64, SDK 10.0.403이다. 두 프로세스에서 ProcessorAffinity=0x3과 PriorityClass=High가 실제 적용되었음을 확인했다. 0x3은 논리 CPU 0·1을 선택하는 마스크이며 물리 코어 토폴로지는 별도로 확인하지 않았다. TieredCompilation과 TieredPGO는 두 실행 모두 활성화했다.
+
+각 리스너는 같은 조건 대리자의 Where 뒤에 구독한다. 조건이 항상 거짓인 경우와 항상 참이어서 모든 리스너가 받는 경우를 각각 측정했다. 시나리오마다 1초 이상 예열하고 배치당 반복 횟수를 조정한 뒤 9라운드의 중앙값을 비교했다. 표의 단위는 ns/Update이며 괄호는 최솟값이다. Update를 호출하는 반복문 비용을 포함하고 등록·폐기·출력 비용은 제외했다. 변경 전과 후 프로세스는 전체 테스트 종료 뒤 순서대로 실행했다.
+
+| 조건 | 리스너 수 | 변경 전 중앙값 (최솟값) | 변경 후 중앙값 (최솟값) |
+| --- | ---: | ---: | ---: |
+| 항상 거짓 | 10 | 282.992 (278.669) | 7.434 (7.293) |
+| 항상 거짓 | 100 | 2,321.800 (2,277.805) | 7.599 (7.586) |
+| 항상 거짓 | 1000 | 22,875.476 (22,712.451) | 7.367 (7.344) |
+| 모두 전달 | 10 | 309.569 (307.036) | 50.072 (49.661) |
+| 모두 전달 | 100 | 2,860.324 (2,834.714) | 511.282 (509.238) |
+| 모두 전달 | 1000 | 27,673.706 (27,569.604) | 5,278.607 (5,249.109) |
+
+항상 거짓인 경우 변경 후 중앙값은 7.367~7.599ns로 리스너 수와 거의 무관하다. 모두 전달하는 경우에는 실제 콜백 호출 수에 비례하는 비용이 남지만 전체 연결 정리 순회 비용은 사라졌다. 모든 시나리오에서 수신 횟수 검산을 통과했으며 9라운드 측정 구간의 관리 힙 할당 합계는 각각 0 B였다. 이 결과는 해당 .NET 환경의 간단한 측정이며 Unity Mono·IL2CPP의 실행 결과는 아니다.
+
+원시 측정 결과는 tests/bin/TestResults/EventHubDisposalNotifications/BenchmarkBefore.txt와 BenchmarkAfter.txt이다. 측정 코드는 저장소에 추가하지 않았다.
+
+### 문서와 범위 확인
+
+[EventHub](../../../docs/02.%20UniEngine/02-Core/03-E.2-EventHub/EventHub.md), [Handle](../../../docs/02.%20UniEngine/02-Core/02-E.1-HandleToken/Handle.md), [EventHub 상태·동작 표](../03-E.2-EventHub/docs/01.%20Tables.md), [EventHub 테스트 계획](../03-E.2-EventHub/docs/02.%20Plans.md)과 이 결과 문서를 갱신했다. 이전 결과 절의 내용은 유지하고 목차에 이번 절을 추가했다.
+
+저장소가 직접 관리하는 Markdown 136개의 기존 상대 링크 450개는 모두 유효했다. 이번 결과 절에서 추가한 상대 링크 4개도 대상이 존재한다. 변경 코드·문서는 LF이며 공백 검사도 통과했다.
+
+결정 사항에서 벗어나거나 추가 결정을 요청해야 하는 문제는 없었다. EventStream 소스·LifecycleHub 동작·MVP 저장소·draw.io 파일은 수정하지 않았고, 커밋과 푸시는 하지 않았다.
+
+## EventHub Connection 정리
+
+2026-11-11에 연결 하나의 등록을 맡는 내부 형식 Order의 이름을 Connection으로 바꾸고 책임을 Connection으로 모았다. 공개 API와 동작은 바꾸지 않았다.
+
+- 같은 연결의 중복 검사, 갱신 구독 생성과 -= 해제, 생애주기 콜백의 추가·제거, 폐기 알림 호출, 빈 연결 정리를 Connection이 수행한다. 허브는 키와 Connection의 대응, 공유 EventStream, 갱신·수면·폐기 진행만 맡는다.
+- 갱신 등록 기록 형식 UpdateSubscription을 Subscription으로 바꾸고 Connection 안의 private 형식으로 두었다. Connection의 필드와 등록 목록도 모두 private이다. 허브와 Builder는 생성자와 등록·해제·알림 메서드만 사용한다.
+- 연결을 끝내는 일은 Connection.Dispose 하나로 모았다. Dispose는 여러 번 불러도 한 번만 동작하며, 구독 핸들과 생애주기 콜백을 놓고 허브 사전에서 자기 항목을 지운다. Disconnect, 등록이 모두 사라진 경우, 생애주기 콜백 실패, 허브 폐기가 모두 이 경로를 쓴다. 허브의 RemoveConnection은 사전 항목만 지운다.
+- Builder는 루트 경로를 만들 때 쓰는 허브를 직접 받고, 사용 가능 여부는 Connection에 확인한다. 테스트용 재정의에만 쓰이던 GetBuilder는 private으로 바꿨다.
+- 이미 폐기된 핸들을 내부 형식으로 직접 등록하던 AlreadyDisposedSubscriptionIsReleasedWhenRegistered(2개 사례)와 그 보조 클래스를 지웠다. 공개 API로는 이 상태를 만들 수 없으며, 방어 분기는 코드에 남겼다. EventHub 표·계획의 F9 행도 함께 지웠다.
+
+| 실행 범위 | 결과 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| 본체·테스트 프로젝트 Release 빌드 | 성공, 경고 0·오류 0 | 0 | 해당 없음 |
+| EventHubTests | 114 / 114 통과 | 0 | 0 |
+| LifecycleHubTests | 18 / 18 통과 | 0 | 0 |
+| 전체 테스트 프로젝트 | 897 / 897 통과 | 0 | 0 |
+
+빌드 경고는 패키지 취약성 정보 서버에 접근하지 못한 NU1900만 있었다. 전체 실행 시간은 1분 44초이다.
+
+## EventHub 비트 조건 경로
+
+2026-11-11에 EventHub의 ulong Builder에 ForFlags 확장 메서드를 추가했다. 기존 EventStream·EventPath의 비트 경로를 재사용하며 연결 수명 검사, 리스너별 구독 소유권과 생애주기 알림을 유지한다. 작업 전 존재하던 Handle·EventHub Connection 정리와 관련 문서·테스트 변경을 보존했다.
+
+Windows·.NET SDK 10.0.403에서 C# 9·netstandard2.1 본체와 net10.0 테스트를 Release로 검증했다. 새 EventHubFlagsTests는 NUnit 직접 사례 14개 메서드·22개 실행 조합이다.
+
+| 실행 범위 | 결과 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| 본체 솔루션 Release 빌드 | 성공, 경고 1·오류 0 | 0 | 해당 없음 |
+| EventHubFlagsTests | 22 / 22 통과 | 0 | 0 |
+| 기존 EventHubTests와 새 플래그 테스트 | 136 / 136 통과 | 0 | 0 |
+| 전체 테스트 프로젝트 | 919 / 919 통과 | 0 | 0 |
+
+전체 테스트 실행 시간은 1분 31초이다. 기존 랜덤 연속 테스트 30개도 모두 통과했으며 seed별 시간과 실행 이력은 전체 TRX에 포함된다. 빌드 경고는 api.nuget.org 취약성 정보 조회 실패인 NU1900이다.
+
+LogStateProjectTests의 seed 0·1·2는 각각 24.186초·24.024초·24.130초이며 합계 72.340초이다. 대상별 합계는 실행 완료 후 TRX에서 확인했으므로 실행 중 60초 초과를 확인해 중간 질의하지는 못했다.
+
+### 확인한 계약
+
+- IEventHub&lt;ulong&gt;의 Connect 반환값에서 HasAny 판정, 원래 값 전달, 부호 비트 폭과 ulong 최상위 비트를 확인했다.
+- 정상 연결의 잘못된 마스크와 null Builder 거부, 기존 구독 유지, 연결 해제·재연결·허브 폐기의 예외 우선순위를 확인했다. 별도 Builder 구현의 NotSupportedException은 코드 검토로 확인했으며 직접 실행 사례에는 포함하지 않았다.
+- 서로 다른 enum의 같은 마스크 뒤에서 공통 Where가 한 번 평가되는지와 FlagsNode 묶음 순서를 확인했다. Where로 대신 필터링하는 구현과 구분되는 검증이다.
+- Where·Debug·ForFlags 조합, 기존 루트 보존, 콜백 형식별 등록, 전파 중 추가·해제, 실패한 빈 연결의 재연결, 수면과 마스크에 무관한 생애주기 알림을 확인했다.
+- 별도 인스턴스 예열 뒤 새 허브의 첫 갱신과 10,000회 반복 갱신 모두 관리 힙 할당 0 B였다. 등록 시점, Debug와 object 박싱 비용은 측정에서 제외했다.
+
+### 실행 과정과 산출물
+
+첫 샌드박스 실행은 testhost 시작 뒤 응답이 없어 중단하고 일반 실행 환경에서 다시 실행했다. 최초 EventHub 실행과 할당 테스트 단독 실행에서 반복 구간에 24 B가 측정되었다. 기존 EventStream 할당 테스트처럼 예열·첫 갱신·반복 갱신에 공통 NoInlining 발행 메서드를 사용하도록 측정 코드를 수정했다. 측정 대상은 새 허브이고 0 B 단언도 유지했다. 제품 코드를 추가 변경하지 않은 최종 EventHub 실행과 전체 실행에서는 첫·반복 구간 모두 0 B였다. 최초 차이의 런타임 원인을 별도 프로파일러로 확정하지는 않았다.
+
+```powershell
+dotnet build src/UniEngine.sln -c Release --no-restore
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-restore --filter FullyQualifiedName~EventHub --logger 'trx;LogFileName=EventHubFinal.trx' --results-directory tests/bin/TestResults/EventHubForFlags
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-build --no-restore --logger 'trx;LogFileName=All.trx' --results-directory tests/bin/TestResults/EventHubForFlags
+```
+
+최종 결과는 [EventHubFinal.trx](../../bin/TestResults/EventHubForFlags/EventHubFinal.trx)와 [All.trx](../../bin/TestResults/EventHubForFlags/All.trx)이다. 최초 실패 기록은 같은 폴더의 EventHub.trx·FlagsAllocation.trx이며 통과 수에 포함하지 않는다. TRX는 버전 관리에서 제외하는 tests/bin 아래의 실행 산출물이다.
+
+API·사용 예제와 [상태·동작 표](../03-E.2-EventHub/docs/01.%20Tables.md)·[테스트 계획](../03-E.2-EventHub/docs/02.%20Plans.md)을 갱신했다. 제품·테스트 C# 파일 3개는 LF이며, 변경한 안내 문서 8개의 상대 링크 53개가 유효했다. Unity 실행과 별도 성능 벤치마크는 수행하지 않았다.
+
+## EventHubBuilder 허브 의존성 분리
+
+2026-11-11에 EventHub의 중첩 Builder를 독립 형식 EventHubBuilder&lt;TEventArgs&gt;로 옮겼다. Builder는 IEventHubConnection과 EventPath만 보관하며, 허브 접근은 연결 계약을 구현한 Connection이 맡는다. Connect의 반환 인터페이스와 Where·Debug·ForFlags·콜백 등록 방식은 유지한다. 기존 구체 형식 EventHub&lt;TEventArgs&gt;.Builder를 직접 참조하는 코드는 새 형식으로 변경해야 한다.
+
+Windows·.NET SDK 10.0.403에서 C# 9·netstandard2.1 본체와 net10.0 테스트를 Release로 검증했다. 기존 테스트와 기대값을 그대로 사용했으며, 전체 실행에 포함된 EventHub 사례를 TRX에서 집계했다.
+
+| 실행 범위 | 결과 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| 본체와 테스트 프로젝트 Release 컴파일 | 성공, NU1900 경고 | 0 | 해당 없음 |
+| 전체 실행에 포함된 EventHub 사례 | 136 / 136 통과 | 0 | 0 |
+| 전체 테스트 프로젝트 | 919 / 919 통과 | 0 | 0 |
+
+테스트 실행기가 보고한 전체 실행 시간은 1분 47초이다. LogStateProjectTests의 랜덤 연속 테스트 seed 0·1·2는 각각 31.150초·18.128초·35.884초이며 합계 85.162초이다. 테스트 안내의 중간 확인 기준에 따라 사용자에게 전체 검증을 끝까지 진행하도록 확인받았다. seed별 실행 이력과 결과는 아래 TRX에 포함된다.
+
+첫 샌드박스 실행은 testhost 시작 이후 결과가 나오지 않아 중단했다. 일반 실행 환경에서 다시 실행한 결과만 통과 수에 포함한다. NU1900은 api.nuget.org의 패키지 취약성 정보를 조회하지 못한 경고이다.
+
+```powershell
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-restore --logger 'trx;LogFileName=All.trx' --results-directory tests/bin/TestResults/EventHubBuilderDecoupling
+```
+
+[전체 실행 결과](../../bin/TestResults/EventHubBuilderDecoupling/All.trx)에서 연결 수명과 예외 우선순위, 루트·파생 경로 공유, typed·object·인자 없는 콜백의 구분, ForFlags 조합, 생애주기와 기존 무할당 전파 사례의 통과를 확인했다. Builder의 실행 코드에서 EventHub 구체 형식 참조가 없고 변경한 C# 파일 4개가 LF임을 확인했다. Unity 실행과 별도 성능 벤치마크는 수행하지 않았다.
+
+## EventHub 조건·콜백 결합형 등록
+
+2026-11-11에 Builder의 경로 구성을 OnUpdated의 조건·콜백 결합형 등록과 ulong 전용 OnFlags로 교체했다. Builder의 모든 등록은 같은 인스턴스를 반환하며, Connection이 불변 EventCondition의 단계를 PathInfo로 연결한다. 등록 중복은 콜백 형식·원본 대리자·조건의 단계별 값으로 판정하고, 노드 공유는 기존 EventStream의 대리자·마스크 규칙을 유지한다. 기존 작업 트리의 EventHub·EventStream 변경을 기준으로 검증했다.
+
+Windows·.NET SDK 10.0.403에서 C# 9·netstandard2.1 본체와 net10.0 테스트를 Release로 실행했다. 아래 모듈 수는 별도 재실행이 아닌 전체 실행의 All.trx에서 집계한 값이다.
+
+| 실행 범위 | 결과 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| 본체 솔루션과 테스트 프로젝트 Release 빌드 | 성공 | 오류 0 | 해당 없음 |
+| EventHubTests | 132 / 132 통과 | 0 | 0 |
+| EventHubFlagsTests | 29 / 29 통과 | 0 | 0 |
+| EventHubRandomContinuousTests | 3 / 3 통과 | 0 | 0 |
+| EventHub 합계 | 164 / 164 통과 | 0 | 0 |
+| LifecycleHubTests | 18 / 18 통과 | 0 | 0 |
+| EventStream 전체 | 215 / 215 통과 | 0 | 0 |
+| 전체 테스트 프로젝트 | 947 / 947 통과 | 0 | 0 |
+
+전체 실행기가 보고한 시간은 2분 57초이다. 빌드에는 api.nuget.org의 패키지 취약성 정보를 조회하지 못한 NU1900 경고가 1건씩 있었으며 컴파일 오류는 없었다. 첫 EventHub 선택 실행은 샌드박스에서 testhost 연결이 90초 뒤 시간 초과되어 사례를 하나도 실행하지 못했다. 이 중단은 테스트 사례 실패와 구분하며, 같은 Release 빌드를 일반 실행 환경에서 전체 실행한 결과가 위 통과 수이다.
+
+반환 참조, null을 포함한 target 비교, predicate·Flags·값 조건·Debug 조합, 비트 조건과 target의 차이, 단축형과 EventCondition 사이의 중복을 확인했다. 당시 값 조건의 비교 람다 공유와 target 단축형의 독립 비교는 사용자 형식의 Equals 호출 횟수로 확인했다. 이 공유 차이는 아래 When 경로 통합 작업으로 대체했다. object 조건·콜백의 원본 대리자 비교, 연결 수명 우선 검사, EH-02의 기존 등록 유지와 직접 Updated -=의 루트 한정 제거도 통과했다. 기존 전파 순서·실패·해제·수면·생애주기와 첫·반복 갱신 및 폐기 순회의 무할당 사례도 통과했다. 등록·object 값 형식 박싱·Debug 로그 비용은 무할당 보장에 포함하지 않는다.
+
+새 EventHub 랜덤 연속 사례는 공개 API의 연결·조건별 등록·중복·해제·재연결·수면·인자 오류·폐기를 누적 검증했다. seed마다 독립 허브로 시작했으며 단계별 이력과 아래 측정값은 All.trx의 테스트 출력에 보관한다.
+
+| seed | 실제 도달 깊이 | 실행시간 | 결과 |
+| --- | ---: | ---: | --- |
+| 0 | 100 / 100 | 40.987 ms | 통과 |
+| 1 | 100 / 100 | 17.730 ms | 통과 |
+| 2 | 100 / 100 | 14.698 ms | 통과 |
+
+EventHub 세 seed 합계는 73.415 ms로 중간 확인 기준인 60초 이하였다. 전체 실행에 포함된 기존 LogStateProjectTests의 세 seed는 각각 44.608초·43.304초·57.148초, 합계 145.060초였다. 대상별 측정값은 완료 후 TRX에서 확인할 수 있어 실행 중에는 Log의 60초 초과 시점을 확인하지 못했다. 모든 랜덤 연속 사례는 목표 깊이에 도달했으며 중단하거나 건너뛴 사례는 없다.
+
+```powershell
+dotnet build src/UniEngine.sln -c Release --no-restore
+dotnet build tests/UniEngine.Tests.csproj -c Release --no-restore
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-restore --filter FullyQualifiedName~EventHub --logger 'trx;LogFileName=EventHub.trx' --results-directory tests/bin/TestResults/EventHubConditions
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-build --no-restore --logger 'trx;LogFileName=All.trx' --results-directory tests/bin/TestResults/EventHubConditions
+```
+
+[전체 실행 TRX](../../bin/TestResults/EventHubConditions/All.trx)와 [샌드박스 중단 TRX](../../bin/TestResults/EventHubConditions/EventHub.trx)는 버전 관리에서 제외하는 tests/bin 아래에 있다. 모듈 문서, 상위 EventSystem 설명, 테스트 상태·동작 표와 계획을 현재 API에 맞추고 상대 링크를 검사했다. 변경한 제품·테스트 C# 파일 8개의 LF와 변경 범위의 git diff --check를 확인했다. EventStream·EventPath의 공개 API, guidelines 서브모듈, .drawio 및 uniengine-mvp는 이번 작업에서 수정하지 않았다. Unity 실행과 별도 성능 벤치마크는 수행하지 않았다.
+
+## 값 조건의 When 경로 통합
+
+2026-11-11에 EventCondition의 값 조건을 When으로 통일하고, Builder의 OnUpdated(target, callback)도 EventStream의 전용 When 경로를 사용하도록 변경했다. 같은 부모 아래의 동등한 target은 같은 조건 객체를 재사용하거나 별도로 구성하거나 단축형을 사용해도 WhenEntry를 공유한다. 등록 중복 판정과 Flags·OnFlags의 이름·동작은 유지했다.
+
+Windows·.NET SDK 10.0.403 Release에서 본체와 테스트를 컴파일한 뒤 선택 실행과 전체 실행을 완료했다. NU1900은 api.nuget.org의 패키지 취약성 정보 조회 경고이며 컴파일 오류는 없었다.
+
+| 실행 범위 | 통과 / 실행 | 실패 | 건너뜀 |
+| --- | ---: | ---: | ---: |
+| When·EventHub 선택 실행 | 254 / 254 | 0 | 0 |
+| 전체 테스트 프로젝트 | 1,028 / 1,028 | 0 | 0 |
+| 전체 실행 중 EventHubTests | 140 / 140 | 0 | 0 |
+| 전체 실행 중 EventHubFlagsTests | 29 / 29 | 0 | 0 |
+| 전체 실행 중 EventHubRandomContinuousTests | 3 / 3 | 0 | 0 |
+| 전체 실행 중 EventHub 합계 | 172 / 172 | 0 | 0 |
+| 전체 실행 중 LifecycleHub | 18 / 18 | 0 | 0 |
+| 전체 실행 중 EventStream | 288 / 288 | 0 | 0 |
+
+각 모듈 수는 전체 실행 TRX에서 집계한 부분집합이다. 전체 실행 시간은 약 80.8초이다. 기존 EventHub 사례에서 값 조건 호출을 When으로 전환했고, 공유 사례를 보강하여 실행 조합은 8개 늘었다.
+
+- 같은 EventCondition 재사용, 별도 동등 조건, target 단축형, 두 형식의 혼합을 typed·인자 없는 콜백 각각에서 검사했다. 사용자 형식의 Equals 호출 횟수로 리스너가 달라도 한 WhenEntry를 공유함을 확인했다.
+- null과 별도로 만든 동등한 string target 아래에서 같은 Where 대리자가 한 번만 평가되는지 확인했다. 한 리스너의 연결을 끊어도 다른 구독과 공유 경로가 유지됐다.
+- 단축형과 별도 조건 사이의 중복 거부, 다른 callback 형식의 구분, Where·When·Flags·Debug 조합, 연결 수명과 실패·수면·생애주기 및 기존 할당 검증을 유지했다.
+
+| EventHub seed | 실제 도달 깊이 | 실행시간 | 결과 |
+| --- | ---: | ---: | --- |
+| 0 | 100 / 100 | 8.127 ms | 통과 |
+| 1 | 100 / 100 | 2.322 ms | 통과 |
+| 2 | 100 / 100 | 2.241 ms | 통과 |
+
+EventHub 세 seed의 실제 실행시간 합계는 12.690 ms이다. 전체 랜덤 연속 테스트 39개는 모두 목표 깊이에 도달했으며, 대상별 세 seed 합계가 60초를 넘지 않았다. 가장 긴 Log는 19.487초·13.863초·21.795초로 합계 55.146초였다. 빌드·복원 시간은 포함하지 않으며 중단하거나 건너뛴 테스트는 없다.
+
+```powershell
+dotnet build src/UniEngine.sln -c Release --no-restore -p:UseSharedCompilation=false
+
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-restore -p:UseSharedCompilation=false --filter 'FullyQualifiedName~When|FullyQualifiedName~EventHub' --logger 'trx;LogFileName=Targeted.trx' --results-directory tests/bin/TestResults/EventStreamWhen
+
+dotnet test tests/UniEngine.Tests.csproj -c Release --no-build --no-restore --logger 'trx;LogFileName=All.trx' --logger 'console;verbosity=normal' --results-directory tests/bin/TestResults/EventStreamWhen *> tests/bin/TestResults/EventStreamWhen/All.console.log
+```
+
+[선택 실행 TRX](../../bin/TestResults/EventStreamWhen/Targeted.trx) · [전체 실행 TRX](../../bin/TestResults/EventStreamWhen/All.trx) · [전체 실행 로그](../../bin/TestResults/EventStreamWhen/All.console.log)에 사례 결과와 seed별 이력을 남겼다. 테스트는 testhost 통신이 가능한 일반 실행 권한으로 실행했다. When의 상세 계약, 신규 할당·UniTest 결과와 이번 변경 파일 전체 목록은 [EventStream 검증 결과](../02-E.3-EventStream/docs/03.%20Results.md)에 있다.
+
+성능 벤치마크, PathInfo 크기 측정과 Unity Mono·IL2CPP의 실행·할당 검증은 수행하지 않았다. 등록 후 target의 Equals·GetHashCode 결과가 바뀌는 경우는 지원하지 않는다. 후속 요청에 따라 기존 변경도 함께 커밋하며 .drawio 내용은 편집하지 않았다. 컨벤션 서브모듈은 별도 원본 저장소의 최신 작업 내용으로 맞추고 자체 커밋은 만들지 않는다.

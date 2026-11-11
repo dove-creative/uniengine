@@ -22,16 +22,16 @@
 
 ## 구성과 역할
 
-Subject는 허브를 제공하는 도메인 객체의 계약이다. 수신자는 Hub 계약으로 연결하고 Builder로 알림을 구성한다. EventHub는 갱신과 수면·폐기를 관리한다. Builder는 리스너에 묶인 EventStream 루트 또는 EventPath를 감싸며, 내부 스트림의 그래프 하나가 모든 리스너와 직접 구독의 전파를 담당한다.
+Subject는 허브를 제공하는 도메인 객체의 계약이다. 수신자는 Hub 계약으로 연결하고 Builder로 알림을 등록한다. EventHub는 갱신과 수면·폐기를 관리한다. Builder는 연결 하나만 구성하며 각 등록의 조건과 콜백을 함께 받는다. 여러 조건 단계는 불변 객체인 EventCondition으로 조합한다. Connection이 조건을 내부 스트림 경로로 연결하며, 그래프 하나가 모든 리스너와 직접 구독의 전파를 담당한다.
 
-Hub·Builder·Subject의 인터페이스는 [LifecycleHub 모듈](../03-E.1-LifecycleHub/README.md)의 생애주기 계약을 확장한다. EventHub 구현은 LifecycleHub 구현을 상속하지 않는다. 직접 이벤트 구독도 대리자를 키로 사용하여 같은 Order 연결 모델로 관리한다. 폐기 완료 알림만 필요한 객체는 LifecycleHub를 사용할 수 있다.
+Hub·Builder·Subject의 인터페이스는 [LifecycleHub 모듈](../03-E.1-LifecycleHub/README.md)의 생애주기 계약을 확장한다. EventHub 구현은 LifecycleHub 구현을 상속하지 않는다. 직접 이벤트 구독도 대리자를 키로 사용하여 같은 Connection 모델로 관리한다. 폐기 완료 알림만 필요한 객체는 LifecycleHub를 사용할 수 있다.
 
-Where·Debug는 새 경로의 Builder를 반환하고 OnUpdated는 그 경로에 구독한다. 같은 위치의 같은 조건 대리자는 리스너가 달라도 공유된다. 루트의 직접 구독과 리스너 콜백은 등록 순서로 섞이며, 갱신 콜백 실패는 그 구독 하나만 해제한다. 다른 등록은 유지하며 마지막 등록이 사라지면 연결도 해제한다. 멀티캐스트를 한 번에 넘기면 묶음 전체가 등록 하나이다.
+OnUpdated는 루트·값 비교·조건 대리자·EventCondition 등록을 제공하고, ulong 허브의 OnFlags는 비트 조건과 콜백을 함께 받는다. 값 비교 단축형은 EventCondition.When과 같은 경로이다. 모든 등록은 같은 Builder를 반환하며 다음 등록에 조건을 넘기지 않는다. 같은 위치의 같은 조건 대리자, 동등한 target, 같은 마스크 비트는 리스너가 달라도 공유된다. 루트의 직접 구독과 리스너 콜백은 등록 순서로 섞이며, 갱신 콜백 실패는 그 구독 하나만 해제한다. 다른 등록은 유지하며 마지막 등록이 사라지면 연결도 해제한다. 멀티캐스트를 한 번에 넘기면 묶음 전체가 등록 하나이다.
 
 ## 대표 흐름
 
 1. 소유자가 허브를 준비하고 수신자가 객체 단위로 연결한다.
-2. Builder로 등록한 콜백을 내부 전달 경로에 연결하여 갱신을 전파한다.
+2. Builder에 조건과 콜백을 함께 등록하고 Connection이 만든 전달 경로로 갱신을 전파한다.
 3. 수신자 해제 또는 소유자 폐기 시 해당 연결과 보관 참조를 정리한다.
 
 ## 상세 문서
@@ -39,12 +39,13 @@ Where·Debug는 새 경로의 Builder를 반환하고 OnUpdated는 그 경로에
 | 문서 | 내용 |
 | --- | --- |
 | [EventHub](EventHub.md) | 객체별 연결과 생애주기를 관리하고 내부 스트림을 통해 갱신을 전달하는 허브이다. |
-| [EventHubBuilder](EventHubBuilder.md) | 리스너에 묶인 갱신 경로와 생애주기 콜백을 구성하는 객체이다. |
+| [EventHubBuilder](EventHubBuilder.md) | 연결 하나에 조건과 갱신 콜백·생애주기 콜백을 등록하는 객체이다. |
+| [EventCondition](EventCondition.md) | 여러 갱신 조건과 로그 단계를 루트부터 조합하는 불변 조건이다. |
 | [IEventHub](IEventHub.md) | 수신자가 소유자의 허브에 연결하고 알림을 관찰할 수 있게 하는 계약 묶음이다. |
 | [IEventSubject](IEventSubject.md) | 이벤트 허브를 제공하는 도메인 객체의 계약 묶음이다. |
-| [IEventHubBuilder](IEventHubBuilder.md) | 연결된 수신자의 알림을 단계적으로 설정하는 구성 계약 묶음이다. |
+| [IEventHubBuilder](IEventHubBuilder.md) | 연결된 수신자의 조건별 갱신과 생애주기 알림을 등록하는 계약 묶음이다. |
 | [AdaptiveCollection](../02-E.2-AdaptiveCollections/AdaptiveCollection.md) | 순회 중 해제를 지원하는 생애주기 등록 컬렉션이다. |
-| [사용 예제](Usage.md) | 객체 연결과 폐기 알림, 직접 구독, 수면과 깨우기, 여러 허브의 일괄 수면 예제이다. |
+| [사용 예제](Usage.md) | 객체 연결과 폐기 알림, 비트 조건, 직접 구독, 수면과 깨우기, 여러 허브의 일괄 수면 예제이다. |
 | [이슈 기록](ISSUES.md) | null 필터 문제의 해결과 미결정인 onSleep 반환값의 계약을 기록한다. |
 | [테스트 상태·동작 표](../../../../tests/02-Core/03-E.2-EventHub/docs/01.%20Tables.md) | 연결·공유 경로·직접 구독·실패·수면·폐기·할당의 검증 기준이다. |
 | [테스트 계획](../../../../tests/02-Core/03-E.2-EventHub/docs/02.%20Plans.md) | 상태·동작 범위와 테스트 파일·검증 방법을 연결한다. |

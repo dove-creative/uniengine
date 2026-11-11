@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
@@ -11,7 +10,7 @@ namespace Blackthunder.UniEngine.Core
         /// <summary>
         /// Counts connections created through Connect or direct event subscriptions.
         /// </summary>
-        public int ConnectionCount => _orders.Count;
+        public int ConnectionCount => _connections.Count;
         public bool IsAwake => !_isSleeping;
         public bool IsDisposed { get; private set; }
 
@@ -23,9 +22,9 @@ namespace Blackthunder.UniEngine.Core
                 ThrowIfDisposed();
                 if (value == null) return;
 
-                AddUpdated(GetOrAddOrder(value), value, UpdateKind.Typed, null);
+                GetOrAddConnection(value).AddUpdate(value, EventHubUpdateKind.Typed, null);
             }
-            remove => RemoveUpdated(value, UpdateKind.Typed);
+            remove => RemoveUpdated(value, EventHubUpdateKind.Typed);
         }
         /// <summary>
         /// Subscribing through this interface may box value-type event arguments.
@@ -37,9 +36,9 @@ namespace Blackthunder.UniEngine.Core
                 ThrowIfDisposed();
                 if (value == null) return;
 
-                AddUpdated(GetOrAddOrder(value), value, UpdateKind.Object, null);
+                GetOrAddConnection(value).AddUpdate(value, EventHubUpdateKind.Object, null);
             }
-            remove => RemoveUpdated(value, UpdateKind.Object);
+            remove => RemoveUpdated(value, EventHubUpdateKind.Object);
         }
 
         public event Action Disposing
@@ -54,56 +53,7 @@ namespace Blackthunder.UniEngine.Core
         }
 
         // Internal
-        internal enum UpdateKind { Typed, Object, Parameterless }
-
-        internal class UpdateSubscription
-        {
-            internal Delegate Source;
-            internal UpdateKind Kind;
-            internal EventPath<TEventArgs> Path;
-            internal Handle Connection;
-        }
-
-        internal class Order
-        {
-            internal EventHub<TEventArgs> Hub;
-            internal object Key;
-            internal bool IsConnected = true;
-            internal readonly List<UpdateSubscription> UpdateSubscriptions = new();
-            internal AdaptiveCollection<Delegate> OnDisposing;
-            internal AdaptiveCollection<Delegate> OnDisposed;
-
-            internal Order() { }
-
-            internal static void AddLifecycleCallback(ref AdaptiveCollection<Delegate> callbacks, Delegate callback)
-            {
-                if (callback == null) return;
-
-                callbacks ??= new AdaptiveCollection<Delegate>();
-
-                if (callbacks.Contains(callback))
-                    throw new InvalidOperationException("This lifecycle callback is already registered.");
-
-                InvocationListCache<Delegate>.Get(callback);
-                callbacks.Add(callback);
-            }
-
-            internal void Clear()
-            {
-                IsConnected = false;
-                Key = null;
-                foreach (var subscription in UpdateSubscriptions)
-                    subscription.Connection.Dispose();
-
-                UpdateSubscriptions.Clear();
-                OnDisposing?.Clear();
-                OnDisposed?.Clear();
-                OnDisposing = null;
-                OnDisposed = null;
-            }
-        }
-
-        private readonly AdaptiveDictionary<object, Order> _orders = new();
+        private readonly AdaptiveDictionary<object, Connection> _connections = new();
         // All listeners and direct subscriptions share one graph.
         private readonly EventStream<TEventArgs> _updates = new();
         private Func<Action> _onSleep;
@@ -118,7 +68,11 @@ namespace Blackthunder.UniEngine.Core
 
         // Content --------------------
         // Construction
-        public EventHub(object owner, Action onDisposing = null, Action onDisposed = null, Func<Action> onSleep = null)
+        public EventHub(
+            object owner,
+            Action onDisposing = null,
+            Action onDisposed = null,
+            Func<Action> onSleep = null)
         {
             Owner = owner;
 
@@ -134,34 +88,30 @@ namespace Blackthunder.UniEngine.Core
 
             if (listener == null)
                 throw new ArgumentNullException(nameof(listener), Ctx("Cannot register a null listener."));
-
-            if (_orders.ContainsKey(listener))
+            if (_connections.ContainsKey(listener))
                 throw new InvalidOperationException(Ctx($"This Listener already exists: {listener}"));
 
-            return GetBuilder(GetOrAddOrder(listener));
+            return new EventHubBuilder<TEventArgs>(GetOrAddConnection(listener));
         }
-        IEventHubBuilder IEventHub.Connect(object listener) => Connect(listener);
-        ILifecycleHubBuilder ILifecycleHub.Connect(object listener) => Connect(listener);
-        internal virtual Builder GetBuilder(Order order) => new Builder(order);
 
-        private Order GetOrAddOrder(object key)
+        private Connection GetOrAddConnection(object key)
         {
-            if (_orders.TryGetValue(key, out var order)) return order;
-            order = new Order { Hub = this, Key = key };
-            _orders.Add(key, order);
+            if (_connections.TryGetValue(key, out var connection)) return connection;
+            connection = new Connection(this, key);
+            _connections.Add(key, connection);
 
-            return order;
+            return connection;
         }
 
-        public bool HasListener(object listener) => !IsDisposed && _orders.ContainsKey(listener);
+        public bool HasListener(object listener) => !IsDisposed && _connections.ContainsKey(listener);
 
         public void Disconnect(object listener)
         {
             if (IsDisposed || listener == null)
                 return;
 
-            if (_orders.TryGetValue(listener, out var order))
-                RemoveOrder(listener, order);
+            if (_connections.TryGetValue(listener, out var connection))
+                connection.Dispose();
         }
 
         // Updates
@@ -184,7 +134,6 @@ namespace Blackthunder.UniEngine.Core
             finally
             {
                 _isUpdating = false;
-                PruneUpdateSubscriptions();
 
                 if (_pendingDispose)
                 {
@@ -196,129 +145,34 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
-        private void PruneUpdateSubscriptions()
-        {
-            // The stream releases failed callbacks and paths, even when reporting throws.
-            foreach (var item in _orders)
-            {
-                if (PruneUpdates(item.Value)) RemoveEmptyOrder(item.Value);
-            }
-        }
-
-        private static bool PruneUpdates(Order order)
-        {
-            var subscriptions = order.UpdateSubscriptions;
-            var retained = 0;
-            for (var index = 0; index < subscriptions.Count; index++)
-            {
-                var subscription = subscriptions[index];
-                if (!subscription.Connection.IsDisposed) subscriptions[retained++] = subscription;
-            }
-
-            if (retained == subscriptions.Count) return false;
-            subscriptions.RemoveRange(retained, subscriptions.Count - retained);
-            return true;
-        }
-
-        // Registrations
-        private void AddUpdated(Order order, Delegate source, UpdateKind kind, EventPath<TEventArgs> path)
-        {
-            if (source == null) return;
-
-            // Keep the order alive when replacing a failed registration during the same update.
-            PruneUpdates(order);
-            foreach (var existing in order.UpdateSubscriptions)
-            {
-                if (existing.Kind == kind && ReferenceEquals(existing.Path, path) && Equals(existing.Source, source))
-                    throw new InvalidOperationException(
-                        Ctx("This update callback is already registered on this path."));
-            }
-
-            var callback = PrepareUpdate(source, kind);
-            var connection = path == null ? _updates.Subscribe(callback) : path.Subscribe(callback);
-
-            order.UpdateSubscriptions.Add(new UpdateSubscription
-            {
-                Source = source,
-                Kind = kind,
-                Path = path,
-                Connection = (Handle)connection,
-            });
-        }
-
-        private static Action<TEventArgs> PrepareUpdate(Delegate source, UpdateKind kind)
-        {
-            if (kind == UpdateKind.Typed) return (Action<TEventArgs>)source;
-
-            // One stream subscription checks its handle between all adapted multicast members.
-            Action<TEventArgs> adapted = null;
-            if (kind == UpdateKind.Object)
-            {
-                foreach (Action<object> callback in source.GetInvocationList())
-                    adapted += args => callback(args);
-            }
-            else
-            {
-                foreach (Action callback in source.GetInvocationList())
-                    adapted += _ => callback();
-            }
-
-            return adapted;
-        }
-
-        private void RemoveUpdated(Delegate callback, UpdateKind kind)
+        // Direct registrations use the delegate as the connection key; the Connection applies the registration rules.
+        private void RemoveUpdated(Delegate callback, EventHubUpdateKind kind)
         {
             if (IsDisposed || callback == null)
                 return;
 
-            if (!_orders.TryGetValue(callback, out var order)) return;
-            var subscriptions = order.UpdateSubscriptions;
-
-            for (var index = 0; index < subscriptions.Count; index++)
-            {
-                var subscription = subscriptions[index];
-                if (subscription.Kind != kind
-                    || subscription.Path != null
-                    || !Equals(subscription.Source, callback))
-                    continue;
-
-                subscriptions.RemoveAt(index);
-                subscription.Connection.Dispose();
-                PruneUpdates(order);
-                RemoveEmptyOrder(order);
-                break;
-            }
+            if (_connections.TryGetValue(callback, out var connection))
+                connection.RemoveRootUpdate(callback, kind);
         }
 
         private void AddLifecycleCallback(Action callback, bool disposing)
         {
             ThrowIfDisposed();
             if (callback == null) return;
-            var order = GetOrAddOrder(callback);
 
-            if (disposing) Order.AddLifecycleCallback(ref order.OnDisposing, callback);
-            else Order.AddLifecycleCallback(ref order.OnDisposed, callback);
+            var connection = GetOrAddConnection(callback);
+
+            if (disposing) connection.AddDisposing(callback);
+            else connection.AddDisposed(callback);
         }
 
         private void RemoveLifecycleCallback(Action callback, bool disposing)
         {
-            if (IsDisposed || callback == null) return;
-            if (!_orders.TryGetValue(callback, out var order)) return;
-            var callbacks = disposing ? order.OnDisposing : order.OnDisposed;
-
-            if (callbacks == null || !callbacks.Remove(callback)) return;
-            PruneUpdates(order);
-            RemoveEmptyOrder(order);
-        }
-
-        private void RemoveEmptyOrder(Order order)
-        {
-            if (order.UpdateSubscriptions.Count != 0
-                || order.OnDisposing?.Count > 0
-                || order.OnDisposed?.Count > 0)
+            if (IsDisposed || callback == null)
                 return;
 
-            RemoveOrder(order.Key, order);
+            if (_connections.TryGetValue(callback, out var connection))
+                connection.RemoveLifecycleCallback(callback, disposing);
         }
 
         // Sleep
@@ -416,8 +270,8 @@ namespace Blackthunder.UniEngine.Core
                     try
                     {
                         Ctx(
-                            "An IEventSubject object was garbage collected without being disposed.\n"
-                            + "Ensure that Dispose() is explicitly called when the object is no longer needed.")
+                            "An IEventSubject object was garbage collected without being disposed.\n" +
+                            "Ensure that Dispose() is explicitly called when the object is no longer needed.")
                             .Write(LogLevel.Warning);
                     }
                     catch (Exception)
@@ -428,13 +282,13 @@ namespace Blackthunder.UniEngine.Core
                     return;
                 }
 
-                foreach (var item in _orders)
-                    InvokeOrder(item.Value, item.Value.OnDisposing);
+                foreach (var item in _connections)
+                    item.Value.NotifyDisposing();
 
                 IsDisposed = true;
 
-                foreach (var item in _orders)
-                    InvokeOrder(item.Value, item.Value.OnDisposed);
+                foreach (var item in _connections)
+                    item.Value.NotifyDisposed();
             }
             finally
             {
@@ -463,47 +317,23 @@ namespace Blackthunder.UniEngine.Core
             _onAwake = null;
             _onSleep = null;
 
-            foreach (var item in _orders)
-                item.Value.Clear();
+            foreach (var item in _connections)
+                item.Value.Dispose();
 
-            _orders.Clear();
+            _connections.Clear();
             GC.SuppressFinalize(this);
         }
 
-        private void InvokeOrder(Order order, AdaptiveCollection<Delegate> callbacks)
+        // Called by a connection while it is being disposed.
+        private void RemoveConnection(object key, Connection connection)
         {
-            if (callbacks == null) return;
+            // ReleaseReferences clears the whole dictionary after disposing every connection, so removing
+            // entries one by one during that traversal would only allocate deferred removals.
+            if (IsDisposed && !_isDisposing)
+                return;
 
-            foreach (var registration in callbacks)
-            {
-                if (!order.IsConnected) return;
-
-                try
-                {
-                    foreach (var callback in InvocationListCache<Delegate>.Get(registration))
-                    {
-                        if (!order.IsConnected || !callbacks.IsCurrentItemActive) break;
-
-                        if (callback is Action action) action();
-                        else ((Action<object>)callback)(Owner);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    RemoveOrder(order.Key, order);
-                    ExceptionHandler.Report(exception);
-                    return;
-                }
-            }
-        }
-
-        private void RemoveOrder(object listener, Order order)
-        {
-            if (!order.IsConnected) return;
-            order.Clear();
-
-            if (_orders.TryGetValue(listener, out var current) && ReferenceEquals(current, order))
-                _orders.Remove(listener);
+            if (_connections.TryGetValue(key, out var current) && ReferenceEquals(current, connection))
+                _connections.Remove(key);
         }
 
         private string Ctx(string message) => $"[EventHub: {Owner ?? "null"}] {message}";

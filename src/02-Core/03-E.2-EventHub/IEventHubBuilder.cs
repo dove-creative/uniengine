@@ -1,14 +1,13 @@
 using System;
-using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
     public interface IEventHubBuilder : ILifecycleHubBuilder
     {
-        IEventHubBuilder Where(Func<object, bool> predicate);
-        IEventHubBuilder Debug(string message = "Debug", LogLevel logType = LogLevel.Log);
         IEventHubBuilder OnUpdated(Action<object> onUpdated);
         IEventHubBuilder OnUpdated(Action onUpdated);
+        IEventHubBuilder OnUpdated(Func<object, bool> condition, Action<object> onUpdated);
+        IEventHubBuilder OnUpdated(Func<object, bool> condition, Action onUpdated);
 
         new IEventHubBuilder OnDisposed(Action onDisposed);
         IEventHubBuilder OnDisposing(Action onDisposing);
@@ -20,10 +19,14 @@ namespace Blackthunder.UniEngine.Core
 
     public interface IEventHubBuilder<TEventArgs> : IEventHubBuilder
     {
-        IEventHubBuilder<TEventArgs> Where(Func<TEventArgs, bool> predicate);
-        new IEventHubBuilder<TEventArgs> Debug(string message = "Debug", LogLevel logType = LogLevel.Log);
         IEventHubBuilder<TEventArgs> OnUpdated(Action<TEventArgs> onUpdated);
         new IEventHubBuilder<TEventArgs> OnUpdated(Action onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action<TEventArgs> onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> condition, Action<TEventArgs> onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> condition, Action onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(EventCondition<TEventArgs> condition, Action<TEventArgs> onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdated(EventCondition<TEventArgs> condition, Action onUpdated);
 
         new IEventHubBuilder<TEventArgs> OnDisposing(Action onDisposing);
         new IEventHubBuilder<TEventArgs> OnDisposing(Action<object> onDisposing);
@@ -32,27 +35,9 @@ namespace Blackthunder.UniEngine.Core
 
 
         // Forwarding implementations
-        IEventHubBuilder IEventHubBuilder.Where(Func<object, bool> predicate)
-        {
-            // Let the typed path reject null after checking the registration's lifetime.
-            if (predicate == null) return Where((Func<TEventArgs, bool>)null);
-
-            return Where(args => predicate(args));
-        }
-        IEventHubBuilder IEventHubBuilder.Debug(string message, LogLevel logType) => Debug(message, logType);
+        // Object registrations have no forwarding default: wrapping them in typed adapters would lose
+        // the original delegates and the object callback kind that duplicate detection depends on.
         IEventHubBuilder IEventHubBuilder.OnUpdated(Action onUpdated) => OnUpdated(onUpdated);
-        IEventHubBuilder IEventHubBuilder.OnUpdated(Action<object> onUpdated)
-        {
-            if (onUpdated == null) return OnUpdated((Action<TEventArgs>)null);
-
-            Action<TEventArgs> typedAction = null;
-            foreach (Action<object> callback in onUpdated.GetInvocationList())
-            {
-                typedAction += args => callback(args);
-            }
-
-            return OnUpdated(typedAction);
-        }
 
         IEventHubBuilder IEventHubBuilder.OnDisposing(Action onDisposing) => OnDisposing(onDisposing);
         IEventHubBuilder IEventHubBuilder.OnDisposing(Action<object> onDisposing) => OnDisposing(onDisposing);

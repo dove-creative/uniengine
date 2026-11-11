@@ -16,6 +16,25 @@ stream.OnNext(new UnitEvent(EventKind.Death));
 
 UnitEvent는 Kind 속성을 가진 이벤트 형식이다. 두 구독이 같은 death 객체를 사용하므로 조건은 한 번 평가된다.
 
+## 값이 같은 경로
+
+```csharp
+using var events = new EventStream<string>();
+using var score = events.When("death").Subscribe(_ => AddScore());
+using var sound = events.When(new string(new[] { 'd', 'e', 'a', 't', 'h' }))
+    .Subscribe(_ => PlaySound());
+using var missing = events.When(null).Subscribe(_ => Console.WriteLine("missing"));
+
+events.OnNext("death");
+events.OnNext(null);
+```
+
+두 문자열은 서로 다른 객체여도 EqualityComparer&lt;string&gt;.Default로 같으므로 같은 When 항목을 공유한다. 첫 값은 score와 sound에, null 값은 missing에 전달된다. Nullable&lt;T&gt;의 null target도 같은 규칙을 따른다. 조건 함수를 넘길 때는 Where를 사용한다.
+
+같은 target이라도 부모 조건이나 순서 그룹이 다르면 항목을 공유하지 않는다. target 객체의 Equals·GetHashCode 결과는 등록 후 바꾸지 않아야 한다. 발행 중 추가하거나 제거 후 다시 등록한 항목은 다음 값부터 받는다. 비교가 발행 중 예외를 던지면 같은 위치의 모든 When target 경로가 해제되고 형제 경로는 계속 진행한다.
+
+`EventStream<ulong>`에서 `When(3UL)`은 값 3에만 반응한다. 아래 ForFlags 예제의 마스크 비트 1은 값 1과 3 모두에 반응하므로 두 연산의 의미가 다르며 같은 부모 아래 함께 사용할 수 있다. When의 성능과 Unity Mono·IL2CPP 할당은 아직 검증하지 않았다.
+
 ## 서로 다른 enum의 비트 조건
 
 ```csharp

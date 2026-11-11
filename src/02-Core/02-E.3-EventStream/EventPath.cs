@@ -25,6 +25,8 @@ namespace Blackthunder.UniEngine.Core
         // Operators
         public EventPath<T> Where(Func<T, bool> predicate) =>
             new(this, PathInfo<T>.Where(predicate));
+        public EventPath<T> When(T target) =>
+            new(this, PathInfo<T>.When(target));
         public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
             new(this, PathInfo<T>.Debug(message, logType));
         public EventPath<T> ForOrder<TOrder>(TOrder order) where TOrder : Enum =>
@@ -64,40 +66,14 @@ namespace Blackthunder.UniEngine.Core
             ((IRegistrable<T>)this).Register(registration, null);
     }
 
-    // Stream entry points and type-specific paths stay here, so EventStream does not depend on EventPath.
+    // Flag paths exist only for ulong streams and paths, so they stay extensions instead of instance methods.
     public static class EventPathExtensions
     {
-        public static EventPath<T> Where<T>(this EventStream<T> stream, Func<T, bool> predicate) =>
-            new(stream, PathInfo<T>.Where(predicate));
-        public static EventPath<T> Debug<T>(
-            this EventStream<T> stream,
-            string message = "Debug",
-            LogLevel logType = LogLevel.Log) =>
-            new(stream, PathInfo<T>.Debug(message, logType));
-        public static EventPath<T> ForOrder<T, TOrder>(this EventStream<T> stream, TOrder order) where TOrder : Enum =>
-            new(stream, PathInfo<T>.Group(Convert.ToInt32(order)));
         public static EventPath<ulong> ForFlags<TFlags>(this EventStream<ulong> stream, TFlags mask)
             where TFlags : struct, Enum =>
-            new(stream, PathInfo<ulong>.Flags(GetMask(mask)));
+            new(stream, PathInfo<ulong>.Flags(mask));
         public static EventPath<ulong> ForFlags<TFlags>(this EventPath<ulong> path, TFlags mask)
             where TFlags : struct, Enum =>
-            new(path, PathInfo<ulong>.Flags(GetMask(mask)));
-
-        private static ulong GetMask<TFlags>(TFlags mask) where TFlags : struct, Enum
-        {
-            if (!FlagType<TFlags>.IsFlags)
-                throw new ArgumentException("The mask type must have the Flags attribute.", nameof(mask));
-
-            var bits = mask.ToBits();
-            if (bits == 0)
-                throw new ArgumentException("The mask must contain at least one bit.", nameof(mask));
-
-            return bits;
-        }
-
-        private static class FlagType<TFlags> where TFlags : struct, Enum
-        {
-            internal static readonly bool IsFlags = typeof(TFlags).IsDefined(typeof(FlagsAttribute), false);
-        }
+            new(path, PathInfo<ulong>.Flags(mask));
     }
 }

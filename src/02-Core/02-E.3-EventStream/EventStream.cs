@@ -14,7 +14,6 @@ namespace Blackthunder.UniEngine.Core
             set
             {
                 if (value) ThrowIfDisposed();
-
                 _isEnabled = value;
             }
         }
@@ -45,6 +44,7 @@ namespace Blackthunder.UniEngine.Core
 
             var input = new InputGate();
             input.Bind(this);
+
             _inputs = new[] { input };
             _openInputs = 1;
 
@@ -73,6 +73,12 @@ namespace Blackthunder.UniEngine.Core
             _inputs = inputs;
             _isPending = true;
             _graph = new EventGraph<T>(Dispose);
+        }
+
+        internal static void CheckDepth(int depth)
+        {
+            if (depth > MaximumDepth)
+                throw new InvalidOperationException($"An event path cannot exceed {MaximumDepth} steps.");
         }
 
         internal void Inject(EventGraph<T>.Node root) => _graph.Inject(root);
@@ -186,19 +192,17 @@ namespace Blackthunder.UniEngine.Core
                 Dispose();
         }
 
-        // Paths and subscriptions
-        internal static InputGate CreateInput(IRegistrable<T> upstream)
-        {
-            upstream.ThrowIfDisposed();
-            return new InputGate(upstream);
-        }
+        // Operators
+        public EventPath<T> Where(Func<T, bool> predicate) =>
+            new(this, PathInfo<T>.Where(predicate));
+        public EventPath<T> When(T target) =>
+            new(this, PathInfo<T>.When(target));
+        public EventPath<T> Debug(string message = "Debug", LogLevel logType = LogLevel.Log) =>
+            new(this, PathInfo<T>.Debug(message, logType));
+        public EventPath<T> ForOrder<TOrder>(TOrder order) where TOrder : Enum =>
+            new(this, PathInfo<T>.Group(Convert.ToInt32(order)));
 
-        internal static void CheckDepth(int depth)
-        {
-            if (depth > MaximumDepth)
-                throw new InvalidOperationException($"An event path cannot exceed {MaximumDepth} steps.");
-        }
-
+        // Subscriptions
         public IDisposable Subscribe(Action<T> updated) =>
             Register(Registration<T>.Subscription(updated, null, null), null);
         public IDisposable Subscribe(Action<T> updated, Action completed, Action<Exception> errored) =>
@@ -219,28 +223,44 @@ namespace Blackthunder.UniEngine.Core
             PrepareSubscription();
 
             var node = _graph.BeginRegistration();
-            for (var info = path; info != null; info = info.Next)
+            try
             {
-                node = info.NodeType switch
+                for (var info = path; info != null; info = info.Next)
                 {
-                    PathNodeType.Group => _graph.FindOrAddGroup(node, info.Order),
-                    PathNodeType.Where => _graph.FindOrAddWhere(node, info.Predicate),
-                    PathNodeType.Flags => _graph.FindOrAddFlags(node, info.Mask),
-                    _ => _graph.AddDebug(node, info.Message, info.LogType)
-                };
-            }
+                    node = info.NodeType switch
+                    {
+                        PathNodeType.Group => _graph.FindOrAddGroup(node, info.Order),
+                        PathNodeType.Where => _graph.FindOrAddWhere(node, info.Predicate),
+                        PathNodeType.When => _graph.FindOrAddWhen(node, info.Target),
+                        PathNodeType.Flags => _graph.FindOrAddFlags(node, info.Mask),
+                        _ => _graph.AddDebug(node, info.Message, info.LogType)
+                    };
+                }
 
-            return registration.IsConnection
-                ? _graph.Connect(node, registration.Input)
-                : _graph.Subscribe(
-                    node,
-                    registration.Updated,
-                    registration.Completed,
-                    registration.Errored,
-                    registration.Input);
+                return registration.IsConnection
+                    ? _graph.Connect(node, registration.Input)
+                    : _graph.Subscribe(
+                        node,
+                        registration.Updated,
+                        registration.Completed,
+                        registration.Errored,
+                        registration.Input);
+            }
+            catch
+            {
+                // A failed comparison must not leave the preceding new path steps empty.
+                _graph.CancelRegistration(node);
+                throw;
+            }
         }
 
         // Relations
+        internal static InputGate CreateInput(IRegistrable<T> upstream)
+        {
+            upstream.ThrowIfDisposed();
+            return new InputGate(upstream);
+        }
+
         public EventStream<T> Take(int count = 1) =>
             new TakeStream<T>(CreateInput(this), count);
         public EventStream<T> TakeWhile(Func<T, bool> predicate) =>

@@ -12,7 +12,7 @@
 
 - 책임: 생성 시 받은 동작을 보관하고 첫 폐기 과정에서 호출한다.
 - 목적: 동작을 정하는 시점과 실행하는 시점을 분리하여, 사용자가 원하는 시점까지 실행을 유예할 수 있게 한다.
-- 보유 정보: 설명 문자열 Description, 폐기 상태 IsDisposed, protected Disposed 콜백을 보관한다.
+- 보유 정보: 설명 문자열 Description, 폐기 상태 IsDisposed, protected internal Disposed 콜백을 보관한다.
 
 | 제공 서비스 | 제공 이유 |
 | --- | --- |
@@ -56,7 +56,7 @@ Console.WriteLine(handle.IsDisposed); // True
 - 반복 Dispose는 무시한다.
 - 실행 유예는 Dispose를 나중에 호출한다는 뜻이다. 저장된 콜백은 Dispose 호출 안에서 동기적으로 실행된다.
 - ExceptionHandler에 처리기가 없으면 원래 예외가 전파되며, 등록된 처리기가 던진 예외도 호출자에게 전파된다. 어느 경우에도 폐기 상태와 콜백 참조 정리는 유지된다.
-- Disposed는 동작을 보관하는 이벤트이고 IsDisposed는 상태 값이다.
+- Disposed는 동작을 보관하는 이벤트이고 IsDisposed는 상태 값이다. Disposed의 접근 수준은 protected internal이므로 파생 형식과 같은 어셈블리의 코드가 해제 알림을 등록할 수 있다.
 - 현재 공개 생성자는 Action을 받으며, 인자 없는 생성자는 protected internal이다. 생성 이후의 공개 구독·해제 기능은 [Token](Token.md)이 제공한다.
 - bool로의 암시적 변환은 제공하지 않는다. 폐기 전 객체인지 확인할 때는 null 여부와 IsDisposed를 검사한다.
 - Handle 자체가 연결 대상이나 자원을 자동으로 찾아 해제하지는 않는다.

@@ -5,8 +5,8 @@
 - 프로젝트 문서는 `docs` 폴더에 존재한다. 작업 시작 전, 관련 문서가 존재하는지 확인하고, 존재할 경우 해당 내용을 숙지한 후 작업을 시작한다.
 - 공통 컨벤션과 작업 지침은 `guidelines/blackthunder-conventions`에 존재한다. 해당 경로가 없거나 비어 있다면 서브모듈이 초기화되지 않았을 수 있으므로 사용자에게 알린다.
 - 코드 작업 시, 공통 규칙도 함께 수록된 해당 언어의 컨벤션을 기본 문서로 읽는다. 언어별 문서는 아래 개발 언어별 추가 확인을 따른다.
-- 해당 언어의 문서가 없거나 언어 간 공통 기준을 확인할 때는 `guidelines/blackthunder-conventions/conventions/02. dove Common Convention.md`를 참고한다.
-- 코드 컨벤션의 적용 우선순위는 프로젝트 지침·설정 → 언어별 컨벤션 → 공통 컨벤션이다.
+- 언어별 문서가 없는 C 계열 언어는 `guidelines/blackthunder-conventions/conventions/02. dove CF Convention.md`를 기본 문서로 읽는다. 그 밖의 언어별 문서가 없는 언어나 언어 간 공통 기준은 `guidelines/blackthunder-conventions/conventions/02. dove Common Convention.md`를 참고한다.
+- 코드 컨벤션의 적용 우선순위는 프로젝트 지침·설정 → 언어별 컨벤션 → C 계열 컨벤션(해당 언어만) → 공통 컨벤션이다.
 - 문서 작업 시, 별도 지침이 없다면 `guidelines/blackthunder-conventions/conventions/01. dove Documentation Convention.md`를 따른다.
 - 작업 유형에 해당하는 구체적인 지침이 `guidelines/blackthunder-conventions/instructions`에 존재한다면 해당 지침을 따른다.
 - 테스트 작성·보강·실행 작업은 [테스트 안내](tests/README.md)의 테스트 작성 기준 절을 따른다.
@@ -47,4 +47,4 @@
 
 ### TypeScript
 
-- TypeScript 코드 작업 시 `guidelines/blackthunder-conventions/conventions/02. dove Common Convention.md`의 공통 규칙과 C 계열 규칙을 기본 문서로 읽는다.
+- TypeScript 코드 작업 시 `guidelines/blackthunder-conventions/conventions/02. dove CF Convention.md`를 기본 문서로 읽는다.

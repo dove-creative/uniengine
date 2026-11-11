@@ -3,7 +3,7 @@ using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
-    internal enum PathNodeType { Group, Where, Debug, Flags }
+    internal enum PathNodeType { Group, Where, When, Debug, Flags }
 
     // One step of a path. Every registration links new copies from the root side to its end,
     // so a chain is used by one registration only and nothing in it is shared or changed later.
@@ -12,6 +12,7 @@ namespace Blackthunder.UniEngine.Core
         // Front
         internal PathNodeType NodeType { get; }
         internal Func<T, bool> Predicate { get; }
+        internal T Target { get; }
         internal int Order { get; }
         internal ulong Mask { get; }
         internal string Message { get; }
@@ -24,6 +25,7 @@ namespace Blackthunder.UniEngine.Core
         private PathInfo(
             PathNodeType nodeType,
             Func<T, bool> predicate,
+            T target,
             int order,
             ulong mask,
             string message,
@@ -32,6 +34,7 @@ namespace Blackthunder.UniEngine.Core
         {
             NodeType = nodeType;
             Predicate = predicate;
+            Target = target;
             Order = order;
             Mask = mask;
             Message = message;
@@ -42,20 +45,39 @@ namespace Blackthunder.UniEngine.Core
         internal static PathInfo<T> Where(Func<T, bool> predicate) => new(
             PathNodeType.Where,
             predicate ?? throw new ArgumentNullException(nameof(predicate)),
+            default,
             0,
             0,
             null,
             LogLevel.Log,
             null);
+        internal static PathInfo<T> When(T target) =>
+            new(PathNodeType.When, null, target, 0, 0, null, LogLevel.Log, null);
         internal static PathInfo<T> Debug(string message, LogLevel logType) =>
-            new(PathNodeType.Debug, null, 0, 0, message, logType, null);
+            new(PathNodeType.Debug, null, default, 0, 0, message, logType, null);
         internal static PathInfo<T> Group(int order) =>
-            new(PathNodeType.Group, null, order, 0, null, LogLevel.Log, null);
-        internal static PathInfo<T> Flags(ulong mask) =>
-            new(PathNodeType.Flags, null, 0, mask, null, LogLevel.Log, null);
+            new(PathNodeType.Group, null, default, order, 0, null, LogLevel.Log, null);
+
+        internal static PathInfo<T> Flags<TFlags>(TFlags mask) where TFlags : struct, Enum
+        {
+            if (!FlagType<TFlags>.IsFlags)
+                throw new ArgumentException("The mask type must have the Flags attribute.", nameof(mask));
+
+            var bits = mask.ToBits();
+            if (bits == 0)
+                throw new ArgumentException("The mask must contain at least one bit.", nameof(mask));
+
+            return new(PathNodeType.Flags, null, default, 0, bits, null, LogLevel.Log, null);
+        }
 
         // Chain
         internal PathInfo<T> Link(PathInfo<T> next) =>
-            new(NodeType, Predicate, Order, Mask, Message, LogType, next);
+            new(NodeType, Predicate, Target, Order, Mask, Message, LogType, next);
+
+        // Caches the attribute check per enum type, since paths are built on every call.
+        private static class FlagType<TFlags> where TFlags : struct, Enum
+        {
+            internal static readonly bool IsFlags = typeof(TFlags).IsDefined(typeof(FlagsAttribute), false);
+        }
     }
 }

@@ -142,7 +142,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="prA1G4Pz3AnYTuL499Sr" name="Core">
-    <mxGraphModel dx="822" dy="599" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2000" math="0" shadow="0">
+    <mxGraphModel dx="2023" dy="1268" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="2000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -172,8 +172,8 @@
         </mxCell>
         <mxCell id="L4urmE3jwtN8YcLDkd7_-6" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;defaultLabelBackgroundColor=page;startSize=12;endSize=12;" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
-            <mxPoint x="280" y="1680" as="sourcePoint" />
-            <mxPoint x="280" y="720" as="targetPoint" />
+            <mxPoint x="280" y="1760" as="sourcePoint" />
+            <mxPoint x="280" y="680" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="L4urmE3jwtN8YcLDkd7_-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;Flag Extensions&lt;/div&gt;" vertex="1">
@@ -188,7 +188,7 @@
         <mxCell id="L4urmE3jwtN8YcLDkd7_-15" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;defaultLabelBackgroundColor=page;startSize=12;endSize=12;" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <mxPoint x="1040" y="1760" as="sourcePoint" />
-            <mxPoint x="1040" y="840" as="targetPoint" />
+            <mxPoint x="1030" y="680" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="L4urmE3jwtN8YcLDkd7_-16" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;defaultLabelBackgroundColor=page;startSize=12;endSize=12;" value="">
@@ -292,6 +292,9 @@
         </mxCell>
         <mxCell id="ClREaEDUyUguRaoIeXwC-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;&lt;b&gt;Lifecycle Hub&lt;/b&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="40" width="120" x="320" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="d63MWN0R_a1P2vZb7MjY-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" value="&lt;div style=&quot;text-align: right;&quot;&gt;&lt;b&gt;Event Hub&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="120" x="320" y="680" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

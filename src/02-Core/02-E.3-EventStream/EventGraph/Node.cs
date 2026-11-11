@@ -117,6 +117,69 @@ namespace Blackthunder.UniEngine.Core
             internal FlagsEntry(ulong mask) => Mask = mask;
         }
 
+        // Routes to at most one target while retaining all entries in the child chain for termination.
+        private class WhenNode : NodeBase
+        {
+            // Non-nullable value types skip the null test entirely; the runtime specializes nullable tests.
+            private static readonly bool _canBeNull = default(T) is null;
+            private readonly Dictionary<T, WhenEntry> _entries = new(EqualityComparer<T>.Default);
+            private WhenEntry _nullEntry;
+
+            internal WhenEntry Find(T target) => IsNull(target)
+                ? _nullEntry
+                : _entries.TryGetValue(target, out var entry) ? entry : null;
+
+            internal void Add(WhenEntry entry)
+            {
+                if (IsNull(entry.Target)) _nullEntry = entry;
+                else _entries.Add(entry.Target, entry);
+            }
+
+            internal void Remove(WhenEntry entry)
+            {
+                if (IsNull(entry.Target)) _nullEntry = null;
+                else if (_entries.Count != 0) _entries.Remove(entry.Target);
+            }
+
+            private static bool IsNull(T value) => _canBeNull && value is null;
+
+            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            {
+                WhenEntry entry;
+                try
+                {
+                    entry = Find(value);
+                }
+                catch (Exception exception)
+                {
+                    Fail(exception, ref failure);
+                    return;
+                }
+
+                if (entry != null && entry.Parent != null && entry.Registration <= lastVisible)
+                    entry.Visit(value, lastVisible, ref failure);
+            }
+
+            internal override void VisitEnd(Signal signal, Exception error, ref ExceptionDispatchInfo failure)
+            {
+                if (signal == Signal.Dispose)
+                {
+                    // Every nested value route must release without calling a failing comparer again.
+                    _entries.Clear();
+                    _nullEntry = null;
+                }
+
+                base.VisitEnd(signal, error, ref failure);
+            }
+        }
+
+        private class WhenEntry : Node
+        {
+            internal T Target { get; }
+
+            internal WhenEntry(T target) => Target = target;
+        }
+
         internal class WhereNode : Node
         {
             internal Func<T, bool> Predicate { get; }
@@ -214,104 +277,6 @@ namespace Blackthunder.UniEngine.Core
                         sub.Fail(exception, ref failure);
                     }
                 }
-            }
-        }
-
-        private class Subscription : Link<Subscription>
-        {
-            internal Handle Handle;
-            internal bool GraphConnection { get; }
-
-            private readonly Delegate[] _updated;
-            private readonly Delegate[] _completed;
-            private readonly Delegate[] _errored;
-            private bool _notified;
-
-            internal Subscription(Action<T> updated, Action completed, Action<Exception> errored, bool graphConnection)
-            {
-                GraphConnection = graphConnection;
-                _updated = updated?.GetInvocationList();
-                _completed = completed?.GetInvocationList();
-                _errored = errored?.GetInvocationList();
-            }
-
-            internal void Publish(T value)
-            {
-                if (_updated == null) return;
-
-                foreach (var callback in _updated)
-                {
-                    if (Handle.IsDisposed) break;
-
-                    ((Action<T>)callback)(value);
-                }
-            }
-
-            internal void Fail(Exception exception, ref ExceptionDispatchInfo failure)
-            {
-                if (GraphConnection)
-                {
-                    // The connected graph already reported its subscriber's failure.
-                    failure ??= ExceptionDispatchInfo.Capture(exception);
-                    return;
-                }
-
-                Handle.Dispose();
-                Report(exception, ref failure);
-            }
-
-            internal void Notify(Signal signal, Exception error)
-            {
-                if (_notified) return;
-                _notified = true;
-
-                var callbacks = signal == Signal.Completed ? _completed : _errored;
-                if (callbacks == null) return;
-
-                foreach (var callback in callbacks)
-                {
-                    if (Handle.IsDisposed) break;
-
-                    if (signal == Signal.Completed) ((Action)callback)();
-                    else ((Action<Exception>)callback)(error);
-                }
-            }
-        }
-
-        internal abstract class Link<TLink> where TLink : Link<TLink>
-        {
-            internal long Registration;
-            internal TLink Previous;
-            internal TLink Next;
-        }
-
-        internal struct Chain<TLink> where TLink : Link<TLink>
-        {
-            internal TLink First { get; private set; }
-            private TLink _last;
-
-            internal void Insert(TLink link, TLink before = null)
-            {
-                link.Next = before;
-                link.Previous = before == null ? _last : before.Previous;
-
-                if (link.Previous == null) First = link;
-                else link.Previous.Next = link;
-
-                if (before == null) _last = link;
-                else before.Previous = link;
-            }
-
-            internal void Remove(TLink link)
-            {
-                if (link.Previous == null) First = link.Next;
-                else link.Previous.Next = link.Next;
-
-                if (link.Next == null) _last = link.Previous;
-                else link.Next.Previous = link.Previous;
-
-                link.Previous = null;
-                // A cursor on a removed item can still reach the following live sibling.
             }
         }
     }

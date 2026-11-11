@@ -103,6 +103,31 @@ namespace Blackthunder.UniEngine.Core
         internal Node FindOrAddWhere(Node parent, Func<T, bool> predicate) =>
             FindWhere(parent, predicate) ?? AddChild(parent, new WhereNode(predicate));
 
+        internal Node FindOrAddWhen(Node parent, T target)
+        {
+            var when = FindWhen(parent) ?? new WhenNode();
+            var entry = when.Find(target);
+            if (entry != null) return entry;
+
+            entry = new WhenEntry(target);
+            // Compare before attaching anything, so a failed lookup or insertion leaves no empty node.
+            when.Add(entry);
+            if (when.Parent == null) AddChild(parent, when);
+
+            return AddChild(when, entry);
+        }
+
+        // The targets of a position share one when node, in creation order.
+        private static WhenNode FindWhen(Node parent)
+        {
+            for (var child = parent.Children.First; child != null; child = child.Next)
+            {
+                if (child is WhenNode when) return when;
+            }
+
+            return null;
+        }
+
         internal Node AddDebug(Node parent, string message, LogLevel logType) =>
             AddChild(parent, new DebugNode(message, logType));
 
@@ -188,6 +213,12 @@ namespace Blackthunder.UniEngine.Core
             return subscription.Handle;
         }
 
+        internal void CancelRegistration(Node node)
+        {
+            Prune(node);
+            if (!_closed && _root.IsEmpty) _onEmpty?.Invoke();
+        }
+
         private void Prune(NodeChild child)
         {
             while (child.Parent != null && child.IsEmpty)
@@ -196,6 +227,7 @@ namespace Blackthunder.UniEngine.Core
                 parent.Children.Remove(child);
 
                 if (parent is OrderedNode ordered && child is Node group) ordered.Remove(group);
+                if (parent is WhenNode when && child is WhenEntry entry) when.Remove(entry);
                 if (_whereIndexes != null && child is WhereNode whereNode
                     && _whereIndexes.TryGetValue((Node)parent, out var index))
                 {

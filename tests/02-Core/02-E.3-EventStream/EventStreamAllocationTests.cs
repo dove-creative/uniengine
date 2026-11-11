@@ -191,6 +191,73 @@ namespace BlackThunder.UniEngine.Tests
             });
         }
 
+        [TestCase(1, 1)]
+        [TestCase(2, 0)]
+        [TestCase(0, 0)]
+        public void FirstAndRepeatedWhenPublicationsAllocateNoManagedMemory(int value, int expectedCalls)
+        {
+            Verify(() =>
+            {
+                var counter = new Counter();
+                var stream = new EventStream<int>();
+                stream.When(1).Subscribe(counter.Record);
+                stream.When(3).Subscribe(counter.Record);
+                return new Publication(
+                    counter, () => stream.OnNext(value), expectedCalls, expectedCalls * value, stream);
+            });
+        }
+
+        [TestCase(null, null, 1)]
+        [TestCase(null, 1, 0)]
+        [TestCase(1, null, 0)]
+        [TestCase(1, 1, 1)]
+        [TestCase(1, 2, 0)]
+        public void FirstAndRepeatedNullableWhenPublicationsAllocateNoManagedMemory(
+            int? target, int? value, int expectedCalls)
+        {
+            Verify(() =>
+            {
+                var counter = new Counter();
+                var stream = new EventStream<int?>();
+                stream.When(target).Subscribe(_ => counter.Record(1));
+                return new Publication(counter, () => stream.OnNext(value), expectedCalls, expectedCalls, stream);
+            });
+        }
+
+        [TestCase(null, null, 1)]
+        [TestCase(null, "value", 0)]
+        [TestCase("value", null, 0)]
+        [TestCase("value", "value", 1)]
+        [TestCase("value", "other", 0)]
+        public void FirstAndRepeatedReferenceWhenPublicationsAllocateNoManagedMemory(
+            string target, string value, int expectedCalls)
+        {
+            Verify(() =>
+            {
+                var counter = new Counter();
+                var stream = new EventStream<string>();
+                stream.When(target).Subscribe(_ => counter.Record(1));
+                return new Publication(counter, () => stream.OnNext(value), expectedCalls, expectedCalls, stream);
+            });
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void FirstAndRepeatedComposedWhenPublicationsAllocateNoManagedMemory(bool matches)
+        {
+            Verify(() =>
+            {
+                var counter = new Counter();
+                var stream = new EventStream<ulong>();
+                var branch = stream.Where(_ => true).When(3).ForFlags(EventKinds.First)
+                    .ForOrder(UpdateOrder.Update).Skip(0).Take(int.MaxValue).Branch();
+                branch.When(3).Subscribe(_ => counter.Record(1));
+                var value = matches ? 3UL : 1UL;
+                var expected = matches ? 1 : 0;
+                return new Publication(counter, () => stream.OnNext(value), expected, expected, stream, branch);
+            });
+        }
+
         // Helpers
         private static Publication CreateBase<T>(
             int registration,

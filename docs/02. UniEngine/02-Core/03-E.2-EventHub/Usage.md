@@ -1,12 +1,15 @@
 # EventHub 사용 예제
 
-객체 연결과 폐기 알림, 직접 구독, 수면과 깨우기, 여러 허브의 일괄 수면을 현재 EventHub API로 구성하는 예제이다.
+객체 연결과 폐기 알림, 비트 조건, 조건 조합, 직접 구독, 수면과 깨우기, 여러 허브의 일괄 수면을 현재 EventHub API로 구성하는 예제이다.
 
 각 C# 블록은 독립된 콘솔 프로그램이다. UniEngine을 참조하는 프로젝트에서 하나씩 실행하며, 문법은 C# 9를 기준으로 한다. 모든 출력은 동기 호출 순서를 그대로 보여준다. 설계와 공통 수명 규칙은 [모듈 구성](README.md)을 따른다.
 
 ## 목차
 
 - 객체 연결과 폐기 알림
+- 비트 조건으로 연결하기
+- 조건 조합과 재사용
+- null 인자의 형식 지정
 - 직접 구독
 - 수면과 깨우기
 - 여러 허브 함께 재우기
@@ -55,8 +58,7 @@ public static class Program
             _target = unit;
             unit.EventHub.Connect(this)
                 .OnUpdated(health => Console.WriteLine($"HealthBar: {health}"))
-                .Where(health => health == 0)
-                .OnUpdated(() => Console.WriteLine("HealthBar: defeated"))
+                .OnUpdated(0, () => Console.WriteLine("HealthBar: defeated"))
                 .OnDisposed(() => _target = null);
         }
     }
@@ -89,7 +91,101 @@ HealthBar: defeated
 HealthBar has target: False
 ```
 
-Where에 조건을 넘기면 그 조건이 true인 갱신에서만 뒤의 OnUpdated를 실행한다. 값을 쓰지 않는 콜백은 인자 없는 OnUpdated로 등록한다. Where·Debug는 새 경로의 Builder를 반환하므로 루트와 여러 조건 경로를 따로 구성하려면 Connect가 반환한 Builder를 보관한다. Unit을 폐기하면 조건과 관계없이 HealthBar의 OnDisposed가 실행되어 참조를 비운다. 폐기 알림의 단계는 [EventHub](EventHub.md), 콜백 구성 규칙은 [EventHubBuilder](EventHubBuilder.md)에서 설명한다.
+OnUpdated(0, callback)은 값이 0과 같을 때만 콜백을 실행한다. 조건 대리자를 쓰려면 OnUpdated(health => health <= 0, callback)처럼 조건과 콜백을 함께 넘긴다. 값을 쓰지 않는 콜백은 인자 없는 Action으로 등록한다. 모든 등록은 같은 Builder를 반환하고 각 등록의 조건은 다음 등록에 영향을 주지 않는다. Unit을 폐기하면 조건과 관계없이 HealthBar의 OnDisposed가 실행되어 참조를 비운다. 폐기 알림의 단계는 [EventHub](EventHub.md), 콜백 구성 규칙은 [EventHubBuilder](EventHubBuilder.md)에서 설명한다.
+
+## 비트 조건으로 연결하기
+
+여러 변화 종류를 비트로 발행하는 EventHub&lt;ulong&gt;에서는 OnFlags에 마스크와 콜백을 함께 넘긴다. 마스크에 지정한 비트 중 하나라도 포함한 갱신을 받으며, 값 사용 콜백에는 마스크로 자르지 않은 원래 ulong 값이 전달된다.
+
+```csharp
+using System;
+using Blackthunder.UniEngine.Core;
+
+public static class Program
+{
+    [Flags]
+    private enum ItemChanges
+    {
+        Count = 1,
+        Selection = 2
+    }
+
+    public static void Main()
+    {
+        using var hub = new EventHub<ulong>("Inventory");
+        IEventHub<ulong> events = hub;
+        var listener = new object();
+
+        events.Connect(listener)
+            .OnFlags(ItemChanges.Count | ItemChanges.Selection,
+                value => Console.WriteLine($"Changed bits: {value}"))
+            .OnDisposed(() => Console.WriteLine("Inventory disposed"));
+
+        hub.Update(ItemChanges.Count.ToBits());
+        hub.Update((ItemChanges.Count | ItemChanges.Selection).ToBits());
+        hub.Update(0);
+    }
+}
+```
+
+```text
+Changed bits: 1
+Changed bits: 3
+Inventory disposed
+```
+
+값 0은 어떤 비트 조건도 통과하지 않는다. 폐기 알림은 마스크 조건과 관계없이 실행된다. Disconnect(listener)는 같은 연결에서 구성한 모든 갱신과 생애주기 콜백을 함께 해제한다.
+
+OnFlags도 같은 Builder를 반환하므로 뒤에 OnUpdated를 붙여 별도의 루트·조건 등록을 계속할 수 있다. 비트 조건 뒤에 조건·로그를 조합하려면 `EventCondition.Flags(ItemChanges.Count).Where(value => value > 1).Debug("Count")`를 OnUpdated에 넘긴다. 같은 부모 위치의 마스크 비트가 같으면 리스너나 enum 형식이 달라도 경로를 공유한다. 서로 다른 분류를 구분할 비트는 호출자가 배정한다.
+
+마스크는 `[Flags]` enum이어야 하며 비트가 0이면 OnFlags 호출 시 ArgumentException이다. enum의 기반 형식은 자유롭다. Update에 넘길 값은 ToBits로 변환하면 부호 비트를 포함한 선언 비트 폭을 보존한다. 형식 없는 IEventHubBuilder에는 OnFlags를 제공하지 않으므로 `IEventHub<ulong>` 계약을 유지한다.
+
+OnUpdated(ItemChanges.Count.ToBits(), callback)은 값 전체가 Count 비트 값과 같을 때만 실행한다. Count와 Selection이 함께 들어온 값 3은 OnFlags(ItemChanges.Count, callback)을 통과하지만 Count의 값 1을 target으로 등록한 OnUpdated는 통과하지 않는다.
+
+## 조건 조합과 재사용
+
+여러 조건을 통과한 값만 받으려면 EventCondition으로 단계를 루트부터 쌓는다. 단계 추가는 새 조건을 반환하므로 공통 조건을 정적 필드에 보관해 여러 리스너가 함께 사용할 수 있다.
+
+```csharp
+using System;
+using Blackthunder.UniEngine.Core;
+
+public static class Program
+{
+    private static readonly EventCondition<int> Positive = EventCondition.Where<int>(value => value > 0);
+    private static readonly EventCondition<int> Selected = Positive.When(3);
+
+    public static void Main()
+    {
+        using var hub = new EventHub<int>("Selection");
+        hub.Connect(new object())
+            .OnUpdated(Positive, value => Console.WriteLine($"Positive: {value}"))
+            .OnUpdated(Selected, () => Console.WriteLine("Selected: 3"));
+        hub.Connect(new object()).OnUpdated(Selected, value => Console.WriteLine($"Mirror: {value}"));
+
+        hub.Update(-1);
+        hub.Update(2);
+        hub.Update(3);
+    }
+}
+```
+
+```text
+Positive: 2
+Positive: 3
+Selected: 3
+Mirror: 3
+```
+
+Positive는 두 번째 조건을 만들어도 양수 판정 그대로이다. Selected를 공유한 두 리스너는 같은 WhenEntry를 공유한다. Positive.When(3)을 따로 만들어도 부모와 target이 같으므로 같은 항목이다. 루트의 OnUpdated(3, callback) 단축형은 EventCondition.When(3)과 항목을 공유하지만, 양수 조건 아래의 Selected와는 부모가 달라 공유하지 않는다. 같은 연결에서 동일한 콜백을 같은 target이나 동등한 EventCondition으로 다시 등록하면 InvalidOperationException이다. Debug를 추가할 때도 원본은 바뀌지 않으며 로그 단계 자체는 공유하지 않는다.
+
+참조 형식과 Nullable&lt;T&gt;의 null target도 When으로 비교할 수 있다. target 객체의 Equals·GetHashCode 결과는 등록 뒤 바꾸지 않아야 한다. ulong target은 전체 값의 동등성을 비교하므로 OnFlags의 공통 비트 판정과 다르다. When의 성능은 측정하지 않았고 Unity Mono·IL2CPP에서의 할당도 검증하지 않았다.
+
+## null 인자의 형식 지정
+
+참조 형식의 null target은 유효하다. 예를 들어 문자열 허브에서 `builder.OnUpdated((string)null, callback)`은 null 갱신만 받는다. 조건 대리자의 null을 지정한 `builder.OnUpdated((Func<string, bool>)null, callback)`과 `builder.OnUpdated((EventCondition<string>)null, callback)`은 ArgumentNullException이다. null 리터럴만 쓰면 target·조건 대리자·EventCondition 사이에서 오버로드가 모호하므로 의도한 형식을 명시한다.
+
+Builder는 연결 수명을 먼저 검사하고 조건 인자를 검사한 다음 null 콜백을 무시한다. 잘못된 조건의 등록 시도는 기존 연결과 등록을 유지한다. 조건 객체를 Builder 밖에서 만드는 호출은 그 생성 시점에 검증한다.
 
 ## 직접 구독
 
@@ -122,7 +218,7 @@ public static class Program
 }
 ```
 
-log를 먼저 구독했으므로 Log가 먼저 호출된다. 직접 Updated와 루트 Builder의 OnUpdated는 같은 위치에 등록되어 등록 순서대로 섞여 호출된다. Where·Debug의 자식 경로는 루트 구독을 모두 호출한 뒤 생성 순서대로 방문한다.
+log를 먼저 구독했으므로 Log가 먼저 호출된다. 직접 Updated와 조건을 생략한 OnUpdated는 같은 루트에 등록되어 등록 순서대로 섞여 호출된다. 조건·로그의 자식 경로는 루트 구독을 모두 호출한 뒤 생성 순서대로 방문한다.
 
 ```text
 Connections: 3

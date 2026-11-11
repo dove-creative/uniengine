@@ -1,6 +1,6 @@
 # EventHub 이슈 기록
 
-2026-11-03에 .NET 10에서 확인한 항목이다. EH-02는 2026-11-10에 해결한 입력 검증 문제이고, EH-03은 반환된 콜백의 용도를 결정해야 하는 API 계약이다.
+2026-11-03에 .NET 10에서 확인한 항목이다. EH-02는 2026-11-10에 해결한 입력 검증 문제이며 2026-11-11의 조건·콜백 결합형 등록에서도 같은 보장을 유지한다. EH-03은 반환된 콜백의 용도를 결정해야 하는 API 계약이다.
 
 ## 목차
 
@@ -13,7 +13,9 @@
 
 **이전 동작.** 등록은 성공하고 첫 Update에서 null 필터를 호출하면서 NullReferenceException이 발생했다. 실패한 리스너의 연결 전체가 해제되어 다음 갱신은 정상 콜백에도 도달하지 않았다.
 
-**해결.** 필터·target을 받는 OnUpdated 오버로드를 제거하고 Where와 OnUpdated를 분리했다. Where(null)은 경로 구성 시 ArgumentNullException으로 거부한다. object Builder도 null을 변환 람다로 감싸기 전에 거부하며, 기존 리스너와 콜백은 유지된다. [Builder 계약](IEventHubBuilder.md)
+**해결.** 조건과 콜백을 함께 받는 OnUpdated는 null 조건 대리자와 null EventCondition을 등록 시점에 ArgumentNullException으로 거부한다. object Builder도 원본 조건을 변환 람다로 감싸기 전에 검증한다. 기존 리스너와 콜백은 유지되므로 이후 Update는 정상 등록에 계속 전달된다. EventCondition.Where의 null도 조건 생성 시점에 거부한다.
+
+등록 검사는 연결 수명 → 조건 인자 → null 콜백 순서이다. 해제된 연결은 InvalidOperationException이고 허브 폐기 후에는 ObjectDisposedException이 조건 오류보다 우선한다. null 콜백을 넘겨도 잘못된 조건을 무시하지 않는다. null target은 유효한 값 비교이며 null 조건과 구분한다. null 리터럴의 오버로드 모호성을 피하려면 `(string)null`, `(Func<string, bool>)null`, `(EventCondition<string>)null`처럼 형식을 명시한다. [Builder 계약](IEventHubBuilder.md)
 
 ## EH-03 onSleep이 반환하는 콜백의 용도
 

@@ -10,7 +10,7 @@ namespace Blackthunder.UniEngine.Core
         public bool IsDisposed { get; private set; } = false;
 
         // Control
-        protected event Action Disposed
+        protected internal event Action Disposed
         {
             add => SetCallbacks(_disposed + value);
             remove => SetCallbacks(_disposed - value);

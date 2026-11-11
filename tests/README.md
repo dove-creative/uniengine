@@ -85,6 +85,8 @@ tests/
    │     └─ 02. Plans.md
    ├─ 03-E.2-EventHub/
    │  ├─ EventHubTests.cs
+   │  ├─ EventHubFlagsTests.cs
+   │  ├─ EventHubRandomContinuousTests.cs
    │  └─ docs/
    │     ├─ 01. Tables.md
    │     └─ 02. Plans.md
@@ -152,7 +154,7 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 - AdaptiveAction과 EventStream의 순회 소비 회귀 검증
 - EventStream·순서 그룹·필터 경로·상태 연산자·Merge의 구독 후 첫 값 전달과 반복 전달 할당량 검증
 - EventStream의 멀티캐스트 해제, 순서·필터 공유, 해제한 콜백의 참조 정리 검증
-- EventHub의 리스너별 구독 수명, 공유 Where·Debug 경로, 직접 구독 순서·실패, Sleep·폐기와 무할당 순회 검증
+- EventHub의 조건·콜백 결합 등록, EventCondition 공유와 값 기준 중복, OnFlags, 리스너별 수명·직접 구독·실패·수면·폐기와 무할당 순회 검증
 - LifecycleHub의 연결·해제·폐기 완료 알림과 무할당 폐기 검증
 - 스트림 연결 수명, 직접 입력, 경로 연산자 경계값, 순서 그룹의 조합, Branch의 Enabled·구독 수명에 대한 UniTest 상태 전이 검증
 - 직접 순회·사전과 집합의 반복 변경·Action의 등록 후 첫 호출과 반복 호출 할당량 검증
