@@ -6,8 +6,8 @@ namespace Blackthunder.UniEngine.Core
     {
         IEventHubBuilder OnUpdated(Action<object> onUpdated);
         IEventHubBuilder OnUpdated(Action onUpdated);
-        IEventHubBuilder OnUpdated(Func<object, bool> condition, Action<object> onUpdated);
-        IEventHubBuilder OnUpdated(Func<object, bool> condition, Action onUpdated);
+        IEventHubBuilder OnUpdatedWhere(Func<object, bool> condition, Action<object> onUpdated);
+        IEventHubBuilder OnUpdatedWhere(Func<object, bool> condition, Action onUpdated);
 
         new IEventHubBuilder OnDisposed(Action onDisposed);
         IEventHubBuilder OnDisposing(Action onDisposing);
@@ -21,12 +21,10 @@ namespace Blackthunder.UniEngine.Core
     {
         IEventHubBuilder<TEventArgs> OnUpdated(Action<TEventArgs> onUpdated);
         new IEventHubBuilder<TEventArgs> OnUpdated(Action onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action<TEventArgs> onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> condition, Action<TEventArgs> onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> condition, Action onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(EventCondition<TEventArgs> condition, Action<TEventArgs> onUpdated);
-        IEventHubBuilder<TEventArgs> OnUpdated(EventCondition<TEventArgs> condition, Action onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdatedWhere(Func<TEventArgs, bool> condition, Action<TEventArgs> onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdatedWhere(Func<TEventArgs, bool> condition, Action onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdatedWhen(TEventArgs target, Action<TEventArgs> onUpdated);
+        IEventHubBuilder<TEventArgs> OnUpdatedWhen(TEventArgs target, Action onUpdated);
 
         new IEventHubBuilder<TEventArgs> OnDisposing(Action onDisposing);
         new IEventHubBuilder<TEventArgs> OnDisposing(Action<object> onDisposing);

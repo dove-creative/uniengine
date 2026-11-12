@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using Blackthunder.UniEngine.Core;
 using BlackThunder.UniEngine.Infrastructure;
@@ -164,7 +163,7 @@ namespace BlackThunder.UniEngine.Tests
             later.OnUpdated(value => calls.Add($"later:{value}"));
             var removed = new object();
 
-            hub.Connect(removed).OnUpdated(value =>
+            hub.Connect(removed).OnUpdatedWhere(value =>
             {
                 calls.Add($"filter:{value}");
                 hub.Disconnect(removed);
@@ -382,8 +381,8 @@ namespace BlackThunder.UniEngine.Tests
             Func<int, bool> predicate = value => { evaluations++; return value > 0; };
             var root = hub.Connect(first);
 
-            Assert.That(root.OnUpdated(predicate, values.Add), Is.SameAs(root));
-            hub.Connect(second).OnUpdated(EventCondition.Where(predicate), values.Add);
+            Assert.That(root.OnUpdatedWhere(predicate, values.Add), Is.SameAs(root));
+            hub.Connect(second).OnUpdatedWhere(predicate, values.Add);
             hub.Update(1);
             hub.Update(0);
             hub.Disconnect(first);
@@ -407,54 +406,23 @@ namespace BlackThunder.UniEngine.Tests
             if (objectBuilder)
             {
                 var untyped = (IEventHubBuilder)builder;
-                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdated(null, _ => { }));
-                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdated(null, () => { }));
-                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdated(null, (Action<object>)null));
-                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdated(null, (Action)null));
+                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdatedWhere(null, _ => { }));
+                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdatedWhere(null, () => { }));
+                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdatedWhere(null, (Action<object>)null));
+                Assert.Throws<ArgumentNullException>(() => untyped.OnUpdatedWhere(null, (Action)null));
             }
             else
             {
-                Assert.Throws<ArgumentNullException>(() => builder.OnUpdated((Func<int, bool>)null, _ => { }));
-                Assert.Throws<ArgumentNullException>(() => builder.OnUpdated((Func<int, bool>)null, () => { }));
-                Assert.Throws<ArgumentNullException>(() => builder.OnUpdated((EventCondition<int>)null, _ => { }));
-                Assert.Throws<ArgumentNullException>(() => builder.OnUpdated((EventCondition<int>)null, () => { }));
-                Assert.Throws<ArgumentNullException>(() => builder.OnUpdated((Func<int, bool>)null, (Action<int>)null));
-                Assert.Throws<ArgumentNullException>(() => builder.OnUpdated((EventCondition<int>)null, (Action)null));
+                Assert.Throws<ArgumentNullException>(() => builder.OnUpdatedWhere(null, _ => { }));
+                Assert.Throws<ArgumentNullException>(() => builder.OnUpdatedWhere(null, () => { }));
+                Assert.Throws<ArgumentNullException>(() => builder.OnUpdatedWhere(null, (Action<int>)null));
+                Assert.Throws<ArgumentNullException>(() => builder.OnUpdatedWhere(null, (Action)null));
             }
 
             hub.Update(1);
             hub.Update(2);
             Assert.That(hub.HasListener(listener), Is.True);
             Assert.That(values, Is.EqualTo(new[] { 1, 2 }));
-        }
-
-        [TestCase(false)]
-        [TestCase(true)]
-        public void DebugForwardsPassingValuesUnchanged(bool parameterless)
-        {
-            using var hub = new EventHub<int>(new object());
-            var builder = hub.Connect(new object());
-            var values = new List<int>();
-
-            var condition = EventCondition.Where<int>(value => value > 0).Debug("hub", LogLevel.Warning);
-            if (parameterless) builder.OnUpdated(condition, () => values.Add(7));
-            else builder.OnUpdated(condition, values.Add);
-
-            using var output = new StringWriter();
-            var original = Console.Out;
-            try
-            {
-                Console.SetOut(output);
-                hub.Update(0);
-                hub.Update(7);
-            }
-            finally
-            {
-                Console.SetOut(original);
-            }
-
-            Assert.That(values, Is.EqualTo(new[] { 7 }));
-            Assert.That(output.ToString(), Does.Contain("7: hub").And.Not.Contain("0: hub"));
         }
 
         [TestCase(false)]
@@ -472,12 +440,12 @@ namespace BlackThunder.UniEngine.Tests
             {
                 var untyped = (IEventHubBuilder)builder;
                 Assert.That(untyped.OnUpdated(root), Is.SameAs(untyped));
-                Assert.That(untyped.OnUpdated(value => (int)value > 0, path + path), Is.SameAs(builder));
+                Assert.That(untyped.OnUpdatedWhere(value => (int)value > 0, path + path), Is.SameAs(builder));
             }
             else
             {
                 Assert.That(builder.OnUpdated(root), Is.SameAs(builder));
-                Assert.That(builder.OnUpdated(value => value > 0, path + path), Is.SameAs(builder));
+                Assert.That(builder.OnUpdatedWhere(value => value > 0, path + path), Is.SameAs(builder));
             }
 
             hub.Update(0);
@@ -489,20 +457,18 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void RootSubscriptionsPrecedeChildrenAndChildrenFollowCreationOrder()
+        public void RootSubscriptionsPrecedeConditionalRegistrations()
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
             var builder = hub.Connect(new object());
-            var condition = EventCondition.Where<int>(_ => true);
-            builder.OnUpdated(condition.Where(_ => true), () => calls.Add("grandchild"));
-            builder.OnUpdated(condition, () => calls.Add("child"));
-            builder.OnUpdated(_ => true, () => calls.Add("sibling"));
+            builder.OnUpdatedWhere(_ => true, () => calls.Add("first"));
+            builder.OnUpdatedWhere(_ => true, () => calls.Add("second"));
             builder.OnUpdated(() => calls.Add("root"));
 
             hub.Update(1);
 
-            Assert.That(calls, Is.EqualTo(new[] { "root", "child", "grandchild", "sibling" }));
+            Assert.That(calls, Is.EqualTo(new[] { "root", "first", "second" }));
         }
 
         [Test]
@@ -512,20 +478,17 @@ namespace BlackThunder.UniEngine.Tests
             var builder = hub.Connect(new object());
             var untyped = (IEventHubBuilder)builder;
             var calls = 0;
-            var condition = EventCondition.When(1);
 
             Assert.That(builder.OnUpdated(_ => calls++), Is.SameAs(builder));
             Assert.That(builder.OnUpdated(() => calls++), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(1, _ => calls++), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(1, () => calls++), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(value => value > 0, _ => calls++), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(value => value > 0, () => calls++), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(condition, _ => calls++), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(condition, () => calls++), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhen(1, _ => calls++), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhen(1, () => calls++), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhere(value => value > 0, _ => calls++), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhere(value => value > 0, () => calls++), Is.SameAs(builder));
             Assert.That(untyped.OnUpdated(_ => calls++), Is.SameAs(builder));
             Assert.That(untyped.OnUpdated(() => calls++), Is.SameAs(builder));
-            Assert.That(untyped.OnUpdated(value => (int)value > 0, _ => calls++), Is.SameAs(builder));
-            Assert.That(untyped.OnUpdated(value => (int)value > 0, () => calls++), Is.SameAs(builder));
+            Assert.That(untyped.OnUpdatedWhere(value => (int)value > 0, _ => calls++), Is.SameAs(builder));
+            Assert.That(untyped.OnUpdatedWhere(value => (int)value > 0, () => calls++), Is.SameAs(builder));
             Assert.That(builder.OnDisposing(() => calls++), Is.SameAs(builder));
             Assert.That(builder.OnDisposing(_ => calls++), Is.SameAs(builder));
             Assert.That(builder.OnDisposed(() => calls++), Is.SameAs(builder));
@@ -537,9 +500,9 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(((ILifecycleHubBuilder)builder).OnDisposed(() => calls++), Is.SameAs(builder));
 
             hub.Update(1);
-            Assert.That(calls, Is.EqualTo(12));
+            Assert.That(calls, Is.EqualTo(10));
             hub.Dispose();
-            Assert.That(calls, Is.EqualTo(21));
+            Assert.That(calls, Is.EqualTo(19));
         }
 
         [TestCase(null, false)]
@@ -552,8 +515,8 @@ namespace BlackThunder.UniEngine.Tests
             var builder = hub.Connect(new object());
             var received = new List<string>();
 
-            if (parameterless) builder.OnUpdated(target, () => received.Add(target));
-            else builder.OnUpdated(target, received.Add);
+            if (parameterless) builder.OnUpdatedWhen(target, () => received.Add(target));
+            else builder.OnUpdatedWhen(target, received.Add);
 
             hub.Update(null);
             hub.Update(new string("match".ToCharArray()));
@@ -563,95 +526,84 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void ConditionsAreImmutableAndApplyStepsFromTheRoot()
+        public void NamedRegistrationsKeepTheirConditionsIndependent()
         {
             using var hub = new EventHub<int>(new object());
             var builder = hub.Connect(new object());
-            var positive = EventCondition.Where<int>(value => value > 0);
-            var one = positive.When(1);
-            var two = positive.When(2);
-            var calls = new List<string>();
+            var positive = new List<int>();
+            var zero = new List<int>();
+            var all = new List<int>();
 
-            Assert.That(one, Is.Not.SameAs(positive));
-            Assert.That(two, Is.Not.SameAs(positive));
-            builder.OnUpdated(positive, value => calls.Add($"positive:{value}"));
-            builder.OnUpdated(one, value => calls.Add($"one:{value}"));
-            builder.OnUpdated(two, value => calls.Add($"two:{value}"));
+            builder.OnUpdatedWhere(value => value > 0, positive.Add)
+                .OnUpdatedWhen(0, zero.Add)
+                .OnUpdated(all.Add);
+            hub.Update(-1);
             hub.Update(0);
             hub.Update(1);
-            hub.Update(2);
 
-            Assert.That(calls, Is.EqualTo(new[] { "positive:1", "one:1", "positive:2", "two:2" }));
+            Assert.That(positive, Is.EqualTo(new[] { 1 }));
+            Assert.That(zero, Is.EqualTo(new[] { 0 }));
+            Assert.That(all, Is.EqualTo(new[] { -1, 0, 1 }));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void NullTargetsRequireNoCastAndRemainDistinctFromNullPredicates(bool parameterless)
+        {
+            using var hub = new EventHub<string>(new object());
+            var builder = hub.Connect(new object());
+            var values = new List<string>();
+
+            if (parameterless) builder.OnUpdatedWhen(null, () => values.Add(null));
+            else builder.OnUpdatedWhen(null, values.Add);
+
+            Assert.Throws<ArgumentNullException>(() => builder.OnUpdatedWhere(null, values.Add));
+            Assert.Throws<ArgumentNullException>(() => builder.OnUpdatedWhere(null, () => { }));
+            hub.Update("value");
+            hub.Update(null);
+
+            Assert.That(values, Is.EqualTo(new string[] { null }));
         }
 
         [Test]
-        public void ConditionFactoriesRejectNullPredicatesAtConstruction()
+        public void DelegateTargetsUseWhenWhilePredicatesUseWhere()
         {
-            var condition = EventCondition.When(1);
+            using var hub = new EventHub<Func<int, bool>>(new object());
+            Func<int, bool> target = IsPositive;
+            Func<int, bool> other = value => value == 0;
+            var exact = new List<Func<int, bool>>();
+            var passing = new List<Func<int, bool>>();
+            var builder = hub.Connect(new object());
+            builder.OnUpdatedWhen(target, exact.Add)
+                .OnUpdatedWhere(value => value(0), passing.Add);
 
-            Assert.Throws<ArgumentNullException>(() => EventCondition.Where<int>(null));
-            Assert.Throws<ArgumentNullException>(() => condition.Where(null));
+            hub.Update(target);
+            hub.Update(other);
 
-            using var hub = new EventHub<int>(new object());
-            var values = new List<int>();
-            hub.Connect(new object()).OnUpdated(condition, values.Add);
-            hub.Update(1);
-            Assert.That(values, Is.EqualTo(new[] { 1 }));
+            Assert.That(exact, Is.EqualTo(new[] { target }));
+            Assert.That(passing, Is.EqualTo(new[] { other }));
         }
 
-        [Test]
-        public void ConditionDepthAllows256StepsAndRejectsTheNextStepDuringConstruction()
-        {
-            Func<int, bool> predicate = _ => true;
-            var condition = EventCondition.Where(predicate);
-            for (var depth = 1; depth < 256; depth++) condition = condition.Where(predicate);
-
-            Assert.Throws<InvalidOperationException>(() => condition.Where(predicate));
-            Assert.Throws<InvalidOperationException>(() => condition.When(1));
-            Assert.Throws<InvalidOperationException>(() => condition.Debug());
-
-            using var hub = new EventHub<int>(new object());
-            var calls = 0;
-            hub.Connect(new object()).OnUpdated(condition, () => calls++);
-            hub.Update(1);
-            Assert.That(calls, Is.EqualTo(1));
-        }
-
-        [TestCase(0, false)]
-        [TestCase(0, true)]
-        [TestCase(1, false)]
-        [TestCase(1, true)]
-        [TestCase(2, false)]
-        [TestCase(2, true)]
-        [TestCase(3, false)]
-        [TestCase(3, true)]
-        public void WhenConditionsAndTargetShortcutsShareEntriesAcrossListeners(int registrationKind, bool parameterless)
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public void EquivalentWhenTargetsShareEntriesAcrossListeners(bool sameTarget, bool parameterless)
         {
             var counter = new Counter();
             var target = new EqualityProbe(1, counter);
             var value = new EqualityProbe(1, counter);
-            var condition = EventCondition.When(target);
             var received = new List<EqualityProbe>();
             var listeners = new[] { new object(), new object() };
             using var hub = new EventHub<EqualityProbe>(new object());
 
-            for (var index = 0; index < listeners.Length; index++)
+            foreach (var listener in listeners)
             {
-                var builder = hub.Connect(listeners[index]);
-                var currentTarget = new EqualityProbe(1, counter);
-                var currentCondition = registrationKind == 0 ? condition : EventCondition.When(currentTarget);
-                var useShortcut = registrationKind == 2 || (registrationKind == 3 && index == 0);
+                var builder = hub.Connect(listener);
+                var currentTarget = sameTarget ? target : new EqualityProbe(1, counter);
 
-                if (parameterless)
-                {
-                    if (useShortcut) builder.OnUpdated(currentTarget, () => received.Add(value));
-                    else builder.OnUpdated(currentCondition, () => received.Add(value));
-                }
-                else
-                {
-                    if (useShortcut) builder.OnUpdated(currentTarget, received.Add);
-                    else builder.OnUpdated(currentCondition, received.Add);
-                }
+                if (parameterless) builder.OnUpdatedWhen(currentTarget, () => received.Add(value));
+                else builder.OnUpdatedWhen(currentTarget, received.Add);
             }
 
             counter.Calls = 0;
@@ -677,38 +629,34 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(null)]
         [TestCase("match")]
-        public void SeparateWhenConditionsShareTheirDescendantsAndKeepCallbacksIndependent(string target)
+        public void WhenRegistrationsKeepCallbacksAndConnectionLifetimesIndependent(string target)
         {
             using var hub = new EventHub<string>(new object());
             var first = new object();
             var second = new object();
-            var evaluations = 0;
             var received = new List<string>();
-            Func<string, bool> predicate = _ => { evaluations++; return true; };
             var firstBuilder = hub.Connect(first);
-            firstBuilder.OnUpdated(EventCondition.When(target).Where(predicate), received.Add);
-            firstBuilder.OnUpdated(EventCondition.When(target).Where(predicate), () => received.Add("plain"));
-            hub.Connect(second).OnUpdated(EventCondition.When(target).Where(predicate), received.Add);
+            firstBuilder.OnUpdatedWhen(target, received.Add);
+            firstBuilder.OnUpdatedWhen(target, () => received.Add("plain"));
+            hub.Connect(second).OnUpdatedWhen(target, received.Add);
 
             hub.Update("other");
             hub.Update(target);
-            Assert.That(evaluations, Is.EqualTo(1));
             Assert.That(received, Is.EqualTo(new[] { target, "plain", target }));
 
             hub.Disconnect(first);
             hub.Update(target);
-            Assert.That(evaluations, Is.EqualTo(2));
             Assert.That(received, Is.EqualTo(new[] { target, "plain", target, target }));
 
             hub.Disconnect(second);
             hub.Update(target);
-            Assert.That(evaluations, Is.EqualTo(2));
+            Assert.That(received.Count, Is.EqualTo(4));
             Assert.That(hub.ConnectionCount, Is.Zero);
         }
 
         [TestCase(false)]
         [TestCase(true)]
-        public void WhenConditionsRejectEquivalentTargetsAndShortcuts(bool parameterless)
+        public void WhenRejectsEquivalentTargets(bool parameterless)
         {
             using var hub = new EventHub<string>(new object());
             var builder = hub.Connect(new object());
@@ -719,19 +667,19 @@ namespace BlackThunder.UniEngine.Tests
 
             if (parameterless)
             {
-                builder.OnUpdated("match", plain);
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(equalTarget, plain));
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(EventCondition.When("match"), plain));
-                builder.OnUpdated(EventCondition.When("other"), plain);
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(EventCondition.When("other"), plain));
+                builder.OnUpdatedWhen("match", plain);
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhen(equalTarget, plain));
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhen("match", plain));
+                builder.OnUpdatedWhen("other", plain);
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhen("other", plain));
             }
             else
             {
-                builder.OnUpdated("match", typed);
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(equalTarget, typed));
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(EventCondition.When("match"), typed));
-                builder.OnUpdated(EventCondition.When("other"), typed);
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(EventCondition.When("other"), typed));
+                builder.OnUpdatedWhen("match", typed);
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhen(equalTarget, typed));
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhen("match", typed));
+                builder.OnUpdatedWhen("other", typed);
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhen("other", typed));
             }
 
             hub.Update("match");
@@ -741,7 +689,7 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void PredicateShortcutsAndConditionsRejectEquivalentDelegates(bool parameterless)
+        public void WhereRejectsEquivalentDelegates(bool parameterless)
         {
             using var hub = new EventHub<int>(new object());
             var builder = hub.Connect(new object());
@@ -756,19 +704,19 @@ namespace BlackThunder.UniEngine.Tests
 
             if (parameterless)
             {
-                builder.OnUpdated(predicate, plain);
+                builder.OnUpdatedWhere(predicate, plain);
                 Assert.Throws<InvalidOperationException>(() =>
-                    builder.OnUpdated(EventCondition.Where(predicate), plain));
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(equivalent, plain));
-                builder.OnUpdated(value => value > 0, plain);
+                    builder.OnUpdatedWhere(predicate, plain));
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhere(equivalent, plain));
+                builder.OnUpdatedWhere(value => value > 0, plain);
             }
             else
             {
-                builder.OnUpdated(predicate, typed);
+                builder.OnUpdatedWhere(predicate, typed);
                 Assert.Throws<InvalidOperationException>(() =>
-                    builder.OnUpdated(EventCondition.Where(predicate), typed));
-                Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(equivalent, typed));
-                builder.OnUpdated(value => value > 0, typed);
+                    builder.OnUpdatedWhere(predicate, typed));
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhere(equivalent, typed));
+                builder.OnUpdatedWhere(value => value > 0, typed);
             }
 
             hub.Update(1);
@@ -789,38 +737,17 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(first, Is.Not.SameAs(equal));
             Assert.That(first.Equals(equal), Is.True);
-            untyped.OnUpdated(first, callback);
-            Assert.Throws<InvalidOperationException>(() => untyped.OnUpdated(equal, callback));
-            untyped.OnUpdated(first, plain);
-            Assert.Throws<InvalidOperationException>(() => untyped.OnUpdated(equal, plain));
-            builder.OnUpdated(first, callback);
-            Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(EventCondition.Where(equal), callback));
-            untyped.OnUpdated(_ => true, callback);
+            untyped.OnUpdatedWhere(first, callback);
+            Assert.Throws<InvalidOperationException>(() => untyped.OnUpdatedWhere(equal, callback));
+            untyped.OnUpdatedWhere(first, plain);
+            Assert.Throws<InvalidOperationException>(() => untyped.OnUpdatedWhere(equal, plain));
+            builder.OnUpdatedWhere(first, callback);
+            Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedWhere(equal, callback));
+            untyped.OnUpdatedWhere(_ => true, callback);
 
             hub.Update(0);
             hub.Update(1);
             Assert.That(receiver.Calls, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void DebugConditionsCompareEveryStepByKindMessageAndLogLevel()
-        {
-            using var hub = new EventHub<int>(new object());
-            var builder = hub.Connect(new object());
-            Action<int> callback = _ => { };
-            Func<int, bool> predicate = value => value > 0;
-            var condition = EventCondition.Where(predicate).When(1).Debug("same", LogLevel.Warning);
-            builder.OnUpdated(condition, callback);
-
-            Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(
-                EventCondition.Where(predicate).When(1).Debug("same", LogLevel.Warning), callback));
-            Assert.DoesNotThrow(() => builder.OnUpdated(
-                EventCondition.Where(predicate).When(1).Debug("other", LogLevel.Warning), callback));
-            Assert.DoesNotThrow(() => builder.OnUpdated(
-                EventCondition.Where(predicate).When(1).Debug("same", LogLevel.Log), callback));
-            Assert.DoesNotThrow(() => builder.OnUpdated(EventCondition.Where(predicate).When(1), callback));
-            Assert.DoesNotThrow(() => builder.OnUpdated(EventCondition.When(1).Where(predicate), callback));
-            Assert.DoesNotThrow(() => builder.OnUpdated(EventCondition.Where(predicate).Where(predicate), callback));
         }
 
         [TestCase(false)]
@@ -835,12 +762,12 @@ namespace BlackThunder.UniEngine.Tests
             if (objectEvent)
             {
                 var untyped = (IEventHubBuilder)builder;
-                untyped.OnUpdated(callback).OnUpdated(value => (int)value > 0, callback);
+                untyped.OnUpdated(callback).OnUpdatedWhere(value => (int)value > 0, callback);
                 ((IEventHub)hub).Updated -= callback;
             }
             else
             {
-                builder.OnUpdated(callback).OnUpdated(value => (int)value > 0, callback);
+                builder.OnUpdated(callback).OnUpdatedWhere(value => (int)value > 0, callback);
                 hub.Updated -= callback;
             }
 
@@ -879,7 +806,7 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<int>(new object());
             var listener = new object();
             var root = hub.Connect(listener);
-            var registered = root.OnUpdated(EventCondition.Where<int>(_ => true).Debug(), () => { });
+            var registered = root.OnUpdatedWhere(_ => true, () => { });
             hub.Disconnect(listener);
             var freshCalls = 0;
 
@@ -920,11 +847,11 @@ namespace BlackThunder.UniEngine.Tests
             if (objectBuilder)
             {
                 var untyped = (IEventHubBuilder)builder;
-                if (parameterless) untyped.OnUpdated(_ => true, disconnect + tail);
-                else untyped.OnUpdated(_ => true, new Action<object>(_ => disconnect()) + (_ => tail()));
+                if (parameterless) untyped.OnUpdatedWhere(_ => true, disconnect + tail);
+                else untyped.OnUpdatedWhere(_ => true, new Action<object>(_ => disconnect()) + (_ => tail()));
             }
-            else if (parameterless) builder.OnUpdated(_ => true, disconnect + tail);
-            else builder.OnUpdated(_ => true, new Action<int>(_ => disconnect()) + (_ => tail()));
+            else if (parameterless) builder.OnUpdatedWhere(_ => true, disconnect + tail);
+            else builder.OnUpdatedWhere(_ => true, new Action<int>(_ => disconnect()) + (_ => tail()));
 
             hub.Update(1);
 
@@ -945,14 +872,14 @@ namespace BlackThunder.UniEngine.Tests
             var disposed = 0;
             ExceptionHandler.SetHandler(reports.Add);
             var builder = hub.Connect(listener);
-            var condition = EventCondition.Where<int>(_ => true);
+            Func<int, bool> condition = _ => true;
 
             if (parameterless)
-                builder.OnUpdated(condition, new Action(() => throw failure) + (() => values.Add(9)));
+                builder.OnUpdatedWhere(condition, new Action(() => throw failure) + (() => values.Add(9)));
             else
-                builder.OnUpdated(condition, new Action<int>(_ => throw failure) + values.Add);
+                builder.OnUpdatedWhere(condition, new Action<int>(_ => throw failure) + values.Add);
 
-            builder.OnUpdated(condition, value => values.Add(-value)).OnDisposed(() => disposed++);
+            builder.OnUpdatedWhere(condition, value => values.Add(-value)).OnDisposed(() => disposed++);
             hub.Update(1);
             hub.Update(2);
 
@@ -994,7 +921,7 @@ namespace BlackThunder.UniEngine.Tests
             var builder = hub.Connect(listener).OnDisposed(() => disposed++);
             RegisterConditionalUpdate(builder, entry, callback);
 
-            hub.Connect(new object()).OnUpdated(value => value > 0, value =>
+            hub.Connect(new object()).OnUpdatedWhere(value => value > 0, value =>
             {
                 if (value != 1) return;
 
@@ -1086,8 +1013,8 @@ namespace BlackThunder.UniEngine.Tests
             Func<int, bool> predicate = _ => throw failure;
             ExceptionHandler.SetHandler(reports.Add);
             var first = hub.Connect(new object());
-            first.OnUpdated(predicate, _ => Assert.Fail("Failed path must not publish."));
-            hub.Connect(new object()).OnUpdated(predicate, _ => Assert.Fail("Shared path must be released."));
+            first.OnUpdatedWhere(predicate, _ => Assert.Fail("Failed path must not publish."));
+            hub.Connect(new object()).OnUpdatedWhere(predicate, _ => Assert.Fail("Shared path must be released."));
             first.OnUpdated(values.Add);
 
             hub.Update(1);
@@ -1116,17 +1043,17 @@ namespace BlackThunder.UniEngine.Tests
             var retained = hub.Connect(retainedListener).OnDisposed(() => disposed++);
             Action<int> first = values.Add;
             Action<int> second = value => values.Add(-value);
-            retained.OnUpdated(predicate, first).OnUpdated(predicate, second);
+            retained.OnUpdatedWhere(predicate, first).OnUpdatedWhere(predicate, second);
             var removed = hub.Connect(removedListener);
-            removed.OnUpdated(predicate, first).OnUpdated(predicate, second);
+            removed.OnUpdatedWhere(predicate, first).OnUpdatedWhere(predicate, second);
 
-            hub.Connect(new object()).OnUpdated(value => value > 0, value =>
+            hub.Connect(new object()).OnUpdatedWhere(value => value > 0, value =>
             {
                 if (value != 1) return;
 
                 retainedDuringUpdate = hub.HasListener(retainedListener);
                 removedDuringUpdate = hub.HasListener(removedListener);
-                retained.OnUpdated(predicate, first).OnUpdated(predicate, second);
+                retained.OnUpdatedWhere(predicate, first).OnUpdatedWhere(predicate, second);
                 observed = true;
             });
 
@@ -1449,7 +1376,7 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
             var root = hub.Connect(new object());
-            root.OnUpdated(_ => false, () => Assert.Fail("Condition must reject the value."))
+            root.OnUpdatedWhere(_ => false, () => Assert.Fail("Condition must reject the value."))
                 .OnDisposing(() => calls.Add($"listener disposing:{hub.IsDisposed}"));
             root.OnDisposed(() => calls.Add($"listener disposed:{hub.IsDisposed}"));
             hub.Disposing += () => calls.Add($"direct disposing:{hub.IsDisposed}");
@@ -1673,7 +1600,7 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
             var root = hub.Connect(new object());
-            var path = root.OnUpdated(_ => false, () => { });
+            var path = root.OnUpdatedWhere(_ => false, () => { });
             Action plain = () => calls.Add("plain");
             Action<object> owner = _ => calls.Add("owner");
 
@@ -1834,18 +1761,15 @@ namespace BlackThunder.UniEngine.Tests
                 .OnDisposing((Action)null).OnDisposing((Action<object>)null)
                 .OnDisposed((Action)null).OnDisposed((Action<object>)null);
             Func<int, bool> predicate = _ => throw new ApplicationException("No subscription should be created.");
-            var condition = EventCondition.Where(predicate);
-            Assert.That(builder.OnUpdated(1, (Action<int>)null), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(1, (Action)null), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(predicate, (Action<int>)null), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(predicate, (Action)null), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(condition, (Action<int>)null), Is.SameAs(builder));
-            Assert.That(builder.OnUpdated(condition, (Action)null), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhen(1, (Action<int>)null), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhen(1, (Action)null), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhere(predicate, (Action<int>)null), Is.SameAs(builder));
+            Assert.That(builder.OnUpdatedWhere(predicate, (Action)null), Is.SameAs(builder));
             var untyped = (IEventHubBuilder)builder;
             untyped.OnUpdated((Action<object>)null);
             Func<object, bool> objectPredicate = _ => throw new ApplicationException("No object subscription.");
-            Assert.That(untyped.OnUpdated(objectPredicate, (Action<object>)null), Is.SameAs(builder));
-            Assert.That(untyped.OnUpdated(objectPredicate, (Action)null), Is.SameAs(builder));
+            Assert.That(untyped.OnUpdatedWhere(objectPredicate, (Action<object>)null), Is.SameAs(builder));
+            Assert.That(untyped.OnUpdatedWhere(objectPredicate, (Action)null), Is.SameAs(builder));
             hub.Update(1);
             Assert.That(hub.ConnectionCount, Is.EqualTo(1));
             hub.Dispose();
@@ -2001,13 +1925,13 @@ namespace BlackThunder.UniEngine.Tests
             switch (entry)
             {
                 case UpdateEntry.Typed:
-                    builder.OnUpdated(EventCondition.Where(predicate), (Action<int>)callback);
+                    builder.OnUpdatedWhere(predicate, (Action<int>)callback);
                     break;
                 case UpdateEntry.Object:
-                    ((IEventHubBuilder)builder).OnUpdated(objectPredicate, (Action<object>)callback);
+                    ((IEventHubBuilder)builder).OnUpdatedWhere(objectPredicate, (Action<object>)callback);
                     break;
                 default:
-                    builder.OnUpdated(EventCondition.Where(predicate), (Action)callback);
+                    builder.OnUpdatedWhere(predicate, (Action)callback);
                     break;
             }
         }
@@ -2035,22 +1959,16 @@ namespace BlackThunder.UniEngine.Tests
                 () => builder.OnUpdated(_ => { }),
                 () => builder.OnUpdated(() => { }),
                 () => builder.OnUpdated((Action<int>)null),
-                () => builder.OnUpdated(1, _ => { }),
-                () => builder.OnUpdated(1, () => { }),
-                () => builder.OnUpdated(1, (Action<int>)null),
-                () => builder.OnUpdated(1, (Action)null),
-                () => builder.OnUpdated(_ => true, _ => { }),
-                () => builder.OnUpdated(_ => true, () => { }),
-                () => builder.OnUpdated((Func<int, bool>)null, _ => { }),
-                () => builder.OnUpdated((Func<int, bool>)null, () => { }),
-                () => builder.OnUpdated((Func<int, bool>)null, (Action<int>)null),
-                () => builder.OnUpdated((Func<int, bool>)null, (Action)null),
-                () => builder.OnUpdated(EventCondition.When(1), _ => { }),
-                () => builder.OnUpdated(EventCondition.When(1), () => { }),
-                () => builder.OnUpdated((EventCondition<int>)null, _ => { }),
-                () => builder.OnUpdated((EventCondition<int>)null, () => { }),
-                () => builder.OnUpdated((EventCondition<int>)null, (Action<int>)null),
-                () => builder.OnUpdated((EventCondition<int>)null, (Action)null),
+                () => builder.OnUpdatedWhen(1, _ => { }),
+                () => builder.OnUpdatedWhen(1, () => { }),
+                () => builder.OnUpdatedWhen(1, (Action<int>)null),
+                () => builder.OnUpdatedWhen(1, (Action)null),
+                () => builder.OnUpdatedWhere(_ => true, _ => { }),
+                () => builder.OnUpdatedWhere(_ => true, () => { }),
+                () => builder.OnUpdatedWhere(null, _ => { }),
+                () => builder.OnUpdatedWhere(null, () => { }),
+                () => builder.OnUpdatedWhere(null, (Action<int>)null),
+                () => builder.OnUpdatedWhere(null, (Action)null),
                 () => builder.OnDisposing(() => { }),
                 () => builder.OnDisposing(_ => { }),
                 () => builder.OnDisposed(() => { }),
@@ -2058,12 +1976,12 @@ namespace BlackThunder.UniEngine.Tests
                 () => untyped.OnUpdated(_ => { }),
                 () => untyped.OnUpdated(() => { }),
                 () => untyped.OnUpdated((Action<object>)null),
-                () => untyped.OnUpdated(_ => true, _ => { }),
-                () => untyped.OnUpdated(_ => true, () => { }),
-                () => untyped.OnUpdated(null, _ => { }),
-                () => untyped.OnUpdated(null, () => { }),
-                () => untyped.OnUpdated(null, (Action<object>)null),
-                () => untyped.OnUpdated(null, (Action)null),
+                () => untyped.OnUpdatedWhere(_ => true, _ => { }),
+                () => untyped.OnUpdatedWhere(_ => true, () => { }),
+                () => untyped.OnUpdatedWhere(null, _ => { }),
+                () => untyped.OnUpdatedWhere(null, () => { }),
+                () => untyped.OnUpdatedWhere(null, (Action<object>)null),
+                () => untyped.OnUpdatedWhere(null, (Action)null),
                 () => untyped.OnDisposing(() => { }),
                 () => untyped.OnDisposing(_ => { }),
                 () => untyped.OnDisposed(() => { }),
@@ -2080,7 +1998,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             var target = new FailingReceiver();
             if (direct) hub.Updated += target.Receive;
-            else hub.Connect(new object()).OnUpdated(_ => true, target.Receive);
+            else hub.Connect(new object()).OnUpdatedWhere(_ => true, target.Receive);
 
             return new WeakReference(target);
         }
@@ -2133,8 +2051,8 @@ namespace BlackThunder.UniEngine.Tests
             Action<int> typed = counter.Record;
             Action plain = counter.Tick;
             var builder = hub.Connect(counter).OnUpdated(typed + typed);
-            builder.OnUpdated(static value => value == 1, typed);
-            builder.OnUpdated(static value => value > 0, plain + plain);
+            builder.OnUpdatedWhere(static value => value == 1, typed);
+            builder.OnUpdatedWhere(static value => value > 0, plain + plain);
             hub.Updated += typed;
             return hub;
         }

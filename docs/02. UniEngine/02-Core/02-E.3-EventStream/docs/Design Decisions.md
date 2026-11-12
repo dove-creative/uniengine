@@ -245,7 +245,7 @@ EventStream이 지금의 형태에 이르기까지 내린 결정을 기록한다
 
 **선택**
 
-값 동등성은 Where·ForFlags와 별도의 경로 연산 When으로 둔다. EventStream&lt;T&gt;와 EventPath&lt;T&gt;의 인스턴스 메서드는 같은 형식의 target을 받고 EventPath&lt;T&gt;를 반환한다. EventCondition의 값 조건도 When으로 통일하며 OnUpdated(target, callback)은 이 한 단계 조건을 사용한다.
+값 동등성은 Where·ForFlags와 별도의 경로 연산 When으로 둔다. EventStream&lt;T&gt;와 EventPath&lt;T&gt;의 인스턴스 메서드는 같은 형식의 target을 받고 EventPath&lt;T&gt;를 반환한다. EventHub의 OnUpdatedWhen(target, callback)도 이 한 단계 조건을 사용한다.
 
 - EqualityComparer&lt;T&gt;.Default로 비교하며 참조 형식과 Nullable&lt;T&gt;의 null도 유효한 target이다.
 - 같은 부모마다 WhenNode 하나를 두고 동등한 target마다 내부 행 하나를 공유한다. 부모나 순서 그룹이 다르면 공유하지 않는다.

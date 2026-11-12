@@ -8,7 +8,11 @@ namespace Blackthunder.UniEngine.Core
     internal interface IEventHubConnection<TEventArgs>
     {
         void ThrowIfUnavailable();
-        void AddUpdate(Delegate source, EventHubUpdateKind kind, EventCondition<TEventArgs> condition);
+        void AddUpdate(
+            Delegate source,
+            EventHubUpdateKind kind,
+            PathInfo<TEventArgs> path,
+            Delegate predicateSource = null);
         void AddDisposing(Delegate callback);
         void AddDisposed(Delegate callback);
     }

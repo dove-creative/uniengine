@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using Blackthunder.UniEngine.Core;
 using BlackThunder.UniEngine.Infrastructure;
@@ -30,7 +29,7 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<ulong>(new object());
             IEventHub<ulong> source = hub;
             var values = new List<ulong>();
-            source.Connect(new object()).OnFlags((Changes)mask, values.Add);
+            source.Connect(new object()).OnUpdatedForFlags((Changes)mask, values.Add);
 
             hub.Update((ulong)value);
 
@@ -44,8 +43,8 @@ namespace BlackThunder.UniEngine.Tests
             var signed = new List<ulong>();
             var unsigned = new List<ulong>();
             var builder = hub.Connect(new object());
-            builder.OnFlags(Changes.Sign, signed.Add);
-            builder.OnFlags(WideChanges.Top, unsigned.Add);
+            builder.OnUpdatedForFlags(Changes.Sign, signed.Add);
+            builder.OnUpdatedForFlags(WideChanges.Top, unsigned.Add);
 
             hub.Update(0x80000000UL);
             hub.Update(1UL << 63);
@@ -67,14 +66,14 @@ namespace BlackThunder.UniEngine.Tests
 
             var empty = Assert.Throws<ArgumentException>(() =>
             {
-                if (parameterless) builder.OnFlags(Changes.None, (Action)null);
-                else builder.OnFlags(Changes.None, (Action<ulong>)null);
+                if (parameterless) builder.OnUpdatedForFlags(Changes.None, (Action)null);
+                else builder.OnUpdatedForFlags(Changes.None, (Action<ulong>)null);
             });
 
             var plain = Assert.Throws<ArgumentException>(() =>
             {
-                if (parameterless) builder.OnFlags(PlainChange.Shape, (Action)null);
-                else builder.OnFlags(PlainChange.Shape, (Action<ulong>)null);
+                if (parameterless) builder.OnUpdatedForFlags(PlainChange.Shape, (Action)null);
+                else builder.OnUpdatedForFlags(PlainChange.Shape, (Action<ulong>)null);
             });
             hub.Update(1);
             hub.Update(2);
@@ -91,8 +90,10 @@ namespace BlackThunder.UniEngine.Tests
         {
             IEventHubBuilder<ulong> builder = null;
 
-            var exception = Assert.Throws<ArgumentNullException>(() => builder.OnFlags(Changes.None, (Action)null));
-            Assert.Throws<ArgumentNullException>(() => builder.OnFlags(PlainChange.Shape, (Action<ulong>)null));
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                builder.OnUpdatedForFlags(Changes.None, (Action)null));
+            Assert.Throws<ArgumentNullException>(() =>
+                builder.OnUpdatedForFlags(PlainChange.Shape, (Action<ulong>)null));
 
             Assert.That(exception.ParamName, Is.EqualTo("builder"));
         }
@@ -108,11 +109,11 @@ namespace BlackThunder.UniEngine.Tests
             var plainCalls = 0;
             root.OnUpdated(roots.Add);
 
-            Assert.That(root.OnFlags(Changes.Shape, typed.Add), Is.SameAs(root));
-            Assert.That(root.OnFlags(Changes.Shape, () => plainCalls++), Is.SameAs(root));
-            Assert.That(root.OnFlags(Changes.Shape, (Action<ulong>)null), Is.SameAs(root));
-            Assert.That(root.OnFlags(Changes.Shape, (Action)null), Is.SameAs(root));
-            Assert.Throws<InvalidOperationException>(() => root.OnFlags(Changes.Shape, typed.Add));
+            Assert.That(root.OnUpdatedForFlags(Changes.Shape, typed.Add), Is.SameAs(root));
+            Assert.That(root.OnUpdatedForFlags(Changes.Shape, () => plainCalls++), Is.SameAs(root));
+            Assert.That(root.OnUpdatedForFlags(Changes.Shape, (Action<ulong>)null), Is.SameAs(root));
+            Assert.That(root.OnUpdatedForFlags(Changes.Shape, (Action)null), Is.SameAs(root));
+            Assert.Throws<InvalidOperationException>(() => root.OnUpdatedForFlags(Changes.Shape, typed.Add));
 
             hub.Update(2);
             hub.Update(3);
@@ -139,13 +140,13 @@ namespace BlackThunder.UniEngine.Tests
 
             if (parameterless)
             {
-                builder.OnFlags(Changes.Shape, () => flagsCalls++);
-                builder.OnUpdated(Changes.Shape.ToBits(), () => targetCalls++);
+                builder.OnUpdatedForFlags(Changes.Shape, () => flagsCalls++);
+                builder.OnUpdatedWhen(Changes.Shape.ToBits(), () => targetCalls++);
             }
             else
             {
-                builder.OnFlags(Changes.Shape, value => { flagsCalls++; flagsValues.Add(value); });
-                builder.OnUpdated(Changes.Shape.ToBits(), _ => targetCalls++);
+                builder.OnUpdatedForFlags(Changes.Shape, value => { flagsCalls++; flagsValues.Add(value); });
+                builder.OnUpdatedWhen(Changes.Shape.ToBits(), _ => targetCalls++);
             }
 
             hub.Update((Changes.Shape | Changes.Location).ToBits());
@@ -162,35 +163,34 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(false, true)]
         [TestCase(true, false)]
         [TestCase(true, true)]
-        public void FlagsShortcutAndEquivalentConditionsRejectDuplicates(bool parameterless, bool conditionFirst)
+        public void EqualMaskBitsRejectDuplicatesAcrossEnumTypes(bool parameterless, bool alternateFirst)
         {
             using var hub = new EventHub<ulong>(new object());
             var builder = hub.Connect(new object());
             var calls = 0;
             Action callback = () => calls++;
             Action<ulong> typed = _ => calls++;
-            var condition = EventCondition.Flags(RouteChanges.Shape);
 
             if (parameterless)
             {
-                if (conditionFirst) builder.OnUpdated(condition, callback);
-                else builder.OnFlags(Changes.Shape, callback);
+                if (alternateFirst) builder.OnUpdatedForFlags(RouteChanges.Shape, callback);
+                else builder.OnUpdatedForFlags(Changes.Shape, callback);
 
-                Assert.Throws<InvalidOperationException>(() => builder.OnFlags(RouteChanges.Shape, callback));
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedForFlags(RouteChanges.Shape, callback));
                 Assert.Throws<InvalidOperationException>(() =>
-                    builder.OnUpdated(EventCondition.Flags(Changes.Shape), callback));
-                builder.OnFlags(Changes.Location, callback);
+                    builder.OnUpdatedForFlags(Changes.Shape, callback));
+                builder.OnUpdatedForFlags(Changes.Location, callback);
                 builder.OnUpdated(callback);
             }
             else
             {
-                if (conditionFirst) builder.OnUpdated(condition, typed);
-                else builder.OnFlags(Changes.Shape, typed);
+                if (alternateFirst) builder.OnUpdatedForFlags(RouteChanges.Shape, typed);
+                else builder.OnUpdatedForFlags(Changes.Shape, typed);
 
-                Assert.Throws<InvalidOperationException>(() => builder.OnFlags(RouteChanges.Shape, typed));
+                Assert.Throws<InvalidOperationException>(() => builder.OnUpdatedForFlags(RouteChanges.Shape, typed));
                 Assert.Throws<InvalidOperationException>(() =>
-                    builder.OnUpdated(EventCondition.Flags(Changes.Shape), typed));
-                builder.OnFlags(Changes.Location, typed);
+                    builder.OnUpdatedForFlags(Changes.Shape, typed));
+                builder.OnUpdatedForFlags(Changes.Location, typed);
                 builder.OnUpdated(typed);
             }
 
@@ -199,32 +199,26 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void FlagsConditionsValidateMasksBeforeRegistrationAndPreserveTheirPrefix()
+        public void FlagsRegistrationsKeepMasksIndependent()
         {
             using var hub = new EventHub<ulong>(new object());
-            var shape = EventCondition.Flags(Changes.Shape);
-            var both = shape.Flags(Changes.Location);
             var shapeValues = new List<ulong>();
-            var bothValues = new List<ulong>();
+            var locationValues = new List<ulong>();
+            var eitherValues = new List<ulong>();
             var builder = hub.Connect(new object());
-            builder.OnUpdated(shape, shapeValues.Add).OnUpdated(both, bothValues.Add);
-
-            Assert.Throws<ArgumentException>(() => EventCondition.Flags(Changes.None));
-            Assert.Throws<ArgumentException>(() => EventCondition.Flags(PlainChange.Shape));
-            Assert.Throws<ArgumentException>(() => shape.Flags(Changes.None));
-            Assert.Throws<ArgumentException>(() => shape.Flags(PlainChange.Shape));
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                ((EventCondition<ulong>)null).Flags(Changes.None));
-            Assert.That(exception.ParamName, Is.EqualTo("condition"));
+            builder.OnUpdatedForFlags(Changes.Shape, shapeValues.Add)
+                .OnUpdatedForFlags(Changes.Location, locationValues.Add)
+                .OnUpdatedForFlags(Changes.Shape | Changes.Location, eitherValues.Add);
 
             hub.Update(1);
             hub.Update(2);
             hub.Update(3);
             Assert.That(shapeValues, Is.EqualTo(new ulong[] { 1, 3 }));
-            Assert.That(bothValues, Is.EqualTo(new ulong[] { 3 }));
+            Assert.That(locationValues, Is.EqualTo(new ulong[] { 2, 3 }));
+            Assert.That(eitherValues, Is.EqualTo(new ulong[] { 1, 2, 3 }));
         }
 
-        // Sharing and composition
+        // Sharing and independent registrations
         [Test]
         public void EqualMaskBitsShareAcrossEnumTypesAndReleaseOnlyTheDisconnectedListener()
         {
@@ -233,20 +227,29 @@ namespace BlackThunder.UniEngine.Tests
             var second = new object();
             var firstValues = new List<ulong>();
             var secondValues = new List<ulong>();
-            var evaluations = 0;
-            Func<ulong, bool> predicate = _ => { evaluations++; return true; };
-            hub.Connect(first).OnUpdated(EventCondition.Flags(Changes.Shape).Where(predicate), firstValues.Add);
-            hub.Connect(second).OnUpdated(EventCondition.Flags(RouteChanges.Shape).Where(predicate), secondValues.Add);
+            var calls = new List<string>();
+            hub.Connect(first).OnUpdatedForFlags(Changes.Shape, value =>
+            {
+                firstValues.Add(value);
+                calls.Add("first");
+            }).OnUpdatedForFlags(Changes.Location, () => calls.Add("location"));
+            hub.Connect(second).OnUpdatedForFlags(RouteChanges.Shape, value =>
+            {
+                secondValues.Add(value);
+                calls.Add("second");
+            });
 
             hub.Update(3);
-            Assert.That(evaluations, Is.EqualTo(1));
+            Assert.That(calls, Is.EqualTo(new[] { "first", "second", "location" }));
+            calls.Clear();
             hub.Disconnect(first);
             hub.Update(1);
-            Assert.That(evaluations, Is.EqualTo(2));
+            Assert.That(calls, Is.EqualTo(new[] { "second" }));
+            calls.Clear();
             hub.Disconnect(second);
             hub.Update(1);
 
-            Assert.That(evaluations, Is.EqualTo(2));
+            Assert.That(calls, Is.Empty);
             Assert.That(firstValues, Is.EqualTo(new ulong[] { 3 }));
             Assert.That(secondValues, Is.EqualTo(new ulong[] { 3, 1 }));
             Assert.That(hub.ConnectionCount, Is.Zero);
@@ -258,12 +261,12 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<ulong>(new object());
             var calls = new List<string>();
             var first = hub.Connect(new object());
-            first.OnUpdated(_ => true, () => calls.Add("where-first"));
-            first.OnFlags(Changes.Location, () => calls.Add("location"));
-            first.OnUpdated(_ => true, () => calls.Add("where"));
+            first.OnUpdatedWhere(_ => true, () => calls.Add("where-first"));
+            first.OnUpdatedForFlags(Changes.Location, () => calls.Add("location"));
+            first.OnUpdatedWhere(_ => true, () => calls.Add("where"));
             var second = hub.Connect(new object());
-            second.OnFlags(Changes.Shape, () => calls.Add("shape"));
-            second.OnFlags(RouteChanges.Location, () => calls.Add("location-again"));
+            second.OnUpdatedForFlags(Changes.Shape, () => calls.Add("shape"));
+            second.OnUpdatedForFlags(RouteChanges.Location, () => calls.Add("location-again"));
             first.OnUpdated(() => calls.Add("root"));
             hub.Updated += _ => calls.Add("direct");
 
@@ -276,33 +279,28 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void FlagsConditionsComposeWithWhereDebugAndAnotherFlagsStep()
+        public void FlagsWhereAndWhenRegistrationsRemainIndependent()
         {
             using var hub = new EventHub<ulong>(new object());
-            var values = new List<ulong>();
-            var condition = EventCondition.Where<ulong>(value => value < 8)
-                .Flags(Changes.Shape | Changes.Location).Debug("flags", LogLevel.Warning)
-                .Flags(RouteChanges.Location).Where(value => value > 2);
-            hub.Connect(new object()).OnUpdated(condition, values.Add);
-            using var output = new StringWriter();
-            var original = Console.Out;
-            try
-            {
-                Console.SetOut(output);
-                hub.Update(0);
-                hub.Update(1);
-                hub.Update(2);
-                hub.Update(3);
-                hub.Update(9);
-            }
-            finally
-            {
-                Console.SetOut(original);
-            }
+            var flagsValues = new List<ulong>();
+            var whereValues = new List<ulong>();
+            var targetValues = new List<ulong>();
+            var rootValues = new List<ulong>();
+            hub.Connect(new object()).OnUpdatedForFlags(Changes.Shape, flagsValues.Add)
+                .OnUpdatedWhere(value => value > 2, whereValues.Add)
+                .OnUpdatedWhen(2, targetValues.Add)
+                .OnUpdated(rootValues.Add);
 
-            Assert.That(values, Is.EqualTo(new ulong[] { 3 }));
-            Assert.That(output.ToString(), Does.Contain("1: flags").And.Contain("2: flags").And.Contain("3: flags"));
-            Assert.That(output.ToString(), Does.Not.Contain("0: flags").And.Not.Contain("9: flags"));
+            hub.Update(0);
+            hub.Update(1);
+            hub.Update(2);
+            hub.Update(3);
+            hub.Update(4);
+
+            Assert.That(flagsValues, Is.EqualTo(new ulong[] { 1, 3 }));
+            Assert.That(whereValues, Is.EqualTo(new ulong[] { 3, 4 }));
+            Assert.That(targetValues, Is.EqualTo(new ulong[] { 2 }));
+            Assert.That(rootValues, Is.EqualTo(new ulong[] { 0, 1, 2, 3, 4 }));
         }
 
         // Mutation and lifetime
@@ -318,13 +316,13 @@ namespace BlackThunder.UniEngine.Tests
                 calls.Add("root");
                 if (changed) return;
                 changed = true;
-                hub.Connect(new object()).OnFlags(Changes.Shape, () => calls.Add("late-shape"));
-                hub.Connect(new object()).OnFlags(Changes.Location, () => calls.Add("late-location"));
+                hub.Connect(new object()).OnUpdatedForFlags(Changes.Shape, () => calls.Add("late-shape"));
+                hub.Connect(new object()).OnUpdatedForFlags(Changes.Location, () => calls.Add("late-location"));
                 hub.Disconnect(removed);
             });
 
-            hub.Connect(new object()).OnFlags(Changes.Shape, () => calls.Add("shape"));
-            hub.Connect(removed).OnFlags(Changes.Location, () => calls.Add("removed"));
+            hub.Connect(new object()).OnUpdatedForFlags(Changes.Shape, () => calls.Add("shape"));
+            hub.Connect(removed).OnUpdatedForFlags(Changes.Location, () => calls.Add("removed"));
 
             hub.Update(3);
             Assert.That(calls, Is.EqualTo(new[] { "root", "shape" }));
@@ -345,11 +343,11 @@ namespace BlackThunder.UniEngine.Tests
             Action disconnect = () => hub.Disconnect(listener);
             Action tail = () => tails++;
 
-            if (parameterless) builder.OnFlags(Changes.Shape, disconnect + tail);
-            else builder.OnFlags(Changes.Shape, new Action<ulong>(_ => disconnect()) + (_ => tail()));
+            if (parameterless) builder.OnUpdatedForFlags(Changes.Shape, disconnect + tail);
+            else builder.OnUpdatedForFlags(Changes.Shape, new Action<ulong>(_ => disconnect()) + (_ => tail()));
 
-            builder.OnFlags(Changes.Location, tail);
-            hub.Connect(new object()).OnFlags(Changes.Location, () => survivors++);
+            builder.OnUpdatedForFlags(Changes.Location, tail);
+            hub.Connect(new object()).OnUpdatedForFlags(Changes.Location, () => survivors++);
             hub.Update(3);
 
             Assert.That(tails, Is.Zero);
@@ -365,22 +363,24 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<ulong>(new object());
             var listener = new object();
             var root = hub.Connect(listener);
-            root.OnFlags(Changes.Shape, () => { });
+            root.OnUpdatedForFlags(Changes.Shape, () => { });
             var freshCalls = 0;
             hub.Disconnect(listener);
-            if (reconnect) hub.Connect(listener).OnFlags(Changes.Shape, () => freshCalls++);
+            if (reconnect) hub.Connect(listener).OnUpdatedForFlags(Changes.Shape, () => freshCalls++);
 
-            Assert.Throws<InvalidOperationException>(() => root.OnFlags(Changes.None, (Action)null));
-            Assert.Throws<InvalidOperationException>(() => root.OnFlags(PlainChange.Shape, (Action<ulong>)null));
+            Assert.Throws<InvalidOperationException>(() => root.OnUpdatedForFlags(Changes.None, (Action)null));
+            Assert.Throws<InvalidOperationException>(() =>
+                root.OnUpdatedForFlags(PlainChange.Shape, (Action<ulong>)null));
             Assert.Throws<InvalidOperationException>(() => root.OnUpdated(() => { }));
             hub.Update(1);
             Assert.That(freshCalls, Is.EqualTo(reconnect ? 1 : 0));
 
-            var active = hub.Connect(new object()).OnFlags(Changes.Shape, () => { });
+            var active = hub.Connect(new object()).OnUpdatedForFlags(Changes.Shape, () => { });
             hub.Dispose();
-            Assert.Throws<ObjectDisposedException>(() => root.OnFlags(Changes.None, (Action)null));
-            Assert.Throws<ObjectDisposedException>(() => root.OnFlags(PlainChange.Shape, (Action<ulong>)null));
-            Assert.Throws<ObjectDisposedException>(() => active.OnFlags(Changes.None, (Action)null));
+            Assert.Throws<ObjectDisposedException>(() => root.OnUpdatedForFlags(Changes.None, (Action)null));
+            Assert.Throws<ObjectDisposedException>(() =>
+                root.OnUpdatedForFlags(PlainChange.Shape, (Action<ulong>)null));
+            Assert.Throws<ObjectDisposedException>(() => active.OnUpdatedForFlags(Changes.None, (Action)null));
         }
 
         [Test]
@@ -390,7 +390,7 @@ namespace BlackThunder.UniEngine.Tests
             using var hub = new EventHub<ulong>(owner);
             var values = new List<ulong>();
             var calls = new List<string>();
-            hub.Connect(new object()).OnFlags(Changes.Shape, values.Add)
+            hub.Connect(new object()).OnUpdatedForFlags(Changes.Shape, values.Add)
                 .OnDisposing(value =>
                 {
                     Assert.That(value, Is.SameAs(owner));
@@ -425,17 +425,17 @@ namespace BlackThunder.UniEngine.Tests
             var disposed = 0;
             ExceptionHandler.SetHandler(reports.Add);
             var failed = hub.Connect(listener);
-            failed.OnFlags(Changes.Shape, new Action<ulong>(_ => throw failure));
+            failed.OnUpdatedForFlags(Changes.Shape, new Action<ulong>(_ => throw failure));
             var remaining = hub.Connect(survivor);
-            remaining.OnFlags(Changes.Shape, new Action<ulong>(_ => throw failure));
-            remaining.OnFlags(Changes.Shape, values.Add).OnDisposed(() => disposed++);
+            remaining.OnUpdatedForFlags(Changes.Shape, new Action<ulong>(_ => throw failure));
+            remaining.OnUpdatedForFlags(Changes.Shape, values.Add).OnDisposed(() => disposed++);
 
             hub.Update(1);
             Assert.That(hub.HasListener(listener), Is.False);
             Assert.That(hub.HasListener(survivor), Is.True);
-            Assert.Throws<InvalidOperationException>(() => failed.OnFlags(Changes.Shape, values.Add));
+            Assert.Throws<InvalidOperationException>(() => failed.OnUpdatedForFlags(Changes.Shape, values.Add));
 
-            hub.Connect(listener).OnFlags(Changes.Location, values.Add);
+            hub.Connect(listener).OnUpdatedForFlags(Changes.Location, values.Add);
             hub.Update(3);
             Assert.That(reports, Is.EqualTo(new[] { failure, failure }));
             Assert.That(values, Is.EqualTo(new ulong[] { 1, 3, 3 }));
@@ -476,9 +476,9 @@ namespace BlackThunder.UniEngine.Tests
         {
             var hub = new EventHub<ulong>(counter);
             var builder = hub.Connect(counter);
-            builder.OnFlags(Changes.Shape, counter.Record);
-            builder.OnUpdated(EventCondition.Flags(RouteChanges.Shape).Where(static value => value > 0), counter.Tick);
-            builder.OnFlags(Changes.Location, counter.Tick);
+            builder.OnUpdatedForFlags(Changes.Shape, counter.Record);
+            builder.OnUpdatedForFlags(RouteChanges.Shape, counter.Tick);
+            builder.OnUpdatedForFlags(Changes.Location, counter.Tick);
             return hub;
         }
 

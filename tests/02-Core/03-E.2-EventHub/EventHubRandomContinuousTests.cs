@@ -14,7 +14,10 @@ namespace BlackThunder.UniEngine.Tests
         [Flags]
         private enum Changes { Shape = 1, Location = 2 }
 
-        private enum Route { Root, Target, Predicate, Flags, Compound, Object, Parameterless }
+        [Flags]
+        private enum AlternateChanges : byte { Shape = 1, Location = 2 }
+
+        private enum Route { Root, Target, Predicate, Flags, CombinedPredicate, Object, Parameterless }
 
         private class Listener
         {
@@ -52,7 +55,7 @@ namespace BlackThunder.UniEngine.Tests
             var stopwatch = Stopwatch.StartNew();
             Func<ulong, bool> predicate = value => value > 2;
             Func<object, bool> objectPredicate = value => (ulong)value < 4;
-            var compound = EventCondition.Flags(Changes.Shape).Where(predicate);
+            Func<ulong, bool> combinedPredicate = value => (value & 1) != 0 && value > 2;
 
             for (int index = 0; index < listeners.Length; index++)
             {
@@ -110,10 +113,11 @@ namespace BlackThunder.UniEngine.Tests
                         case 6:
                             ConnectIfNeeded(listener);
                             Assert.Throws<ArgumentNullException>(() =>
-                                listener.Builder.OnUpdated((Func<ulong, bool>)null, listener.Callbacks[0]));
+                                listener.Builder.OnUpdatedWhere(null, listener.Callbacks[0]));
                             Assert.Throws<ArgumentNullException>(() =>
-                                ((IEventHubBuilder)listener.Builder).OnUpdated(null, listener.ObjectCallback));
-                            Assert.Throws<ArgumentException>(() => listener.Builder.OnFlags((Changes)0, (Action)null));
+                                ((IEventHubBuilder)listener.Builder).OnUpdatedWhere(null, listener.ObjectCallback));
+                            Assert.Throws<ArgumentException>(() =>
+                                listener.Builder.OnUpdatedForFlags((Changes)0, (Action)null));
                             break;
                         case 7:
                             DisposeAndRestart();
@@ -166,7 +170,7 @@ namespace BlackThunder.UniEngine.Tests
                     Assert.Throws<InvalidOperationException>(() => listener.StaleBuilder.OnUpdated((Action)null));
             }
 
-            void Register(Listener listener, Route route, bool explicitCondition)
+            void Register(Listener listener, Route route, bool alternateMask)
             {
                 var routeIndex = (int)route;
                 var callback = listener.Callbacks[routeIndex];
@@ -179,29 +183,29 @@ namespace BlackThunder.UniEngine.Tests
                             returned = listener.Builder.OnUpdated(callback);
                             break;
                         case Route.Target:
-                            returned = explicitCondition
-                                ? listener.Builder.OnUpdated(EventCondition.When(1UL), callback)
-                                : listener.Builder.OnUpdated(1UL, callback);
+                            returned = listener.Builder.OnUpdatedWhen(1UL, callback);
                             break;
                         case Route.Predicate:
-                            returned = explicitCondition
-                                ? listener.Builder.OnUpdated(EventCondition.Where(predicate), callback)
-                                : listener.Builder.OnUpdated(predicate, callback);
+                            returned = listener.Builder.OnUpdatedWhere(predicate, callback);
                             break;
                         case Route.Flags:
-                            returned = explicitCondition
-                                ? listener.Builder.OnUpdated(EventCondition.Flags(Changes.Shape), callback)
-                                : listener.Builder.OnFlags(Changes.Shape, callback);
+                            returned = alternateMask
+                                ? listener.Builder.OnUpdatedForFlags(AlternateChanges.Shape, callback)
+                                : listener.Builder.OnUpdatedForFlags(Changes.Shape, callback);
                             break;
-                        case Route.Compound:
-                            returned = listener.Builder.OnUpdated(compound, callback);
+                        case Route.CombinedPredicate:
+                            returned = listener.Builder.OnUpdatedWhere(combinedPredicate, callback);
                             break;
                         case Route.Object:
                             returned = ((IEventHubBuilder)listener.Builder)
-                                .OnUpdated(objectPredicate, listener.ObjectCallback);
+                                .OnUpdatedWhere(objectPredicate, listener.ObjectCallback);
                             break;
                         case Route.Parameterless:
-                            returned = listener.Builder.OnFlags(Changes.Location, listener.ParameterlessCallback);
+                            returned = alternateMask
+                                ? listener.Builder.OnUpdatedForFlags(
+                                    AlternateChanges.Location,
+                                    listener.ParameterlessCallback)
+                                : listener.Builder.OnUpdatedForFlags(Changes.Location, listener.ParameterlessCallback);
                             break;
                     }
                 };
@@ -237,7 +241,7 @@ namespace BlackThunder.UniEngine.Tests
                                 Route.Target => value == 1,
                                 Route.Predicate => value > 2,
                                 Route.Flags => (value & 1) != 0,
-                                Route.Compound => (value & 1) != 0 && value > 2,
+                                Route.CombinedPredicate => (value & 1) != 0 && value > 2,
                                 Route.Object => value < 4,
                                 Route.Parameterless => (value & 2) != 0,
                                 _ => false
@@ -272,7 +276,10 @@ namespace BlackThunder.UniEngine.Tests
                 {
                     var builder = listener.Builder ?? listener.StaleBuilder;
                     if (builder != null)
-                        Assert.Throws<ObjectDisposedException>(() => builder.OnFlags((Changes)0, (Action)null));
+                    {
+                        Assert.Throws<ObjectDisposedException>(() =>
+                            builder.OnUpdatedForFlags((Changes)0, (Action)null));
+                    }
 
                     listener.Builder = null;
                     listener.StaleBuilder = null;

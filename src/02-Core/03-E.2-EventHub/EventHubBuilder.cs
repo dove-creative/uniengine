@@ -26,48 +26,30 @@ namespace Blackthunder.UniEngine.Core
             _connection.AddUpdate(onUpdated, EventHubUpdateKind.Parameterless, null);
             return this;
         }
-        public IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action<TEventArgs> onUpdated)
+        public IEventHubBuilder<TEventArgs> OnUpdatedWhere(
+            Func<TEventArgs, bool> condition,
+            Action<TEventArgs> onUpdated)
         {
             _connection.ThrowIfUnavailable();
-            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Typed, EventCondition.When(target));
+            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Typed, PathInfo<TEventArgs>.Where(condition));
             return this;
         }
-        public IEventHubBuilder<TEventArgs> OnUpdated(TEventArgs target, Action onUpdated)
+        public IEventHubBuilder<TEventArgs> OnUpdatedWhere(Func<TEventArgs, bool> condition, Action onUpdated)
         {
             _connection.ThrowIfUnavailable();
-            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Parameterless, EventCondition.When(target));
+            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Parameterless, PathInfo<TEventArgs>.Where(condition));
             return this;
         }
-        public IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> condition, Action<TEventArgs> onUpdated)
+        public IEventHubBuilder<TEventArgs> OnUpdatedWhen(TEventArgs target, Action<TEventArgs> onUpdated)
         {
             _connection.ThrowIfUnavailable();
-            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Typed, EventCondition.Where(condition));
+            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Typed, PathInfo<TEventArgs>.When(target));
             return this;
         }
-        public IEventHubBuilder<TEventArgs> OnUpdated(Func<TEventArgs, bool> condition, Action onUpdated)
+        public IEventHubBuilder<TEventArgs> OnUpdatedWhen(TEventArgs target, Action onUpdated)
         {
             _connection.ThrowIfUnavailable();
-            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Parameterless, EventCondition.Where(condition));
-            return this;
-        }
-        public IEventHubBuilder<TEventArgs> OnUpdated(EventCondition<TEventArgs> condition, Action<TEventArgs> onUpdated)
-        {
-            _connection.ThrowIfUnavailable();
-
-            if (condition == null)
-                throw new ArgumentNullException(nameof(condition));
-
-            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Typed, condition);
-            return this;
-        }
-        public IEventHubBuilder<TEventArgs> OnUpdated(EventCondition<TEventArgs> condition, Action onUpdated)
-        {
-            _connection.ThrowIfUnavailable();
-
-            if (condition == null)
-                throw new ArgumentNullException(nameof(condition));
-
-            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Parameterless, condition);
+            _connection.AddUpdate(onUpdated, EventHubUpdateKind.Parameterless, PathInfo<TEventArgs>.When(target));
             return this;
         }
 
@@ -78,30 +60,40 @@ namespace Blackthunder.UniEngine.Core
             _connection.AddUpdate(onUpdated, EventHubUpdateKind.Object, null);
             return this;
         }
-        IEventHubBuilder IEventHubBuilder.OnUpdated(Func<object, bool> condition, Action<object> onUpdated)
+        IEventHubBuilder IEventHubBuilder.OnUpdatedWhere(Func<object, bool> condition, Action<object> onUpdated)
         {
             _connection.ThrowIfUnavailable();
+
+            if (condition == null)
+                throw new ArgumentNullException(nameof(condition));
+
             _connection.AddUpdate(
-                onUpdated, EventHubUpdateKind.Object, EventCondition<TEventArgs>.CreateObjectWhere(condition));
+                onUpdated, EventHubUpdateKind.Object, PathInfo<TEventArgs>.Where(value => condition(value)), condition);
             return this;
         }
-        IEventHubBuilder IEventHubBuilder.OnUpdated(Func<object, bool> condition, Action onUpdated)
+        IEventHubBuilder IEventHubBuilder.OnUpdatedWhere(Func<object, bool> condition, Action onUpdated)
         {
             _connection.ThrowIfUnavailable();
+
+            if (condition == null)
+                throw new ArgumentNullException(nameof(condition));
+
             _connection.AddUpdate(
-                onUpdated, EventHubUpdateKind.Parameterless, EventCondition<TEventArgs>.CreateObjectWhere(condition));
+                onUpdated,
+                EventHubUpdateKind.Parameterless,
+                PathInfo<TEventArgs>.Where(value => condition(value)),
+                condition);
             return this;
         }
 
         // Flags shortcuts must check the connection before validating or constructing the condition.
-        internal IEventHubBuilder<TEventArgs> OnFlags<TFlags>(
+        internal IEventHubBuilder<TEventArgs> OnUpdatedForFlags<TFlags>(
             TFlags mask,
             Delegate onUpdated,
             EventHubUpdateKind kind) where TFlags : struct, Enum
         {
             _connection.ThrowIfUnavailable();
-            var condition = (EventCondition<TEventArgs>)(object)EventCondition.Flags(mask);
-            _connection.AddUpdate(onUpdated, kind, condition);
+            _connection.AddUpdate(onUpdated, kind, PathInfo<TEventArgs>.Flags(mask));
             return this;
         }
 
@@ -137,7 +129,7 @@ namespace Blackthunder.UniEngine.Core
         /// Registers values sharing any bit with the flags mask, preserving the original value.
         /// Requires a builder returned by EventHub&lt;ulong&gt; and a nonzero mask from a flags enum.
         /// </summary>
-        public static IEventHubBuilder<ulong> OnFlags<TFlags>(
+        public static IEventHubBuilder<ulong> OnUpdatedForFlags<TFlags>(
             this IEventHubBuilder<ulong> builder,
             TFlags mask,
             Action<ulong> onUpdated)
@@ -146,12 +138,12 @@ namespace Blackthunder.UniEngine.Core
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
             if (builder is not EventHubBuilder<ulong> hubBuilder)
-                throw new NotSupportedException("OnFlags requires a builder created by EventHub<ulong>.");
+                throw new NotSupportedException("OnUpdatedForFlags requires a builder created by EventHub<ulong>.");
 
-            return hubBuilder.OnFlags(mask, onUpdated, EventHubUpdateKind.Typed);
+            return hubBuilder.OnUpdatedForFlags(mask, onUpdated, EventHubUpdateKind.Typed);
         }
 
-        public static IEventHubBuilder<ulong> OnFlags<TFlags>(
+        public static IEventHubBuilder<ulong> OnUpdatedForFlags<TFlags>(
             this IEventHubBuilder<ulong> builder,
             TFlags mask,
             Action onUpdated)
@@ -160,9 +152,9 @@ namespace Blackthunder.UniEngine.Core
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
             if (builder is not EventHubBuilder<ulong> hubBuilder)
-                throw new NotSupportedException("OnFlags requires a builder created by EventHub<ulong>.");
+                throw new NotSupportedException("OnUpdatedForFlags requires a builder created by EventHub<ulong>.");
 
-            return hubBuilder.OnFlags(mask, onUpdated, EventHubUpdateKind.Parameterless);
+            return hubBuilder.OnUpdatedForFlags(mask, onUpdated, EventHubUpdateKind.Parameterless);
         }
     }
 }

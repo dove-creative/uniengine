@@ -2,7 +2,7 @@
 
 ## 적용 범위
 
-2026-11-10에 UniEngine `main` 작업 트리의 기존 UniTest 검증 범위에 적용했다. 각 대상은 seed 0·1·2를 각각 독립된 초기 상태로 실행한다. 기존 모듈·통합·실패 경로의 직접 검증도 유지했다.
+2026-11-10에 각 모듈의 테스트 계획에 따라 UniTest 랜덤 연속 검증을 실행한 결과이다. 각 대상의 seed 0·1·2를 독립된 초기 상태에서 실행했으며, 기존 모듈·통합·실패 경로의 직접 검증도 함께 수행했다.
 
 | 모듈 | 대상 | seed당 목표 깊이 | 통과 / 실행 |
 | --- | --- | ---: | ---: |
@@ -12,7 +12,7 @@
 | AdaptiveCollections | 지연·즉시 반영 두 모드 | 100 | 6 / 6 |
 | EventStream | Branch, Merge, 상태 연산자, ForFlags 공유·수명, ForFlags 발행 중 변경 | 100 | 15 / 15 |
 
-Configuration은 프로세스당 초기화가 한 번만 가능하다. 초기화 전 준비 세 단계, 초기화 한 단계, 초기화 후 조회·재초기화 거부 네 단계를 포함하는 깊이 8을 적용했다.
+Configuration은 [테스트 계획](../01-Infrastructure/01-M.1-Configuration/docs/02.%20Plans.md)의 초기화 전후 경로에 따라 깊이 8까지 실행했다.
 
 ## 실행 결과
 
@@ -37,11 +37,11 @@ When 값 동등성 경로의 공유·수명과 발행 중 변경 프로젝트를
 
 .NET SDK 10.0.403 Release 전체 테스트 1,028개가 통과했고 실패·건너뜀은 0개이다. 랜덤 연속 사례 39개도 모두 목표 깊이에 도달했다. 대상별 세 seed의 실제 실행시간 합계는 모두 60초 이내였으며 가장 긴 Log는 55.146초였다. 중간 확인 기준을 넘은 대상이나 중단한 실행은 없다.
 
-시간과 이력은 [전체 실행 TRX](../bin/TestResults/EventStreamWhen/All.trx)의 각 사례 출력에서 확인한다. 명령·검증 범위·미검증 항목은 [EventStream 결과](../02-Core/02-E.3-EventStream/docs/03.%20Results.md)와 [Hub 결과](../02-Core/docs/Hub%20Results.md)에 기록했다. 앞 절의 2026-11-10 실행 기록은 당시 결과로 보존한다.
+시간과 이력은 [전체 실행 TRX](../bin/TestResults/EventStreamWhen/All.trx)의 각 사례 출력에 있다. 실행 명령과 검증 범위는 [EventStream 계획](../02-Core/02-E.3-EventStream/docs/02.%20Plans.md)과 [EventHub 계획](../02-Core/03-E.2-EventHub/docs/02.%20Plans.md)에, 상세 결과와 미검증 항목은 [EventStream 결과](../02-Core/02-E.3-EventStream/docs/03.%20Results.md)와 [Hub 결과](../02-Core/docs/Hub%20Results.md)에 있다.
 
 ### 모듈 문서
 
-각 결과 문서에 seed, 실제 도달 깊이, 실행시간, 결과를 기록했다. 연결된 TRX의 각 NUnit 사례 출력에는 동작 이력이 있다. 각 행은 노드 ID, 부모 노드 ID, 깊이, 상태, Lab ID 순서이며 부모 노드 ID를 따라 후보까지의 경로를 재구성할 수 있다.
+각 결과 문서에 seed, 실제 도달 깊이, 실행시간, 결과를 기록했다. 연결된 TRX의 각 NUnit 사례 출력에 동작 이력이 있다.
 
 - [Configuration](../01-Infrastructure/01-M.1-Configuration/docs/03.%20Results.md)
 - [LogSystem](../01-Infrastructure/03-M.3-LogSystem/docs/03.%20Results.md)

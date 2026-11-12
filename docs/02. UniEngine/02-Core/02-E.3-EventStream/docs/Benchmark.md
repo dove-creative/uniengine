@@ -111,10 +111,9 @@ stream.Where(condition).Subscribe(Handle);
 - 비교는 '비교 대상 / 기준 - 1'이다. 변화율의 절댓값이 10% 이상이고 양쪽 회차 편차보다 클 때만 빠름·느림으로 판정한다. 10% 미만은 '10% 미만', 그 밖은 '보류'로 둔다. 이 판정은 측정의 해석 기준이며 통계적 유의성 검정이 아니다.
 - 원본은 [결과 폴더](../../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/results/jit-conditions-20261112)에 있으며 버전 관리에서 제외한다. 원본에는 이 문서에서 다루지 않는 두 구현의 기록도 함께 있다.
 
-측정과 이 문서의 표 생성은 다음 명령으로 다시 실행한다. 재측정 설정은 이 문서의 세 구조만 포함하며 새 결과 폴더를 사용한다. 표 생성은 보존한 기존 측정 원본을 사용한다. 두 스크립트는 버전 관리에서 제외되는 tests/bin에 있다.
+표는 채택하지 않은 구조라 코드와 빌드를 지웠으며 다시 측정하지 않는다. 핵심 구현은 [순회 구현 발췌](Traversal%20Samples.md)에 있다. 이 문서의 표는 보존한 측정 원본에서 다음 명령으로 다시 생성한다. 스크립트는 버전 관리에서 제외되는 tests/bin에 있다.
 
 ```powershell
-pwsh -NoProfile -File tests/bin/JitConditions/run-jit-conditions.ps1 -StructuresFile tests/bin/JitConditions/structures.json -ScenariosFile tests/bin/JitConditions/scenarios.txt -Runs 3 -Output tests/02-Core/02-E.3-EventStream/Benchmarks/results/jit-conditions-rerun
 python tests/bin/BenchmarkDoc/build-tables.py --results tests/02-Core/02-E.3-EventStream/Benchmarks/results/jit-conditions-20261112 --template tests/bin/BenchmarkDoc/Benchmark.template.md --output "docs/02. UniEngine/02-Core/02-E.3-EventStream/docs/Benchmark.md"
 ```
 

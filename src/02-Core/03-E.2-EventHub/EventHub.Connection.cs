@@ -28,7 +28,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 public Delegate Source;
                 public EventHubUpdateKind Kind;
-                public EventCondition<TEventArgs> Condition;
+                public PathInfo<TEventArgs> Path;
+                public Delegate PredicateSource;
                 public Handle Handle;
             }
 
@@ -50,16 +51,33 @@ namespace Blackthunder.UniEngine.Core
             }
 
             // Updates
-            public void AddUpdate(Delegate source, EventHubUpdateKind kind, EventCondition<TEventArgs> condition)
+            public void AddUpdate(
+                Delegate source,
+                EventHubUpdateKind kind,
+                PathInfo<TEventArgs> path,
+                Delegate predicateSource = null)
             {
                 if (source == null)
                     return;
 
                 foreach (var existing in _subscriptions)
                 {
-                    if (existing.Kind == kind
-                        && Equals(existing.Source, source)
-                        && EventCondition<TEventArgs>.Matches(existing.Condition, condition))
+                    if (existing.Kind != kind || !Equals(existing.Source, source))
+                        continue;
+
+                    var samePath = existing.Path == null || path == null
+                        ? existing.Path == path
+                        : existing.Path.NodeType == path.NodeType && (path.NodeType switch
+                        {
+                            PathNodeType.Where => Equals(
+                                existing.PredicateSource ?? existing.Path.Predicate, predicateSource ?? path.Predicate),
+                            PathNodeType.When => EqualityComparer<TEventArgs>.Default.Equals(
+                                existing.Path.Target, path.Target),
+                            PathNodeType.Flags => existing.Path.Mask == path.Mask,
+                            _ => false
+                        });
+
+                    if (samePath)
                     {
                         throw new InvalidOperationException(
                             _hub.Ctx("This update callback is already registered with this condition."));
@@ -84,11 +102,6 @@ namespace Blackthunder.UniEngine.Core
                         callback += _ => entry();
                 }
 
-                // Materialize the immutable steps in root-to-callback order for this registration.
-                PathInfo<TEventArgs> path = null;
-                for (var step = condition; step != null; step = step.Previous)
-                    path = step.Step.Link(path);
-
                 var handle = ((IRegistrable<TEventArgs>)_hub._updates).Register(
                     Registration<TEventArgs>.Subscription(callback, null, null), path);
 
@@ -96,7 +109,8 @@ namespace Blackthunder.UniEngine.Core
                 {
                     Source = source,
                     Kind = kind,
-                    Condition = condition,
+                    Path = path,
+                    PredicateSource = predicateSource,
                     Handle = (Handle)handle,
                 };
 
@@ -130,7 +144,7 @@ namespace Blackthunder.UniEngine.Core
                     var subscription = node.Value;
 
                     if (subscription.Kind != kind
-                        || subscription.Condition != null
+                        || subscription.Path != null
                         || !Equals(subscription.Source, source))
                         continue;
 
