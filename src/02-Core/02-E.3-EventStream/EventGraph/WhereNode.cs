@@ -6,7 +6,7 @@ namespace Blackthunder.UniEngine.Core
 {
     internal partial class EventGraph<T>
     {
-        private class WhereNode : NodeBase
+        private class WhereNode : Node
         {
             // Internal
             private Chain<Row> _rows;
@@ -17,6 +17,9 @@ namespace Blackthunder.UniEngine.Core
 
 
             // Content --------------------
+            // Construction
+            internal WhereNode() : base(keyed: true) { }
+
             // Registration
             internal Connection FindOrAdd(Func<T, bool> predicate, long registration)
             {
@@ -75,7 +78,8 @@ namespace Blackthunder.UniEngine.Core
                         continue;
                     }
 
-                    if (matches && row.IsConnected) row.Connection.Visit(value, lastVisible, ref failure);
+                    if (matches && row.IsConnected)
+                        row.Connection.Visit(value, lastVisible, ref failure);
                 }
             }
 
@@ -83,7 +87,8 @@ namespace Blackthunder.UniEngine.Core
             {
                 for (var row = _rows.First; row != null; row = row.Next)
                 {
-                    if (row.IsConnected) row.Connection.VisitEnd(signal, error, ref failure);
+                    if (row.IsConnected)
+                        row.Connection.VisitEnd(signal, error, ref failure);
                 }
             }
 
@@ -94,7 +99,7 @@ namespace Blackthunder.UniEngine.Core
                 internal bool IsConnected = true;
                 private readonly WhereNode _node;
 
-                NodeBase IConnectionOwner.Node => _node;
+                Node IConnectionOwner.Node => _node;
 
                 internal Row(WhereNode node, Func<T, bool> predicate)
                 {

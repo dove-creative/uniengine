@@ -86,7 +86,7 @@ namespace Blackthunder.UniEngine.Core
         internal Connection AddDebug(Connection parent, string message, LogLevel logType) =>
             AddChild(parent, new DebugNode(message, logType)).Connection;
 
-        private static TNode Find<TNode>(Connection parent) where TNode : NodeBase
+        private static TNode Find<TNode>(Connection parent) where TNode : Node
         {
             for (var child = parent.Children.First; child != null; child = child.Next)
             {

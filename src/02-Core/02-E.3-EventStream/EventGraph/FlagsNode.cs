@@ -6,7 +6,7 @@ namespace Blackthunder.UniEngine.Core
 {
     internal partial class EventGraph<T>
     {
-        private class FlagsNode : NodeBase
+        private class FlagsNode : Node
         {
             // Internal
             private Chain<Row> _rows;
@@ -17,6 +17,9 @@ namespace Blackthunder.UniEngine.Core
 
 
             // Content --------------------
+            // Construction
+            internal FlagsNode() : base(keyed: true) { }
+
             // Registration
             internal Connection FindOrAdd(ulong mask, long registration)
             {
@@ -84,7 +87,7 @@ namespace Blackthunder.UniEngine.Core
                 internal bool IsConnected = true;
                 private readonly FlagsNode _node;
 
-                NodeBase IConnectionOwner.Node => _node;
+                Node IConnectionOwner.Node => _node;
 
                 internal Row(FlagsNode node, ulong mask)
                 {

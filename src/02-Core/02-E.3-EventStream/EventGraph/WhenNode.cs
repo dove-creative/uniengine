@@ -7,7 +7,7 @@ namespace Blackthunder.UniEngine.Core
     internal partial class EventGraph<T>
     {
         // Routes to one target and keeps every row in creation order for termination.
-        private class WhenNode : NodeBase
+        private class WhenNode : Node
         {
             // Property
             internal override bool IsEmpty => _rows.First == null;
@@ -21,6 +21,9 @@ namespace Blackthunder.UniEngine.Core
 
 
             // Content --------------------
+            // Construction
+            internal WhenNode() : base(keyed: true) { }
+
             // Registration
             internal Connection FindOrAdd(T target, long registration)
             {
@@ -90,7 +93,7 @@ namespace Blackthunder.UniEngine.Core
             private class Row : Link<Row>, IConnectionOwner
             {
                 // Property
-                public NodeBase Node => _owner;
+                public Node Node => _owner;
 
                 // Internal
                 internal readonly T Target;

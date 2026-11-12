@@ -7,7 +7,7 @@ namespace Blackthunder.UniEngine.Core
     internal partial class EventGraph<T>
     {
         // Searches by order and visits rows through a chain that remains sorted during mutations.
-        private class OrderedNode : NodeBase
+        private class OrderedNode : Node
         {
             // Property
             internal override bool IsEmpty => _rows.First == null;
@@ -18,6 +18,9 @@ namespace Blackthunder.UniEngine.Core
 
 
             // Content --------------------
+            // Construction
+            internal OrderedNode() : base(keyed: true) { }
+
             // Registration
             internal Connection FindOrAdd(int order, long registration)
             {
@@ -62,7 +65,7 @@ namespace Blackthunder.UniEngine.Core
             private class Row : Link<Row>, IConnectionOwner
             {
                 // Property
-                public NodeBase Node => _owner;
+                public Node Node => _owner;
 
                 // Internal
                 internal readonly int Order;

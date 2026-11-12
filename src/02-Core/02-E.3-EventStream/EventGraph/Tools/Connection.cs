@@ -7,7 +7,7 @@ namespace Blackthunder.UniEngine.Core
     {
         internal interface IConnectionOwner
         {
-            NodeBase Node { get; }
+            Node Node { get; }
             void Remove();
         }
 
