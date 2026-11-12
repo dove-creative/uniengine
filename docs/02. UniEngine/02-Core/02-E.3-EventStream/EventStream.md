@@ -23,8 +23,8 @@ EventStream은 값을 받아 구독 그래프로 전달하는 기본 단위이�
 | --- | --- | --- |
 | 입구 | InputGate | 상위 하나당 하나씩 둔다. 첫 구독 전에는 연결할 위치를, 연결 후에는 해제 핸들을 가진다. 상위의 값·완료·끊김을 받아 스트림에 전달한다. 트리에 속하지 않는다. |
 | 연산 | 파생 스트림의 중첩 노드 | TakeStream, TakeWhileStream, SkipStream, SkipWhileStream이 자기 노드를 중첩 클래스로 가진다. 횟수를 세는 쪽은 Counter, 조건을 보는 쪽은 Condition이다. 스트림을 만들 때 그래프의 루트로 주입되어 상태를 가지고, 끝나면 스트림의 완료 처리를 호출한다. 스트림마다 하나이며 경로 병합의 대상이 아니다. |
-| 키가 있는 경로 | WhereNode·WhenNode·FlagsNode·OrderedNode | 같은 부모 연결 위치마다 종류별 노드 하나를 두고, 노드 안에 키별 행을 둔다. 같은 위치의 같은 키는 구독자와 리스너가 달라도 행을 공유한다. 다른 부모 위치의 행은 공유하지 않는다. |
-| 키 행 | 각 키 노드의 내부 클래스 | 키 하나와 그 뒤의 연결을 가진다. 행은 NodeBase나 NodeChild를 상속하지 않으며 NodeCount에도 포함하지 않는다. 행은 Gate와 다음 단계 노드를 참조할 뿐, 다음 노드가 행이나 앞 노드의 일부가 되는 것은 아니다. |
+| 키가 있는 경로 | WhereNode·WhenNode·FlagsNode·OrderedNode | 같은 부모 연결 위치마다 종류별 노드 하나를 두고, 노드 안에 키별 행을 둔다. 키 없는 노드와 같은 Node 형식이지만 자기 연결은 두지 않는다. 같은 위치의 같은 키는 구독자와 리스너가 달라도 행을 공유한다. 다른 부모 위치의 행은 공유하지 않는다. |
+| 키 행 | 각 키 노드의 내부 클래스 | 키 하나와 그 뒤의 연결을 가진다. 행은 Node나 NodeChild를 상속하지 않으며 NodeCount에도 포함하지 않는다. 행은 Gate와 다음 단계 노드를 참조할 뿐, 다음 노드가 행이나 앞 노드의 일부가 되는 것은 아니다. |
 | 키가 없는 경로 | 루트·DebugNode·Counter·Condition | 자기 연결 하나를 가진다. Debug는 등록마다 별도 노드이며 공유하지 않는다. Counter·Condition은 파생 스트림마다 하나이다. |
 | 연결 | Connection | 행과 키 없는 노드가 함께 쓰는 형식이다. 구독자 Gate 우선 순서, 자식 체인, Registration과 정리를 맡는다. 등록할 때 다음 단계와 Gate가 참조될 위치는 이 연결이다. |
 | 출구 | OutputGate | 구독 목록을 가진 말단이다. Node가 아니지만 NodeChild를 상속해 연결의 자식 자리에 들어간다. 같은 위치의 구독자는 Gate 하나를 공유한다. 새 스트림으로 가는 연결은 연결마다 Gate를 따로 둔다. |
@@ -80,7 +80,7 @@ When의 비교가 발행 중 실패하면 그 위치의 WhenNode와 모든 targe
 - **그래프 안에 합류 노드를 두지 않는다.** 그래프를 트리로 유지해야 순회와 노드 정리가 단순하다. 여러 입력은 Merge가 만든 새 스트림이 받는다.
 - **경로 등록은 스트림이 그래프에 연결한다.** EventPath와 EventStream은 같은 등록 계약(IRegistrable)을 구현한다. 경로는 자기 단계를 PathInfo로 만들어 앞 단계(Source)로 넘기고, 끝의 스트림이 받은 PathInfo 체인을 따라 그래프의 노드 기능으로 노드를 찾거나 만든다. PathInfo는 등록 한 번에만 쓰는 객체라 공유되지 않는다. 그래프는 경로를 모르고 노드 단위 기능만 제공한다. Where·When·Debug·ForOrder는 EventStream과 EventPath의 인스턴스 메서드이며, 스트림도 반환형인 EventPath를 참조한다. ForFlags는 ulong 스트림·경로에만 제공하므로 EventPathExtensions의 확장 메서드로 남긴다.
 
-각 기준을 정하기 전에 쓰거나 검토한 형태와 그 대가, 보류 항목은 [설계 결정](Design%20Decisions.md)에 있다.
+각 기준을 정하기 전에 쓰거나 검토한 형태와 그 대가, 보류 항목은 [설계 결정](docs/Design%20Decisions.md)에 있다.
 
 When의 성능은 측정하지 않았으며 Unity Mono·IL2CPP에서의 할당도 검증하지 않았다. 이전 구현의 측정 결과를 When의 성능 근거로 사용하지 않는다.
 

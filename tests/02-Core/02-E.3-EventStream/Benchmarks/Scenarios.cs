@@ -54,7 +54,7 @@ namespace BlackThunder.UniEngine.Benchmarks
             var scenarios = new Dictionary<string, Func<Scenario>>();
 
             // A: the number of subscribers grows while 1 in 16 receives the value.
-            foreach (var count in new[] { 16, 64, 256, 1024 })
+            foreach (var count in new[] { 16, 64, 256, 1000, 1024 })
             {
                 var subscribers = count;
                 scenarios[$"A-Individual-{count}"] = () => Individual(subscribers, 16, 1);
@@ -98,6 +98,8 @@ namespace BlackThunder.UniEngine.Benchmarks
 
             // L: 1 in 16 receives. R: only 4 receive. K: one condition per 4 subscribers, 4 receive.
             // T: subscribe and release one subscription on the L graph.
+            scenarios["K-Individual-1000"] = () => Scale("K", true, 1000);
+            scenarios["K-Pipeline-1000"] = () => Scale("K", false, 1000);
             foreach (var family in new[] { "L", "R", "K", "T" })
             {
                 foreach (var count in new[] { 10_000, 100_000, 1_000_000 })

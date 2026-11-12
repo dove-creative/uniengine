@@ -41,11 +41,11 @@ Take·TakeWhile·Skip·SkipWhile·Branch·Merge는 경로 노드가 아니라 �
 | 사건 종류를 골라 전달하고 횟수나 조건으로 중단하기 | [경로 연산자](EventStreamOperators.md) |
 | 구독 순서를 여러 단계로 나누기 | [순서 그룹](OrderGroups.md) |
 | 필터, 독립 분기, 그룹별 구독 작성 | [사용 예제](Usage.md) |
-| 개별 순회와 파이프라인의 비용 비교 | [벤치마크](Benchmark.md) |
-| 지금 구조를 고른 이유와 대가, 보류 항목 확인 | [설계 결정](Design%20Decisions.md) |
+| 그래프 구조와 구독 방식별 비용 비교 | [벤치마크](docs/Benchmark.md) |
+| 지금 구조를 고른 이유와 대가, 보류 항목 확인 | [설계 결정](docs/Design%20Decisions.md) |
 
 설계 기준은 [EventStream](EventStream.md)에, 테스트 결과는 [검증 결과](../../../../tests/02-Core/02-E.3-EventStream/docs/03.%20Results.md)에 있다.
 
-EventStream은 매 프레임 많은 구독자에게 값을 나누는 구조라 전파와 구독 비용이 설계의 중요한 기준이다. 그래서 구조를 바꿀 때는 기능 테스트와 함께 벤치마크로 이전 버전과 비용을 비교한다. 측정 도구는 테스트 폴더의 [벤치마크 도구](../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/README.md)에 있고, 측정 결과와 해석은 [벤치마크](Benchmark.md)에 정리한다.
+EventStream은 매 프레임 많은 구독자에게 값을 나누는 구조라 전파와 구독 비용이 설계의 중요한 기준이다. 그래서 구조를 바꿀 때는 기능 테스트와 함께 벤치마크로 이전 버전과 비용을 비교한다. 측정 도구는 테스트 폴더의 [벤치마크 도구](../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/README.md)에 있고, 측정 결과와 해석은 [벤치마크](docs/Benchmark.md)에 정리한다.
 
 When 추가에 따른 성능은 측정하지 않았으며 Unity Mono·IL2CPP에서의 할당도 검증하지 않았다. 이전 벤치마크 수치는 When의 성능을 나타내지 않는다.
