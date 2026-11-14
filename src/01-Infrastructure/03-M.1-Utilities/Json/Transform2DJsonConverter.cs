@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BlackThunder.UniEngine.Objects;
 
-namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
+namespace BlackThunder.UniEngine.Utilities.Json
 {
     public class Transform2DJsonConverter : JsonConverter<Transform2D>
     {

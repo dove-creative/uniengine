@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json;
 
-namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
+namespace BlackThunder.UniEngine.Utilities.Json
 {
     internal static class JsonComponentSerializer
     {

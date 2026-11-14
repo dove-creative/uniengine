@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace BlackThunder.UniEngine.Infrastructure.Utilities.Json
+namespace BlackThunder.UniEngine.Utilities.Json
 {
     public class Vector3JsonConverter : JsonConverter<Vector3>
     {

@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Text;
 using BlackThunder.UniEngine.Objects;
 
-namespace BlackThunder.UniEngine.Infrastructure.Utilities
+namespace BlackThunder.UniEngine.Utilities
 {
     public static class DataFormattingExtensions
     {

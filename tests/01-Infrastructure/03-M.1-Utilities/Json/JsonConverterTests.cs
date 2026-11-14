@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
-using BlackThunder.UniEngine.Infrastructure.Utilities.Json;
+using BlackThunder.UniEngine.Utilities.Json;
 using BlackThunder.UniEngine.Objects;
 using NUnit.Framework;
 

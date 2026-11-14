@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Numerics;
-using BlackThunder.UniEngine.Infrastructure.Utilities;
+using BlackThunder.UniEngine.Utilities;
 using BlackThunder.UniEngine.Objects;
 using NUnit.Framework;
 

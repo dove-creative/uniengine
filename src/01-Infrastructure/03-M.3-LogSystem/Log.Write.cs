@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BlackThunder.UniEngine.Infrastructure.Utilities;
+using BlackThunder.UniEngine.Utilities;
 
 namespace BlackThunder.UniEngine.Infrastructure
 {

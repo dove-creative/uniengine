@@ -65,7 +65,7 @@ namespace Blackthunder.UniEngine.Core
             foreach (var input in inputs)
             {
                 input.Bind(this);
-                UpstreamDepth = Math.Max(UpstreamDepth, input.Depth + 1);
+                UpstreamDepth = System.Math.Max(UpstreamDepth, input.Depth + 1);
             }
 
             CheckDepth(UpstreamDepth);
