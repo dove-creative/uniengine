@@ -21,8 +21,12 @@ namespace Blackthunder.UniEngine.Core
 
             void IConnectionOwner.Remove() { }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure) =>
-                Connection.Visit(value, lastVisible, ref failure);
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null) =>
+                Connection.Visit(value, lastVisible, ref failure, batch);
             internal override void VisitEnd(Signal signal, Exception error, ref ExceptionDispatchInfo failure) =>
                 Connection.VisitEnd(signal, error, ref failure);
 

@@ -68,7 +68,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void PromotionDuringPublicationDefersNewNodesAndSkipsReplacedNodes()
+        public void PromotionAndReplacementCommitAfterTheRootPublication()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -85,9 +85,10 @@ namespace BlackThunder.UniEngine.Tests
             });
 
             stream.OnNext(1);
-            Assert.That(calls, Is.Empty);
+            Assert.That(calls, Is.EqualTo(new[] { "removed" }));
+            calls.Clear();
             stream.OnNext(2);
-            Assert.That(calls, Is.EqualTo(new[] { "replacement", "shared" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "replacement", "shared" }));
             Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 

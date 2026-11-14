@@ -9,6 +9,7 @@ namespace Blackthunder.UniEngine.Core
         // Front
         internal int NodeCount { get; private set; }
         internal bool IsPublishing { get; private set; }
+        internal EventDispatchScope Scope { get; } = new();
 
         // Internal
         private const int RowIndexThreshold = 16;
@@ -19,6 +20,7 @@ namespace Blackthunder.UniEngine.Core
             : null;
 
         private Node _root = new();
+        private readonly EventDispatchScope _terminalScope = new();
         private readonly Action _onEmpty;
         private long _lastRegistration;
         private bool _closed;
@@ -26,10 +28,18 @@ namespace Blackthunder.UniEngine.Core
 
         // Content --------------------
         // Registration
-        internal EventGraph(Action onEmpty) => _onEmpty = onEmpty;
+        internal EventGraph(Action onEmpty)
+        {
+            _onEmpty = onEmpty;
+            _root.Scope = Scope;
+        }
 
         // An operator stream replaces the root while it is built, before anything can subscribe.
-        internal void Inject(Node root) => _root = root;
+        internal void Inject(Node root)
+        {
+            _root = root;
+            _root.Scope = Scope;
+        }
 
         // Starts a registration at the root. Nodes added from here on stay invisible
         // to a publication that is already running.
@@ -46,20 +56,22 @@ namespace Blackthunder.UniEngine.Core
             Action<T> updated,
             Action completed,
             Action<Exception> errored,
-            IGraphObserver<T> input = null) =>
-            Attach(FindGate(node), updated, completed, errored, input);
+            IGraphObserver<T> input = null,
+            bool sequential = false,
+            EventSubscriptionHandle handle = null) =>
+            Attach(FindGate(node), updated, completed, errored, input, sequential, handle);
 
-        internal Handle Connect(Connection node, IGraphObserver<T> input)
+        internal Handle Connect(Connection node, IGraphObserver<T> input, EventSubscriptionHandle handle = null)
         {
             var gate = AddChild(node, new OutputGate(isConnection: true));
-            return Attach(gate, input.OnNext, input.OnCompleted, input.OnError, input);
+            return Attach(gate, input.OnNext, input.OnCompleted, input.OnError, input, handle: handle);
         }
 
         // Path steps return the connection owned by a row or a keyless node.
-        internal Connection FindOrAddGroup(Connection parent, int order)
+        internal Connection FindOrAddGroup(Connection parent, int order, bool parallel = false)
         {
             var node = Find<OrderedNode>(parent) ?? AddChild(parent, new OrderedNode());
-            return node.FindOrAdd(order, _lastRegistration);
+            return node.FindOrAdd(order, parallel, _lastRegistration);
         }
 
         internal Connection FindOrAddFlags(Connection parent, ulong mask)
@@ -86,11 +98,47 @@ namespace Blackthunder.UniEngine.Core
         internal Connection AddDebug(Connection parent, string message, LogLevel logType) =>
             AddChild(parent, new DebugNode(message, logType)).Connection;
 
+        // Read ownership without creating nodes or promoting indexes during propagation.
+        internal EventDispatchScope RegistrationScope(PathInfo<T> path)
+        {
+            var connection = _root.Connection;
+            var scope = Scope;
+            for (var info = path; info != null; info = info.Next)
+            {
+                switch (info.NodeType)
+                {
+                    case PathNodeType.Group:
+                    case PathNodeType.ParallelGroup:
+                        var ordered = Find<OrderedNode>(connection);
+                        var key = (long)info.Order * 2;
+                        var existing = ordered?.Find(key) ?? ordered?.Find(key + 1);
+                        if (existing == null) return null;
+                        scope = existing.Scope;
+                        connection = ordered.Find(key + (info.NodeType == PathNodeType.Group ? 1 : 0));
+                        break;
+                    case PathNodeType.Where:
+                        connection = Find<WhereNode>(connection)?.Find(info.Predicate);
+                        break;
+                    case PathNodeType.When:
+                        connection = Find<WhenNode>(connection)?.FindConnection(info.Target);
+                        break;
+                    case PathNodeType.Flags:
+                        connection = Find<FlagsNode>(connection)?.Find(info.Mask);
+                        break;
+                    default:
+                        return scope;
+                }
+                if (connection == null) return scope;
+            }
+            return scope;
+        }
+
         private static TNode Find<TNode>(Connection parent) where TNode : Node
         {
             for (var child = parent.Children.First; child != null; child = child.Next)
             {
-                if (child is TNode node) return node;
+                // Pending registrations must not enter a When index scheduled for cleanup.
+                if (child is TNode node && !(node is WhenNode { IsClosing: true })) return node;
             }
 
             return null;
@@ -107,6 +155,7 @@ namespace Blackthunder.UniEngine.Core
         {
             child.Registration = _lastRegistration;
             child.Parent = parent;
+            child.Scope = parent.Scope;
             parent.Children.Insert(child, before);
 
             if (CountsAsNode(child)) NodeCount++;
@@ -122,14 +171,18 @@ namespace Blackthunder.UniEngine.Core
             Action<T> updated,
             Action completed,
             Action<Exception> errored,
-            IGraphObserver<T> input)
+            IGraphObserver<T> input,
+            bool sequential = false,
+            EventSubscriptionHandle handle = null)
         {
-            var subscription = new Subscription(updated, completed, errored, input != null)
+            var subscription = new Subscription(updated, completed, errored, input != null, sequential)
             {
                 Registration = _lastRegistration
             };
 
-            subscription.Handle = new Handle(() =>
+            handle ??= new EventSubscriptionHandle(gate.Scope);
+            subscription.Handle = handle;
+            handle.Bind(gate.Scope, () =>
             {
                 gate.Subscriptions.Remove(subscription);
                 Prune(gate);
@@ -177,17 +230,23 @@ namespace Blackthunder.UniEngine.Core
             if (IsPublishing) throw new InvalidOperationException("Cannot publish recursively to the same stream.");
 
             IsPublishing = true;
+            Scope.Enter();
+            ExceptionDispatchInfo failure = null;
 
             try
             {
-                ExceptionDispatchInfo failure = null;
                 _root.Visit(value, _lastRegistration, ref failure);
-                failure?.Throw();
+            }
+            catch (Exception exception)
+            {
+                failure ??= ExceptionDispatchInfo.Capture(exception);
             }
             finally
             {
-                IsPublishing = false;
+                try { Scope.Exit(ref failure); }
+                finally { IsPublishing = false; }
             }
+            failure?.Throw();
         }
 
         private static void Report(Exception exception, ref ExceptionDispatchInfo failure)
@@ -209,8 +268,16 @@ namespace Blackthunder.UniEngine.Core
             _closed = true;
 
             ExceptionDispatchInfo failure = null;
-            _root.VisitEnd(completed ? Signal.Completed : Signal.Error, error, ref failure);
-            _root.VisitEnd(Signal.Dispose, null, ref failure);
+            _terminalScope.Enter();
+            try
+            {
+                _root.VisitEnd(completed ? Signal.Completed : Signal.Error, error, ref failure);
+            }
+            finally
+            {
+                _terminalScope.Exit(ref failure);
+                _root.VisitEnd(Signal.Dispose, null, ref failure);
+            }
             failure?.Throw();
         }
 

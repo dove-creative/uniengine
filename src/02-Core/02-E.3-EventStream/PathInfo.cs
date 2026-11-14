@@ -3,7 +3,7 @@ using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
-    internal enum PathNodeType { Group, Where, When, Debug, Flags }
+    internal enum PathNodeType { Group, ParallelGroup, Where, When, Debug, Flags }
 
     // One step of a path. Every registration links new copies from the root side to its end,
     // so a chain is used by one registration only and nothing in it is shared or changed later.
@@ -57,6 +57,9 @@ namespace Blackthunder.UniEngine.Core
             new(PathNodeType.Debug, null, default, 0, 0, message, logType, null);
         internal static PathInfo<T> Group(int order) =>
             new(PathNodeType.Group, null, default, order, 0, null, LogLevel.Log, null);
+
+        internal static PathInfo<T> ParallelGroup(int order) =>
+            new(PathNodeType.ParallelGroup, null, default, order, 0, null, LogLevel.Log, null);
 
         internal static PathInfo<T> Flags<TFlags>(TFlags mask) where TFlags : struct, Enum
         {

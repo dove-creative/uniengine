@@ -49,6 +49,18 @@ namespace Blackthunder.UniEngine.Core
                 return added.Connection;
             }
 
+            internal Connection Find(Func<T, bool> predicate)
+            {
+                if (_index != null)
+                    return _index.TryGetValue(predicate, out var existing) ? existing.Connection : null;
+
+                for (var row = _rows.First; row != null; row = row.Next)
+                {
+                    if (row.Predicate == predicate) return row.Connection;
+                }
+                return null;
+            }
+
             private void Remove(Row row)
             {
                 if (!row.IsConnected) return;
@@ -60,9 +72,13 @@ namespace Blackthunder.UniEngine.Core
             }
 
             // Propagation
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
-                for (var row = _rows.First; row != null; row = row.Next)
+                for (var row = _rows.First; row != null && failure == null && !Scope.Root.Stopped; row = row.Next)
                 {
                     if (!row.IsConnected || row.Registration > lastVisible) continue;
 
@@ -79,7 +95,7 @@ namespace Blackthunder.UniEngine.Core
                     }
 
                     if (matches && row.IsConnected)
-                        row.Connection.Visit(value, lastVisible, ref failure);
+                        row.Connection.Visit(value, lastVisible, ref failure, batch);
                 }
             }
 
@@ -87,6 +103,7 @@ namespace Blackthunder.UniEngine.Core
             {
                 for (var row = _rows.First; row != null; row = row.Next)
                 {
+                    if (signal != Signal.Dispose && failure != null) break;
                     if (row.IsConnected)
                         row.Connection.VisitEnd(signal, error, ref failure);
                 }

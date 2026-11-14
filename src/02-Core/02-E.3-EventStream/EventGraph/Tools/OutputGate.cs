@@ -1,5 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
+using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
@@ -14,11 +16,55 @@ namespace Blackthunder.UniEngine.Core
 
             internal OutputGate(bool isConnection) => IsConnection = isConnection;
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
-                for (var sub = Subscriptions.First; sub != null && sub.Registration <= lastVisible; sub = sub.Next)
+                if (batch != null)
+                {
+                    Collect(value, lastVisible, ref failure, batch);
+                    return;
+                }
+
+                var scope = EventDispatchScope.Current;
+                var receiver = scope.Receiver;
+                try
+                {
+                    for (var sub = Subscriptions.First;
+                        sub != null && sub.Registration <= lastVisible && failure == null;
+                        sub = sub.Next)
+                    {
+                        if (sub.Handle.IsDisposed) continue;
+                        scope.Receiver = sub;
+                        try { sub.Publish(value); }
+                        catch (Exception exception) { sub.Fail(exception, ref failure); }
+                    }
+                }
+                finally
+                {
+                    scope.Receiver = receiver;
+                }
+            }
+
+            private void Collect(T value, long lastVisible, ref ExceptionDispatchInfo failure, ParallelBatch batch)
+            {
+                for (var sub = Subscriptions.First;
+                    sub != null && sub.Registration <= lastVisible && failure == null && !Scope.Root.Stopped;
+                    sub = sub.Next)
                 {
                     if (sub.Handle.IsDisposed) continue;
+
+                    if (!IsConnection && !sub.IsSequential)
+                    {
+                        batch.Add(sub);
+                        continue;
+                    }
+
+                    batch.Flush(ref failure);
+                    if (failure != null || Scope.Root.Stopped) break;
+                    if (Parent == null || sub.Handle.IsDisposed) continue;
 
                     try
                     {
@@ -35,6 +81,7 @@ namespace Blackthunder.UniEngine.Core
             {
                 for (var sub = Subscriptions.First; sub != null; sub = sub.Next)
                 {
+                    if (signal != Signal.Dispose && failure != null) break;
                     if (sub.Handle.IsDisposed) continue;
 
                     if (signal == Signal.Dispose)

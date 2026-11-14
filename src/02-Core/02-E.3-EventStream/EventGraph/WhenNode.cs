@@ -7,10 +7,11 @@ namespace Blackthunder.UniEngine.Core
     internal partial class EventGraph<T>
     {
         // Routes to one target and keeps every row in creation order for termination.
-        private class WhenNode : Node
+        private class WhenNode : Node, IEventChange
         {
             // Property
             internal override bool IsEmpty => _rows.First == null;
+            internal bool IsClosing { get; private set; }
 
             // Internal
             // Non-nullable value types skip the null test entirely.
@@ -40,6 +41,8 @@ namespace Blackthunder.UniEngine.Core
                 return row.Connection;
             }
 
+            internal Connection FindConnection(T target) => Find(target)?.Connection;
+
             private Row Find(T target) => IsNull(target)
                 ? _nullRow
                 : _entries.TryGetValue(target, out var row) ? row : null;
@@ -58,7 +61,11 @@ namespace Blackthunder.UniEngine.Core
             }
 
             // Propagation
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
                 Row row;
                 try
@@ -72,22 +79,31 @@ namespace Blackthunder.UniEngine.Core
                 }
 
                 if (row != null && row.IsConnected && row.Registration <= lastVisible)
-                    row.Connection.Visit(value, lastVisible, ref failure);
+                    row.Connection.Visit(value, lastVisible, ref failure, batch);
             }
 
             internal override void VisitEnd(Signal signal, Exception error, ref ExceptionDispatchInfo failure)
             {
                 if (signal == Signal.Dispose)
                 {
-                    // Nested routes must also clear their index before releasing a failing target.
-                    _entries.Clear();
-                    _nullRow = null;
+                    IsClosing = true;
+                    // Clear before deferred removals without changing a live ancestor index.
+                    var scope = EventDispatchScope.FindDeferral(Scope);
+                    if (scope != null) scope.Defer(Scope, this);
+                    else ((IEventChange)this).Apply();
                 }
 
                 for (var row = _rows.First; row != null; row = row.Next)
                 {
+                    if (signal != Signal.Dispose && failure != null) break;
                     if (row.IsConnected) row.Connection.VisitEnd(signal, error, ref failure);
                 }
+            }
+
+            void IEventChange.Apply()
+            {
+                _entries.Clear();
+                _nullRow = null;
             }
 
             private class Row : Link<Row>, IConnectionOwner

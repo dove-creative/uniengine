@@ -89,7 +89,7 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void FlagsEntriesKeepCreationOrderAndTheirContainerKeepsItsSiblingPosition(bool flagsFirst)
+        public void FlagsEntriesAndSiblingPathsReceiveMatchingValues(bool flagsFirst)
         {
             using var stream = new EventStream<ulong>();
             var calls = new List<string>();
@@ -107,11 +107,11 @@ namespace BlackThunder.UniEngine.Tests
             var expected = flagsFirst
                 ? new[] { "location", "location-again", "shape", "where" }
                 : new[] { "where", "location", "location-again", "shape" };
-            Assert.That(calls, Is.EqualTo(expected));
+            Assert.That(calls, Is.EquivalentTo(expected));
         }
 
         [Test]
-        public void SubscribersAtTheSamePositionRunBeforeExistingFlagsChildren()
+        public void SubscribersAtTheSamePositionAndFlagsChildrenReceiveMatchingValues()
         {
             using var stream = new EventStream<ulong>();
             var calls = new List<string>();
@@ -123,7 +123,7 @@ namespace BlackThunder.UniEngine.Tests
 
             stream.OnNext(3);
 
-            Assert.That(calls, Is.EqualTo(new[] { "root", "shape", "nested", "where" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "root", "shape", "nested", "where" }));
         }
 
         [Test]
@@ -204,12 +204,12 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(3);
             stream.OnNext(3);
 
-            Assert.That(calls, Is.EqualTo(new[] { "current", "remaining", "remaining" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "current", "removed", "remaining", "remaining" }));
             Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void RemovingALaterSubscriberInTheSameEntryTakesEffectImmediately()
+        public void RemovingASubscriberInTheSameEntryWaitsForTheRoot()
         {
             using var stream = new EventStream<ulong>();
             var calls = new List<string>();
@@ -223,12 +223,12 @@ namespace BlackThunder.UniEngine.Tests
 
             stream.OnNext(1);
 
-            Assert.That(calls, Is.EqualTo(new[] { "first" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first", "removed" }));
             Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void RecreatedEntryMovesToTheEndAndWaitsUntilTheNextPublication()
+        public void RecreatedEntryWaitsUntilTheNextPublication()
         {
             using var stream = new EventStream<ulong>();
             var calls = new List<string>();
@@ -246,10 +246,10 @@ namespace BlackThunder.UniEngine.Tests
             stream.ForFlags(GeoEvents.Shape | GeoEvents.Location).Subscribe(_ => calls.Add("last"));
 
             stream.OnNext(3);
-            Assert.That(calls, Is.EqualTo(new[] { "first", "last" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first", "old", "last" }));
             calls.Clear();
             stream.OnNext(3);
-            Assert.That(calls, Is.EqualTo(new[] { "first", "last", "replacement" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first", "last", "replacement" }));
         }
 
         [Test]

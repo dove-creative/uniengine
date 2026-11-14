@@ -17,7 +17,11 @@ namespace Blackthunder.UniEngine.Core
                 _logType = logType;
             }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
                 try
                 {
@@ -29,7 +33,7 @@ namespace Blackthunder.UniEngine.Core
                     return;
                 }
 
-                base.Visit(value, lastVisible, ref failure);
+                base.Visit(value, lastVisible, ref failure, batch);
             }
         }
     }

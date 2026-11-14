@@ -12,6 +12,7 @@ namespace Blackthunder.UniEngine.Core
         internal Action<Exception> Errored { get; }
         internal IGraphObserver<T> Input { get; }
         internal bool IsConnection { get; }
+        internal bool IsSequential { get; }
 
 
         // Content --------------------
@@ -21,13 +22,15 @@ namespace Blackthunder.UniEngine.Core
             Action completed,
             Action<Exception> errored,
             IGraphObserver<T> input,
-            bool isConnection)
+            bool isConnection,
+            bool isSequential = false)
         {
             Updated = updated;
             Completed = completed;
             Errored = errored;
             Input = input;
             IsConnection = isConnection;
+            IsSequential = isSequential;
         }
 
         internal static Registration<T> Subscription(Action<T> updated, Action completed, Action<Exception> errored) =>
@@ -38,7 +41,13 @@ namespace Blackthunder.UniEngine.Core
             if (observer == null)
                 throw new ArgumentNullException(nameof(observer));
 
-            return new(observer.OnNext, observer.OnCompleted, observer.OnError, observer as IGraphObserver<T>, false);
+            return new(
+                observer.OnNext,
+                observer.OnCompleted,
+                observer.OnError,
+                observer as IGraphObserver<T>,
+                false,
+                observer is EventStream<T>);
         }
 
         internal static Registration<T> Connection(IGraphObserver<T> input) =>

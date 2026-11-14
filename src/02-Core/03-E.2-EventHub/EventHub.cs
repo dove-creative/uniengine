@@ -254,7 +254,7 @@ namespace Blackthunder.UniEngine.Core
 
             if (_isUpdating)
             {
-                // Stop updates now; lifecycle callbacks wait for the current callback to return.
+                // The stream finishes its root unit before lifecycle callbacks are delivered.
                 _updates.Dispose();
                 return;
             }

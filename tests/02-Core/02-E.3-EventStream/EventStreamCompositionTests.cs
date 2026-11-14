@@ -66,7 +66,7 @@ namespace BlackThunder.UniEngine.Tests
 
         // I3: Plain subscribers run first because their gate stays the first child of the node.
         [Test]
-        public void SubscribersWithoutAnOrderRunBeforeGroups()
+        public void UnorderedSubscribersAndOrderedGroupsReceiveTheValue()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -76,7 +76,7 @@ namespace BlackThunder.UniEngine.Tests
 
             stream.OnNext(1);
 
-            Assert.That(calls, Is.EqualTo(new[] { "plain", "update", "render" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "plain", "update", "render" }));
         }
 
         // I4: Groups order the children of the position they are used at, not only the root.

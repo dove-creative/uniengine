@@ -247,10 +247,10 @@ namespace BlackThunder.UniEngine.Tests
             stream.Where(_ => true).Subscribe(_ => calls.Add("sibling"));
 
             stream.OnNext(target);
-            Assert.That(calls, Is.EqualTo(new[] { "sibling" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "old", "sibling" }));
             calls.Clear();
             stream.OnNext(target);
-            Assert.That(calls, Is.EqualTo(new[] { "replacement", "sibling" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "replacement", "sibling" }));
             Assert.That(stream.NodeCount, Is.EqualTo(2));
         }
 
@@ -273,7 +273,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(1);
             stream.OnNext(1);
 
-            Assert.That(calls, Is.EqualTo(new[] { "current", "remaining", "remaining" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "current", "removed", "remaining", "remaining" }));
             Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
@@ -439,7 +439,7 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(true, true)]
         [TestCase(false, false)]
         [TestCase(true, false)]
-        public void PublicationComparisonFailuresReleaseTheWholeContainerAndContinueSiblings(bool hash, bool handled)
+        public void PublicationComparisonFailuresReleaseTheWholeContainerAndFollowTheFailurePolicy(bool hash, bool handled)
         {
             using var stream = new EventStream<ReferenceKey>();
             var target = new ReferenceKey(1);
@@ -467,12 +467,39 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(first.IsDisposed && other.IsDisposed && empty.IsDisposed && nested.IsDisposed, Is.True);
             Assert.That(branch.IsDisposed, Is.True);
             Assert.That(stream.NodeCount, Is.EqualTo(1));
-            Assert.That(calls, Is.EqualTo(1));
+            Assert.That(calls, Is.EqualTo(handled ? 1 : 0));
             stream.OnNext(new ReferenceKey(1));
-            Assert.That(calls, Is.EqualTo(2));
+            Assert.That(calls, Is.EqualTo(handled ? 2 : 1));
             stream.When(new ReferenceKey(1)).Subscribe(_ => calls++);
             stream.OnNext(new ReferenceKey(1));
-            Assert.That(calls, Is.EqualTo(4));
+            Assert.That(calls, Is.EqualTo(handled ? 4 : 3));
+        }
+
+        [Test]
+        public void QueuedRegistrationsSurviveTheOldWhenIndexFailingInTheSamePublication()
+        {
+            using var stream = new EventStream<ReferenceKey>();
+            var failure = new ApplicationException("publication hash");
+            var reports = new List<Exception>();
+            var calls = 0;
+            var queued = false;
+            var old = (Handle)stream.When(new ReferenceKey(1)).Subscribe(_ => Assert.Fail("Failed route"));
+            stream.Subscribe(_ =>
+            {
+                if (queued) return;
+                queued = true;
+                stream.When(new ReferenceKey(2)).Subscribe(_ => calls++);
+                stream.When(new ReferenceKey(2)).Subscribe(_ => calls++);
+            });
+            ExceptionHandler.SetHandler(reports.Add);
+
+            stream.OnNext(new ReferenceKey(1) { HashFailure = failure });
+            Assert.That(old.IsDisposed, Is.True);
+            Assert.That(calls, Is.Zero);
+            Assert.That(reports, Is.EqualTo(new[] { failure }));
+            Assert.That(stream.NodeCount, Is.EqualTo(1));
+            stream.OnNext(new ReferenceKey(2));
+            Assert.That(calls, Is.EqualTo(2));
         }
 
         [TestCase(false)]

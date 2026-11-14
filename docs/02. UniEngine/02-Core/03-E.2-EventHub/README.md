@@ -26,9 +26,9 @@ Subject는 허브를 제공하는 도메인 객체의 계약이다. 수신자는
 
 Hub·Builder·Subject의 인터페이스는 [LifecycleHub 모듈](../03-E.1-LifecycleHub/README.md)의 생애주기 계약을 확장한다. EventHub 구현은 LifecycleHub 구현을 상속하지 않는다. 직접 이벤트 구독도 대리자를 키로 사용하여 같은 Connection 모델로 관리한다. 폐기 완료 알림만 필요한 객체는 LifecycleHub를 사용할 수 있다.
 
-OnUpdated는 모든 갱신을, OnUpdatedWhere는 조건 함수가 참인 갱신을, OnUpdatedWhen은 target과 값 전체가 같은 갱신을 등록한다. ulong 허브의 OnUpdatedForFlags는 마스크와 공통 비트가 있는 갱신을 등록한다. 모든 등록은 같은 Builder를 반환하며 다음 등록에 조건을 넘기지 않는다. 같은 위치의 같은 조건 대리자, 동등한 target, 같은 마스크 비트는 리스너가 달라도 공유된다. 복합 판정은 하나의 조건 함수로 표현하며, 단계별 경로 조합·로그·순서 구성은 EventStream에서 담당한다. 루트의 직접 구독과 리스너 콜백은 등록 순서로 섞이며, 갱신 콜백 실패는 그 구독 하나만 해제한다. 다른 등록은 유지하며 마지막 등록이 사라지면 연결도 해제한다. 멀티캐스트를 한 번에 넘기면 묶음 전체가 등록 하나이다.
+OnUpdated는 모든 갱신을, OnUpdatedWhere는 조건 함수가 참인 갱신을, OnUpdatedWhen은 target과 값 전체가 같은 갱신을 등록한다. ulong 허브의 OnUpdatedForFlags는 마스크와 공통 비트가 있는 갱신을 등록한다. 모든 등록은 같은 Builder를 반환하며 다음 등록에 조건을 넘기지 않는다. 같은 위치의 같은 조건 대리자, 동등한 target, 같은 마스크 비트는 리스너가 달라도 공유된다. 복합 판정은 하나의 조건 함수로 표현하며, 단계별 경로 조합·로그·순서 구성은 EventStream에서 담당한다. 갱신 등록 사이의 호출 순서는 보장하지 않으며, 갱신 콜백 실패는 그 구독 하나만 해제한다. 다른 등록은 유지하며 마지막 등록이 사라지면 연결도 해제한다. 멀티캐스트를 한 번에 넘기면 묶음 전체가 등록 하나이다.
 
-키 연산은 같은 위치에서 종류별 노드 하나의 행으로 모인다. 연결마다 구독 Gate를 먼저 호출한 뒤 자식 노드를 생성 순서대로 방문하므로 OnUpdatedWhere(a), OnUpdatedForFlags(m), OnUpdatedWhere(b)를 등록하면 a, b행 → flags 순서이다. Where 조건 실패는 해당 행만 해제하며 다른 Where 행은 유지한다. 자세한 순서와 실패 범위는 [EventHub](EventHub.md)를 따른다.
+키 연산은 같은 위치에서 종류별 노드 하나의 행으로 모인다. 등록·삭제 요청은 내부 루트 종료 때 반영한다. Where 조건 실패는 해당 행만 정리하며, 미처리 예외는 새 호출을 중단한다. 자세한 전파·실패 규칙은 [EventHub](EventHub.md)를 따른다.
 
 ## 대표 흐름
 

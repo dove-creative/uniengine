@@ -84,7 +84,7 @@ namespace Blackthunder.UniEngine.Core
                     }
                 }
 
-                // One stream subscription checks its handle between all adapted multicast members.
+                // One stream subscription keeps adapted multicast members in the same propagation unit.
                 Action<TEventArgs> callback = null;
 
                 if (kind == EventHubUpdateKind.Typed)

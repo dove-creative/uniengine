@@ -138,3 +138,10 @@ EventHub의 아래 실행은 seed마다 깊이 100/100에 도달했으며 실패
 - 성능 비교는 해제 알림 전환 당시의 간단한 측정이다. 이후 Builder·조건·When·키 행 구조 변경의 처리량이나 PathInfo 크기를 나타내지 않는다. CPU 0·1의 물리 코어 토폴로지도 확인하지 않았다.
 - 별도 Builder 구현의 NotSupportedException은 코드 검토만 했으며 직접 실행 사례에 포함하지 않았다.
 - 원본 TRX·로그·측정 파일은 버전 관리에서 제외된 로컬 산출물이다. EventStream의 상세 결과는 [EventStream 검증 결과](../02-E.3-EventStream/docs/03.%20Results.md)에 있다.
+
+
+## 2026-11-14 루트 경계 계약 검증
+
+Release 전체 1,243개가 통과했으며 EventHub는 166/166, LifecycleHub는 18/18이다. 갱신 중 등록·해제·폐기, 멀티캐스트 완료, 실패 등록의 경계 전 중복 거부와 경계 후 재등록, 조건 공유와 참조 회수, 기존 첫·반복 무할당 사례를 포함한다. EventHub의 고정 seed 0·1·2와 깊이 100의 랜덤 연속 검증도 통과했다.
+
+[원본 TRX](../../obj/EventStreamBoundaries/20261114-main/tests.trx)와 [실행 로그](../../obj/EventStreamBoundaries/20261114-main/tests.log)는 로컬 무시 경로이며 테스트별 출력에 seed·깊이·실행시간·상태 이력을 보관한다. 초기 실패와 검증 범위·한계는 [EventStream 실행 결과](../02-E.3-EventStream/docs/03.%20Results.md)의 같은 날짜 기록을 따른다.

@@ -13,7 +13,7 @@ namespace BlackThunder.UniEngine.Tests
         // Content --------------------
         // Mutation during publication
         [Test]
-        public void SelfRemovalSkipsItsMulticastTailButPreservesAnIdenticalGraphSubscription()
+        public void SelfRemovalFinishesBothMulticastSubscriptions()
         {
             using var stream = new EventStream<int>();
             var path = stream.Where(value => value > 0);
@@ -33,11 +33,11 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(1);
             stream.OnNext(2);
 
-            Assert.That(calls, Is.EqualTo(new[] { "head:1", "head:1", "tail:1", "head:2", "tail:2" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "head:1", "tail:1", "head:1", "tail:1", "head:2", "tail:2" }));
         }
 
         [Test]
-        public void NewSubscribersAndNodesWaitWhileRemovalSkipsPendingCallbacksImmediately()
+        public void RootChangesWaitUntilThePublicationEnds()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -65,9 +65,9 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(1);
             stream.OnNext(2);
 
-            Assert.That(calls, Is.EqualTo(new[]
+            Assert.That(calls, Is.EquivalentTo(new[]
             {
-                "root:1", "existing:1", "root:2", "lateRoot:2", "existing:2", "lateExisting:2", "lateChild:2",
+                "root:1", "removed:1", "existing:1", "root:2", "lateRoot:2", "existing:2", "lateExisting:2", "lateChild:2",
             }));
         }
 
@@ -93,13 +93,13 @@ namespace BlackThunder.UniEngine.Tests
             stream.Where(_ => true).Subscribe(value => calls.Add($"last:{value}"));
 
             stream.OnNext(1);
-            Assert.That(calls, Is.EqualTo(new[] { "first:1", "last:1" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first:1", "removed", "last:1" }));
             stream.OnNext(2);
-            Assert.That(calls, Is.EqualTo(new[] { "first:1", "last:1", "last:2", "replacement:2" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first:1", "removed", "last:1", "last:2", "replacement:2" }));
         }
 
         [Test]
-        public void DisposalFromACallbackSilentlyStopsTheRestOfTheTraversal()
+        public void DisposalFinishesTheRootTraversalWithoutTerminalNotifications()
         {
             using var stream = new EventStream<int>();
             var notifications = 0;
@@ -107,7 +107,7 @@ namespace BlackThunder.UniEngine.Tests
             var later = (Handle)stream.Where(_ => true)
                 .Subscribe(_ => notifications++, () => notifications++, _ => notifications++);
             stream.OnNext(1);
-            Assert.That(notifications, Is.Zero);
+            Assert.That(notifications, Is.EqualTo(1));
             Assert.That(first.IsDisposed && later.IsDisposed, Is.True);
             Assert.That(stream.IsDisposed, Is.True);
             Assert.That(stream.NodeCount, Is.Zero);
@@ -118,7 +118,7 @@ namespace BlackThunder.UniEngine.Tests
         public void TearDown() => ExceptionHandler.SetHandler(null);
 
         [Test]
-        public void UpstreamPreservesAnEarlierConnectedFailureAndFinishesDeliveringAfterADirectSubscriberFails()
+        public void ConnectedFailuresStopTheParentAndLeaveUnvisitedSubscriptionsForTheNextValue()
         {
             using var source = new EventStream<int>();
             using var stream = new EventStream<int>(source);
@@ -131,9 +131,12 @@ namespace BlackThunder.UniEngine.Tests
             source.Subscribe(value => calls.Add($"source:{value}"));
 
             Assert.That(Assert.Throws<ApplicationException>(() => source.OnNext(1)), Is.SameAs(graphFailure));
-            source.OnNext(2);
+            Assert.That(failedGraph.IsDisposed, Is.True);
+            Assert.That(failedDirect.IsDisposed, Is.False);
+            Assert.That(Assert.Throws<InvalidOperationException>(() => source.OnNext(2)), Is.SameAs(directFailure));
+            source.OnNext(3);
 
-            Assert.That(calls, Is.EqualTo(new[] { "graph:1", "source:1", "graph:2", "source:2" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "graph:2", "graph:3", "source:3" }));
             Assert.That(failedGraph.IsDisposed && failedDirect.IsDisposed, Is.True);
         }
 
@@ -170,7 +173,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void ThrowingReporterPreservesTheNextSiblingAndTheNextPublication()
+        public void ThrowingReporterStopsTheCurrentPublicationAndPreservesTheNext()
         {
             using var stream = new EventStream<int>();
             var failure = new ApplicationException("subscriber");
@@ -191,14 +194,14 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(2);
 
             Assert.That(reported, Is.EqualTo(new[] { failure }));
-            Assert.That(values, Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(values, Is.EqualTo(new[] { 2 }));
             Assert.That(failed.IsDisposed, Is.True);
             Assert.That(stream.NodeCount, Is.EqualTo(1));
         }
 
         [TestCase(false)]
         [TestCase(true)]
-        public void FirstUnhandledFailureIsRethrownAfterBranchAndParentSiblingsReceiveTheValue(bool failFilter)
+        public void UnhandledBranchFailureStopsBothBranchAndParent(bool failFilter)
         {
             using var parent = new EventStream<int>();
             using var branch = parent.Branch();
@@ -212,8 +215,10 @@ namespace BlackThunder.UniEngine.Tests
             parent.Where(_ => true).Subscribe(v => values.Add($"parent:{v}"));
 
             Assert.That(Assert.Throws<ApplicationException>(() => parent.OnNext(1)), Is.SameAs(first));
-            parent.OnNext(2);
-            Assert.That(values, Is.EqualTo(new[] { "branch:1", "parent:1", "branch:2", "parent:2" }));
+            Assert.That(second.IsDisposed, Is.False);
+            Assert.That(Assert.Throws<InvalidOperationException>(() => parent.OnNext(2)), Is.SameAs(later));
+            parent.OnNext(3);
+            Assert.That(values, Is.EquivalentTo(new[] { "branch:3", "parent:3" }));
             Assert.That(failed.IsDisposed && second.IsDisposed, Is.True);
             Assert.That(branch.IsDisposed, Is.False);
         }
@@ -267,7 +272,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void UnhandledRelationPredicateFailureIsRethrownAfterSiblingsReceiveTheValue()
+        public void UnhandledRelationPredicateFailureStopsParentSiblings()
         {
             using var stream = new EventStream<int>();
             var failure = new ApplicationException("filter");
@@ -278,12 +283,12 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
 
-            Assert.That(healthy, Is.EqualTo(new[] { 1 }));
+            Assert.That(healthy, Is.Empty);
             Assert.That(relation.IsDisposed, Is.True);
         }
 
         [Test]
-        public void UnhandledFailureInTheLastTakeValueStillCompletesTheTake()
+        public void UnhandledFailureInTheLastTakeValueCleansUpWithoutNewNotifications()
         {
             using var stream = new EventStream<int>();
             var failure = new ApplicationException("subscriber");
@@ -294,7 +299,7 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(Assert.Throws<ApplicationException>(() => stream.OnNext(1)), Is.SameAs(failure));
 
-            Assert.That(completions, Is.EqualTo(1));
+            Assert.That(completions, Is.Zero);
             Assert.That(taken.IsDisposed, Is.True);
         }
 
@@ -346,14 +351,15 @@ namespace BlackThunder.UniEngine.Tests
             else Assert.That(Assert.Throws<ApplicationException>(publish), Is.SameAs(valueFailure));
 
             Assert.That(reports, Is.EqualTo(reporting == "Unhandled"
-                ? Array.Empty<Exception>() : new Exception[] { valueFailure, completionFailure }));
-            Assert.That(calls, Is.EqualTo(new[] { "value:1", "completed" }));
+                ? Array.Empty<Exception>() : reporting == "Handled"
+                    ? new Exception[] { valueFailure, completionFailure } : new Exception[] { valueFailure }));
+            Assert.That(calls, Is.EqualTo(reporting == "Handled" ? new[] { "value:1", "completed" } : Array.Empty<string>()));
             Assert.That(failedValue.IsDisposed && failedCompletion.IsDisposed && healthy.IsDisposed, Is.True);
             Assert.That(taken.IsDisposed, Is.True);
             Assert.That(taken.NodeCount, Is.Zero);
             Assert.That(source.NodeCount, Is.EqualTo(1), "Only the healthy sibling path remains.");
             source.OnNext(2);
-            Assert.That(sourceValues, Is.EqualTo(directInput ? new[] { 2 } : new[] { 1, 2 }));
+            Assert.That(sourceValues, Is.EqualTo(directInput || reporting != "Handled" ? new[] { 2 } : new[] { 1, 2 }));
         }
 
         // F3: Capturing terminal failure must not swallow it when no value callback failed.
@@ -380,12 +386,12 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(thrown, Is.SameAs(failure));
             Assert.That(values, Is.EqualTo(new[] { 1 }));
-            Assert.That(completed, Is.EqualTo(1));
+            Assert.That(completed, Is.Zero);
             Assert.That(failed.IsDisposed && healthy.IsDisposed && taken.IsDisposed, Is.True);
             Assert.That(taken.NodeCount, Is.Zero);
             Assert.That(source.NodeCount, Is.EqualTo(1));
             source.OnNext(2);
-            Assert.That(sourceValues, Is.EqualTo(directInput ? new[] { 2 } : new[] { 1, 2 }));
+            Assert.That(sourceValues, Is.EqualTo(new[] { 2 }));
         }
     }
 }

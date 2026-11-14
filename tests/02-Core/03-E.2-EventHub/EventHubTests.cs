@@ -142,7 +142,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void UpdateDefersBuilderAndDirectAdditionsAndSkipsDisconnectedCallbacks()
+        public void UpdateCommitsRegistrationsAndRemovalsAtTheRootEnd()
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
@@ -175,9 +175,9 @@ namespace BlackThunder.UniEngine.Tests
             hub.Update(1);
             hub.Update(2);
 
-            Assert.That(calls, Is.EqualTo(new[]
+            Assert.That(calls, Is.EquivalentTo(new[]
             {
-                "early:1", "later:1", "direct:1", "filter:1",
+                "early:1", "later:1", "direct:1", "filter:1", "removed:1",
                 "early:2", "later:2", "direct:2", "added:2", "added direct:2",
             }));
         }
@@ -208,7 +208,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void UpdateNotifiesRootCallbacksInRegistrationOrder()
+        public void UpdateNotifiesEveryRootCallback()
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
@@ -218,7 +218,7 @@ namespace BlackThunder.UniEngine.Tests
             hub.Update(1);
 
             Assert.That(hub.ConnectionCount, Is.EqualTo(2));
-            Assert.That(calls, Is.EqualTo(new[] { "first:1", "second:1" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first:1", "second:1" }));
         }
 
         [TestCase(false)]
@@ -241,7 +241,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void ListenersDisconnectedDuringUpdateMissTheRestOfIt()
+        public void ListenersDisconnectedDuringUpdateFinishTheRootUnit()
         {
             using var hub = new EventHub<int>(new object());
             var first = new object();
@@ -262,7 +262,7 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(hub.HasListener(first), Is.False);
             Assert.That(hub.HasListener(second), Is.False);
-            Assert.That(calls, Is.EqualTo(new[] { "first" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first", "first tail", "second" }));
         }
 
         [Test]
@@ -342,7 +342,7 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void LastDirectUpdateRemovalDisconnectsImmediatelyDuringUpdate(bool objectEvent)
+        public void LastDirectUpdateRemovalCommitsAfterTheRoot(bool objectEvent)
         {
             using var hub = new EventHub<object>(new object());
             var values = new List<object>();
@@ -363,9 +363,10 @@ namespace BlackThunder.UniEngine.Tests
 
             hub.Update(1);
 
-            Assert.That(connectedAfterRemoval, Is.False);
+            Assert.That(connectedAfterRemoval, Is.True);
             Assert.That(hub.ConnectionCount, Is.EqualTo(1));
-            Assert.That(values, Is.Empty);
+            Assert.That(values, Is.EqualTo(new object[] { 1 }));
+            Assert.That(hub.HasListener(callback), Is.False);
             Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(callback));
         }
 
@@ -457,7 +458,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void RootSubscriptionsPrecedeConditionalRegistrations()
+        public void RootAndConditionalRegistrationsReceiveTheUpdate()
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
@@ -468,7 +469,7 @@ namespace BlackThunder.UniEngine.Tests
 
             hub.Update(1);
 
-            Assert.That(calls, Is.EqualTo(new[] { "root", "first", "second" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "root", "first", "second" }));
         }
 
         [Test]
@@ -778,7 +779,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void DirectAndListenerCallbacksInterleaveInRegistrationOrder()
+        public void DirectAndListenerCallbacksShareTheRootPublication()
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
@@ -792,7 +793,7 @@ namespace BlackThunder.UniEngine.Tests
 
             hub.Update(1);
 
-            Assert.That(calls, Is.EqualTo(new[]
+            Assert.That(calls, Is.EquivalentTo(new[]
             {
                 "direct first", "second listener", "object direct", "first listener", "second tail",
             }));
@@ -835,7 +836,7 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(false, true)]
         [TestCase(true, false)]
         [TestCase(true, true)]
-        public void DisconnectSkipsMulticastTailsOnEveryBuilderPath(bool objectBuilder, bool parameterless)
+        public void DisconnectFinishesMulticastTailsOnEveryBuilderPath(bool objectBuilder, bool parameterless)
         {
             using var hub = new EventHub<int>(new object());
             var listener = new object();
@@ -855,7 +856,7 @@ namespace BlackThunder.UniEngine.Tests
 
             hub.Update(1);
 
-            Assert.That(tails, Is.Zero);
+            Assert.That(tails, Is.EqualTo(1));
             Assert.That(hub.ConnectionCount, Is.Zero);
         }
 
@@ -894,7 +895,7 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(UpdateEntry.Typed)]
         [TestCase(UpdateEntry.Object)]
         [TestCase(UpdateEntry.Parameterless)]
-        public void LifecycleConnectedListenerCanReregisterAFailedCallbackOnTheSamePathDuringUpdate(UpdateEntry entry)
+        public void LifecycleConnectedListenerCanReregisterAFailedCallbackAfterTheRoot(UpdateEntry entry)
         {
             using var hub = new EventHub<int>(new object());
             var listener = new object();
@@ -902,7 +903,7 @@ namespace BlackThunder.UniEngine.Tests
             var failure = new ApplicationException("retry with lifecycle");
             var attempts = 0;
             var disposed = 0;
-            var registeredAgain = false;
+            var retryObserved = false;
             var connectedDuringRetry = false;
             Action receive = () =>
             {
@@ -926,15 +927,16 @@ namespace BlackThunder.UniEngine.Tests
                 if (value != 1) return;
 
                 connectedDuringRetry = hub.HasListener(listener);
-                RegisterConditionalUpdate(builder, entry, callback);
-                registeredAgain = true;
+                Assert.Throws<InvalidOperationException>(() => RegisterConditionalUpdate(builder, entry, callback));
+                retryObserved = true;
             });
 
             hub.Update(1);
 
             Assert.That(connectedDuringRetry, Is.True);
-            Assert.That(registeredAgain, Is.True);
+            Assert.That(retryObserved, Is.True);
             Assert.That(attempts, Is.EqualTo(1));
+            RegisterConditionalUpdate(builder, entry, callback);
             hub.Update(2);
 
             Assert.That(attempts, Is.EqualTo(2));
@@ -946,7 +948,7 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void UnhandledUpdateFailuresFinishTraversalAndRethrowTheFirstException(bool throwingReporter)
+        public void UnhandledUpdateFailuresStopTraversalAndLeaveUnvisitedSubscriptions(bool throwingReporter)
         {
             using var hub = new EventHub<int>(new object());
             var listener = new object();
@@ -965,10 +967,11 @@ namespace BlackThunder.UniEngine.Tests
 
             var actual = Assert.Catch<Exception>(() => hub.Update(1));
             Assert.That(actual, Is.SameAs(throwingReporter ? reportFailure : first));
-            Assert.That(calls, Is.EqualTo(new[] { 1, -1 }));
+            Assert.That(calls, Is.Empty);
             Assert.That(hub.HasListener(listener), Is.True);
-            hub.Update(2);
-            Assert.That(calls, Is.EqualTo(new[] { 1, -1, 2, -2 }));
+            Assert.Catch<Exception>(() => hub.Update(2));
+            hub.Update(3);
+            Assert.That(calls, Is.EquivalentTo(new[] { 2, 3, -3 }));
             Assert.That(reports, Is.EqualTo(throwingReporter ? new[] { first, second } : Array.Empty<Exception>()));
         }
 
@@ -999,7 +1002,7 @@ namespace BlackThunder.UniEngine.Tests
             else Assert.DoesNotThrow(() => hub.Updated -= typed);
 
             hub.Update(2);
-            Assert.That(values, Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(values, Is.EqualTo(handled ? new[] { 1, 2 } : new[] { 2 }));
             Assert.That(reports, Is.EqualTo(handled ? new[] { failure } : Array.Empty<Exception>()));
         }
 
@@ -1026,7 +1029,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void FailedWhereImmediatelyDisconnectsEmptyListenersAndKeepsLifecycleConnections()
+        public void FailedWhereDisconnectsEmptyListenersAfterTheRootAndKeepsLifecycleConnections()
         {
             using var hub = new EventHub<int>(new object());
             var retainedListener = new object();
@@ -1053,7 +1056,7 @@ namespace BlackThunder.UniEngine.Tests
 
                 retainedDuringUpdate = hub.HasListener(retainedListener);
                 removedDuringUpdate = hub.HasListener(removedListener);
-                retained.OnUpdatedWhere(predicate, first).OnUpdatedWhere(predicate, second);
+                Assert.Throws<InvalidOperationException>(() => retained.OnUpdatedWhere(predicate, first));
                 observed = true;
             });
 
@@ -1061,9 +1064,11 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(observed, Is.True);
             Assert.That(retainedDuringUpdate, Is.True);
-            Assert.That(removedDuringUpdate, Is.False);
+            Assert.That(removedDuringUpdate, Is.True);
+            Assert.That(hub.HasListener(removedListener), Is.False);
             Assert.That(values, Is.Empty);
             AssertBuilderUnavailable<InvalidOperationException>(removed);
+            retained.OnUpdatedWhere(predicate, first).OnUpdatedWhere(predicate, second);
             hub.Update(2);
 
             Assert.That(values, Is.EqualTo(new[] { 2, -2 }));
@@ -1296,7 +1301,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void DisposalFromUpdateWaitsForTheCurrentCallbackAndSkipsItsMulticastTail()
+        public void DisposalFromUpdateWaitsForTheRootUnit()
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
@@ -1316,7 +1321,7 @@ namespace BlackThunder.UniEngine.Tests
             hub.Update(0);
 
             Assert.That(hub.IsDisposed, Is.True);
-            Assert.That(calls, Is.EqualTo(new[] { "before", "after", "disposing", "disposed" }));
+            Assert.That(calls, Is.EqualTo(new[] { "before", "after", "tail", "direct", "disposing", "disposed" }));
         }
 
         [TestCase(false)]
@@ -1351,7 +1356,7 @@ namespace BlackThunder.UniEngine.Tests
             {
                 "disposed:0:True", "disposed:1:True", "disposed:2:True",
             }));
-            Assert.That(updates, Is.Zero);
+            Assert.That(updates, Is.EqualTo(duringUpdate ? 10 : 0));
             Assert.That(hub.IsDisposed, Is.True);
             Assert.That(hub.ConnectionCount, Is.Zero);
         }
@@ -1684,7 +1689,7 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void RemovingCurrentDirectUpdateSkipsItsMulticastTail(bool objectEvent)
+        public void RemovingCurrentDirectUpdateFinishesItsMulticastTail(bool objectEvent)
         {
             using var hub = new EventHub<int>(new object());
             var calls = new List<string>();
@@ -1700,7 +1705,7 @@ namespace BlackThunder.UniEngine.Tests
             hub.Update(1);
             hub.Update(2);
 
-            Assert.That(calls, Is.EqualTo(new[] { "remove" }));
+            Assert.That(calls, Is.EqualTo(new[] { "remove", "tail" }));
             Assert.That(hub.ConnectionCount, Is.Zero);
         }
 
@@ -1808,12 +1813,11 @@ namespace BlackThunder.UniEngine.Tests
 
         [TestCase(false)]
         [TestCase(true)]
-        public void FailedUpdateCanBeRegisteredAgainDuringTheSameUpdate(bool direct)
+        public void FailedUpdateCanBeRegisteredAgainAfterTheRootCommit(bool direct)
         {
             using var hub = new EventHub<int>(new object());
             var values = new List<int>();
             var reports = new List<Exception>();
-            Exception registrationFailure = null;
             var failure = new ApplicationException("retry");
             Action<int> callback = value =>
             {
@@ -1822,33 +1826,23 @@ namespace BlackThunder.UniEngine.Tests
             };
 
             ExceptionHandler.SetHandler(reports.Add);
-            var builder = direct ? null : hub.Connect(new object());
+            var builder = direct ? null : hub.Connect(new object()).OnDisposed(() => { });
             if (direct) hub.Updated += callback;
             else builder.OnUpdated(callback);
 
             hub.Updated += value =>
             {
                 if (value != 1) return;
-                if (direct) hub.Updated += callback;
-                else
-                {
-                    try
-                    {
-                        builder.OnUpdated(callback);
-                    }
-                    catch (Exception exception)
-                    {
-                        registrationFailure = exception;
-                    }
-                }
+                if (direct) Assert.Throws<InvalidOperationException>(() => hub.Updated += callback);
+                else Assert.Throws<InvalidOperationException>(() => builder.OnUpdated(callback));
             };
 
             hub.Update(1);
             Assert.That(values, Is.Empty);
-            if (!direct) Assert.That(registrationFailure, Is.TypeOf<InvalidOperationException>());
-
+            if (direct) hub.Updated += callback;
+            else builder.OnUpdated(callback);
             hub.Update(2);
-            Assert.That(values, Is.EqualTo(direct ? new[] { 2 } : Array.Empty<int>()));
+            Assert.That(values, Is.EqualTo(new[] { 2 }));
             Assert.That(reports, Is.EqualTo(new[] { failure }));
         }
 

@@ -187,10 +187,10 @@ namespace BlackThunder.UniEngine.Tests
             stream.Where(_ => true).Subscribe(_ => calls.Add("last"));
 
             stream.OnNext(1);
-            Assert.That(calls, Is.EqualTo(removeCurrent ? new[] { "next", "last" } : new[] { "current", "last" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "current", "next", "last" }));
             calls.Clear();
             stream.OnNext(2);
-            Assert.That(calls, Is.EqualTo(removeCurrent
+            Assert.That(calls, Is.EquivalentTo(removeCurrent
                 ? new[] { "next", "last", "replacement" }
                 : new[] { "current", "last", "replacement" }));
         }

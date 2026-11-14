@@ -305,7 +305,7 @@ namespace BlackThunder.UniEngine.Tests
 
         // Mutation and lifetime
         [Test]
-        public void UpdatesDeferNewFlagsSubscriptionsAndImmediatelyDisconnectExistingOnes()
+        public void UpdatesCommitFlagsRegistrationsAndRemovalsAfterTheRoot()
         {
             using var hub = new EventHub<ulong>(new object());
             var calls = new List<string>();
@@ -325,15 +325,15 @@ namespace BlackThunder.UniEngine.Tests
             hub.Connect(removed).OnUpdatedForFlags(Changes.Location, () => calls.Add("removed"));
 
             hub.Update(3);
-            Assert.That(calls, Is.EqualTo(new[] { "root", "shape" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "root", "shape", "removed" }));
             calls.Clear();
             hub.Update(3);
-            Assert.That(calls, Is.EqualTo(new[] { "root", "shape", "late-shape", "late-location" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "root", "shape", "late-shape", "late-location" }));
         }
 
         [TestCase(false)]
         [TestCase(true)]
-        public void DisconnectInsideAFlagsCallbackSkipsItsMulticastTailAndOtherPaths(bool parameterless)
+        public void DisconnectInsideAFlagsCallbackFinishesTheRootUnit(bool parameterless)
         {
             using var hub = new EventHub<ulong>(new object());
             var listener = new object();
@@ -350,7 +350,7 @@ namespace BlackThunder.UniEngine.Tests
             hub.Connect(new object()).OnUpdatedForFlags(Changes.Location, () => survivors++);
             hub.Update(3);
 
-            Assert.That(tails, Is.Zero);
+            Assert.That(tails, Is.EqualTo(2));
             Assert.That(survivors, Is.EqualTo(1));
             Assert.That(hub.HasListener(listener), Is.False);
             Assert.That(hub.ConnectionCount, Is.EqualTo(1));

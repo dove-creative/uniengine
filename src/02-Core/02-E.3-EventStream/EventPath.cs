@@ -32,6 +32,9 @@ namespace Blackthunder.UniEngine.Core
         public EventPath<T> ForOrder<TOrder>(TOrder order) where TOrder : Enum =>
             new(this, PathInfo<T>.Group(Convert.ToInt32(order)));
 
+        public EventPath<T> ForOrderAsync<TOrder>(TOrder order) where TOrder : Enum =>
+            new(this, PathInfo<T>.ParallelGroup(Convert.ToInt32(order)));
+
         // Subscriptions
         public IDisposable Subscribe(Action<T> updated) =>
             Register(Registration<T>.Subscription(updated, null, null));

@@ -19,11 +19,15 @@ namespace Blackthunder.UniEngine.Core
                 _remaining = count;
             }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                EventGraph<T>.ParallelBatch batch = null)
             {
                 if (_remaining > 0)
                 {
-                    base.Visit(value, lastVisible, ref failure);
+                    base.Visit(value, lastVisible, ref failure, batch);
                     _remaining--;
                 }
 
@@ -61,11 +65,15 @@ namespace Blackthunder.UniEngine.Core
                 _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
             }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                EventGraph<T>.ParallelBatch batch = null)
             {
                 if (!_stream.TryEvaluate(_predicate, value, out var matches)) return;
 
-                if (matches) base.Visit(value, lastVisible, ref failure);
+                if (matches) base.Visit(value, lastVisible, ref failure, batch);
                 else _stream.OnCompleted();
             }
         }
@@ -82,7 +90,11 @@ namespace Blackthunder.UniEngine.Core
 
             internal Counter(int count) => _remaining = count;
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                EventGraph<T>.ParallelBatch batch = null)
             {
                 if (_remaining > 0)
                 {
@@ -90,7 +102,7 @@ namespace Blackthunder.UniEngine.Core
                     return;
                 }
 
-                base.Visit(value, lastVisible, ref failure);
+                base.Visit(value, lastVisible, ref failure, batch);
             }
         }
     }
@@ -112,7 +124,11 @@ namespace Blackthunder.UniEngine.Core
                 _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
             }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                EventGraph<T>.ParallelBatch batch = null)
             {
                 if (!_isOpen)
                 {
@@ -122,7 +138,7 @@ namespace Blackthunder.UniEngine.Core
                     _isOpen = true;
                 }
 
-                base.Visit(value, lastVisible, ref failure);
+                base.Visit(value, lastVisible, ref failure, batch);
             }
         }
     }
