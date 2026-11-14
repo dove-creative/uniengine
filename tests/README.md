@@ -2,7 +2,7 @@
 
 ## 구성
 
-`UniEngine.Tests.csproj`는 본체를 ProjectReference로 참조하는 단일 .NET 10·C# 9 테스트 프로젝트이다. 로컬 `BlackThunder.UniTest` 0.4.1 패키지와 NUnit 3을 사용한다. 테스트 코드는 `src`의 계층·모듈 폴더에 대응하도록 배치하며, 모든 테스트를 하나의 `UniEngine.Tests.dll`로 빌드한다.
+`UniEngine.Tests.csproj`는 본체를 ProjectReference로 참조하는 단일 .NET 10·C# 9 테스트 프로젝트이다. 로컬 `BlackThunder.UniTest` 0.4.2 패키지와 NUnit 3을 사용한다. 테스트 코드는 `src`의 계층·모듈 폴더에 대응하도록 배치하며, 모든 테스트를 하나의 `UniEngine.Tests.dll`로 빌드한다.
 
 ```text
 tests/
@@ -125,6 +125,8 @@ Plans에는 검증 범위·절차·실행 명령·기대값을, Results에는 �
 본체는 `InternalsVisibleTo("UniEngine.Tests")`로 테스트 어셈블리에 internal 접근 권한을 허용한다. 이 선언은 역방향 프로젝트 참조를 만들지 않으며 private 접근은 허용하지 않는다. 현재 Infrastructure 테스트는 공개 API를 사용한다.
 
 ## 테스트 작성 기준
+
+변경 유형별 검증 범위는 [AGENTS](../AGENTS.md)와 UniTest의 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/e53ef8b012f58dc2e851f44498985cb8df772ecd/docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md) 6절을 따른다. 동작 변화가 없는 코드 변경은 빌드만 수행하고, 국소적인 동작 변경은 영향을 받는 테스트만 실행한다. 여러 모듈에 걸친 코드 변경, 공개 API·빌드 설정·의존성 변경, 릴리즈·패키징 작업은 전체 테스트를 실행한다. 국소적인 수정의 통합 테스트도 영향을 받는 연동 범위로 제한한다.
 
 별도 범위 지정이 없는 UniTest 기반 테스트 작성·보강 작업에서는 대상 모듈의 `01. Tables.md`와 `02. Plans.md`를 기준으로 다음 두 범위를 모두 작성하고 실행하는 것을 기본으로 한다.
 

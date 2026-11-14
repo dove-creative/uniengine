@@ -22,11 +22,11 @@ UniEngine에서 상태와 동작을 구성하여 재현·검증하는 외부 테
 
 UniTest는 여러 단계에 걸친 상태 전이를 하나의 실행 흐름으로 재현할 때 사용한다. 어떤 모듈의 어떤 상태 전이를 검증할지는 각 모듈의 테스트 표와 계획이 정하고, 실행 결과는 실행 기록에 남긴다.
 
-현재 채택 버전은 0.4.1이다. 교체할 때는 테스트 프로젝트에서 검증한 뒤 이전 버전을 제거하며, 버전·출처·지침 확인 이력은 패키지 문서가 관리한다.
+현재 채택 버전은 0.4.2이다. 교체할 때는 테스트 프로젝트에서 검증한 뒤 이전 버전을 제거하며, 버전·출처·지침 확인 이력은 패키지 문서가 관리한다.
 
 ## 참조
 
-테스트 폴더와 문서의 이름은 UniTest의 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/3df16ae4785f73f1b15569e99a198b20a7be7e94/docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md) 기준을 따른다.
+테스트 폴더와 문서의 이름, 변경 유형별 검증 범위는 UniTest의 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/e53ef8b012f58dc2e851f44498985cb8df772ecd/docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md) 기준을 따른다.
 UniEngine의 기본 검증 범위, 랜덤 연속 테스트의 seed·깊이와 실행 중 확인 규칙은 [테스트 안내](../../../tests/README.md)의 테스트 작성 기준 절을 따른다.
 
 [패키지 문서](../../../packages/README.md) · [보조 프레임워크](README.md)

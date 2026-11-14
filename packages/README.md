@@ -24,25 +24,51 @@ C# 구현의 `netstandard2.1` DLL만 포함하며, TypeScript 구현과 런타�
 | 항목 | 값 |
 | --- | --- |
 | 패키지 | `BlackThunder.UniTest` |
-| 버전 | `0.4.1` |
-| 파일 | [BlackThunder.UniTest.0.4.1.nupkg](BlackThunder.UniTest.0.4.1.nupkg) |
+| 버전 | `0.4.2` |
+| 파일 | [BlackThunder.UniTest.0.4.2.nupkg](BlackThunder.UniTest.0.4.2.nupkg) |
 | 원본 저장소 | [dove-creative/unitest](https://github.com/dove-creative/unitest) |
-| 원본 커밋 | [3df16ae4785f73f1b15569e99a198b20a7be7e94](https://github.com/dove-creative/unitest/commit/3df16ae4785f73f1b15569e99a198b20a7be7e94) |
-| SHA-256 | `2669B8806791D68E96FA34DCCA3709C46C8EBE1D97C286F5D3CFE60443C92DA0` |
-| 원본 검증 | 전체 테스트 641개와 샘플 CLI 검증 통과 |
-| 소비 검증 | 빈 캐시에서 복원, Release 빌드, UniEngine 전체 테스트 686개 통과. 이전 패키지 삭제 후 새 빈 캐시에서 복원·빌드 재확인 |
+| 원본 커밋 | [e53ef8b012f58dc2e851f44498985cb8df772ecd](https://github.com/dove-creative/unitest/commit/e53ef8b012f58dc2e851f44498985cb8df772ecd) |
+| SHA-256 | `C9B57885397F4FFADF96010776C600A3E41E9052C8E763C4F22ECA51C0A4AAE4` |
+| 원본 검증 | C# 전체 테스트 660개와 샘플 CLI 검증 통과 |
+| 소비 검증 | 빈 캐시 복원 및 UniEngine 커밋 e002925의 별도 사본에 새 패키지를 적용한 Release 빌드 통과. 소비 테스트와 이후 추가 검증은 사용자 요청으로 실행하지 않음 |
 
-`netstandard2.1`의 `BlackThunder.UniTest.dll`을 제공하며 런타임 패키지 의존성은 없다. `tests/UniEngine.Tests.csproj`가 이 로컬 패키지를 정확한 버전 `[0.4.1]`으로 참조한다. 실행 방법은 [테스트 안내](../tests/README.md)를 따른다.
+`netstandard2.1`의 `BlackThunder.UniTest.dll`을 제공하며 런타임 패키지 의존성은 없다. `tests/UniEngine.Tests.csproj`가 이 로컬 패키지를 정확한 버전 `[0.4.2]`으로 참조한다. 실행 방법은 [테스트 안내](../tests/README.md)를 따른다.
 
 각 패키지는 현재 채택한 버전만 보관한다. 새 버전으로 참조를 갱신하고 검증을 마치면, 더 이상 참조하지 않는 이전 버전의 `.nupkg`를 삭제한다.
 
 ## UniTest 작업 지침
 
-2026-11-07에 원격 main의 최신 커밋 [3df16ae](https://github.com/dove-creative/unitest/commit/3df16ae4785f73f1b15569e99a198b20a7be7e94)과 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/3df16ae4785f73f1b15569e99a198b20a7be7e94/docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md)를 확인했다. 최신 지침은 Wiki 아래로 통합되어 있으며, 이 커밋의 CompositeLab 예상 예외 판정 수정이 새 소비 패키지에 포함된다.
+2026-11-14에 `dove/harden-lab-public-api` 브랜치에 푸시한 커밋 [e53ef8b](https://github.com/dove-creative/unitest/commit/e53ef8b012f58dc2e851f44498985cb8df772ecd)과 [테스트 작성 워크플로](https://github.com/dove-creative/unitest/blob/e53ef8b012f58dc2e851f44498985cb8df772ecd/docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md)를 반영했다. 워크플로 6절은 동작 변화 없는 코드 변경의 빌드 검증, 국소적인 동작 변경의 영향 범위 테스트, 여러 모듈·공개 API·빌드 설정·의존성·릴리즈 변경의 전체 테스트를 구분한다. 통합 테스트도 같은 영향 범위 기준을 따른다.
 
-기존 0.4.0 패키지를 덮어쓰지 않기 위해 소비용 패키지 버전을 0.4.1로 부여했다. 원본 프로젝트의 Version은 0.4.0으로 유지하고, 패키징 시 PackageVersion=0.4.1과 RepositoryCommit을 명시했다. UniEngine은 소스 복제나 외부 ProjectReference 없이 로컬 피드의 컴파일된 패키지만 사용한다.
+기존 배포본을 덮어쓰지 않기 위해 소비용 패키지 버전을 0.4.2로 부여했다. 원본 프로젝트의 Version은 0.4.0이며, 패키징 시 PackageVersion=0.4.2와 RepositoryCommit을 명시했다. UniEngine은 소스 복제나 외부 ProjectReference 없이 로컬 피드의 컴파일된 패키지만 사용한다.
+
+이번 패키지에는 Lab의 생성 전용 속성, 읽기 전용 메타데이터·후속 노드 공개와 예외 스택 보존 변경이 포함된다. 연속 경로의 후보 정렬과 seed 해시 규칙도 변경되어, 기존과 같은 seed라도 선택 경로는 달라질 수 있다.
+
+## 2026-11-14 갱신 검증
+
+푸시한 UniTest 커밋을 별도 폴더에 추출하여 C# Release 빌드, 일반 테스트 609개, 자체 테스트 51개와 샘플 CLI 검증을 수행했다. 빌드는 경고·오류가 없었고 모든 테스트와 샘플 검증이 통과했다. 다음 명령으로 소비용 패키지를 생성했다.
+
+```powershell
+dotnet pack csharp/src/BlackThunder.UniTest/BlackThunder.UniTest.csproj --configuration Release --no-build --no-restore --output artifacts/packages/uniengine-e53ef8b -p:PackageVersion=0.4.2 -p:RepositoryCommit=e53ef8b012f58dc2e851f44498985cb8df772ecd
+```
+
+패키지의 ID·버전·원본 커밋, netstandard2.1 DLL과 런타임 의존성 없음을 확인했다. 패키지 안의 DLL SHA-256은 `A171E4FF363E4618B5B80CB70ED65E6D299BE60F46E7618BC4332F8E68DA2AF1`이다.
+
+| 단계 | 결과 |
+| --- | --- |
+| 현재 작업 폴더의 빈 캐시 복원 | UniTest 0.4.2와 기존 의존성 복원 성공 |
+| 현재 작업 폴더의 Release 빌드 | 본체 빌드 성공. 테스트 빌드는 병행 Utilities 네임스페이스 변경과 기존 테스트 using의 불일치로 CS1061 오류 19개 발생 |
+| UniEngine e002925의 별도 사본에 0.4.2만 적용 | 별도 빈 캐시 복원과 본체·테스트 Release 빌드 성공, 경고·오류 0개 |
+| UniEngine 소비 테스트 | 사용자 요청으로 실행하지 않음 |
+| 이전 0.4.1 패키지 제거 후 재검증 | 사용자 요청으로 실행하지 않음 |
+
+빌드한 별도 사본의 기준은 [e002925194cc1713d0a34e7e2f277575bbb0556a](https://github.com/dove-creative/uniengine/commit/e002925194cc1713d0a34e7e2f277575bbb0556a)이다. 이 결과는 현재 작업 폴더에 있는 다른 변경의 검증 결과가 아니다. 사용자가 추가 검증 중단을 요청하여 소비 테스트와 삭제 후 복원·빌드는 수행하지 않았다.
+
+원본 기록은 [현재 폴더 복원 로그](../tests/obj/UniTestUpdate-e53ef8b/restore-before-cleanup.log), [현재 폴더 빌드 로그](../tests/obj/UniTestUpdate-e53ef8b/build-before-cleanup.log), [별도 사본 복원 로그](../tests/obj/UniTestUpdate-e53ef8b/restore-committed-consumer.log), [별도 사본 빌드 로그](../tests/obj/UniTestUpdate-e53ef8b/build-committed-consumer.log)에 있다. 로그와 검증용 사본은 비추적 산출물이다.
 
 ## 2026-11-07 갱신 검증
+
+당시에는 원격 main의 3df16ae 커밋으로 소비용 0.4.1 패키지를 만들었다. 아래 수치는 그 버전의 과거 검증 결과이다.
 
 UniTest의 깨끗한 커밋에서 다음 명령으로 패키지를 생성했다.
 
