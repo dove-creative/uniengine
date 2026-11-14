@@ -7,9 +7,8 @@
 *.user
 *.suo
 
-# Obsidian local workspace state
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
+# Obsidian local settings and workspace state
+.obsidian/
 
 # Operating system files
 .DS_Store
