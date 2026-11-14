@@ -47,6 +47,14 @@ tests/
    │  └─ docs/
    │     ├─ 01. Tables.md
    │     └─ 02. Plans.md
+   ├─ 02-O.1-Property/
+   │  ├─ PropertyTests.cs
+   │  ├─ UniTest/
+   │  │  └─ PropertyStateProjectTests.cs
+   │  └─ docs/
+   │     ├─ 01. Tables.md
+   │     ├─ 02. Plans.md
+   │     └─ 03. Results.md
    ├─ 02-E.2-AdaptiveCollections/
    │  ├─ AdaptiveCollectionTests.cs
    │  ├─ AdaptiveActionTests.cs
@@ -159,6 +167,7 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 
 ## 범위
 
+- Property의 등록·형식 지정 조회·실패 시 상태 보존·회수·표준 사전 계약과 IPropertySubject 소비 시나리오·연속 상태 전이 검증
 - 공통 ValueEnumerator의 순회 수명과 실패 처리- AdaptiveCollection·AdaptiveDictionary·AdaptiveHashSet의 순회 중 변경·중단·복사본 처리
 - AdaptiveAction과 EventStream의 순회 소비 회귀 검증
 - EventStream·순서 그룹·필터 경로·상태 연산자·Merge의 구독 후 첫 값 전달과 반복 전달 할당량 검증
@@ -174,6 +183,8 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 - ExceptionHandler의 보고 정책과 SafeInvoke 전체 오버로드
 
 Core 순회 범위의 상태와 동작 기준과 실행 구성은 ValueEnumerator의 [상태·동작 표](02-Core/01-O.3-Objects/docs/01.%20Tables.md)·[테스트 계획](02-Core/01-O.3-Objects/docs/02.%20Plans.md)과 Adaptive Collections의 [상태·동작 표](02-Core/02-E.2-AdaptiveCollections/docs/01.%20Tables.md)·[테스트 계획](02-Core/02-E.2-AdaptiveCollections/docs/02.%20Plans.md)을 따른다. Infrastructure 보강 당시의 전체 실행 기록과 모듈별 결과는 [Infrastructure 검증 결과](01-Infrastructure/docs/03.%20Results.md)에 있다.
+
+Property 모듈의 [상태·동작 표](02-Core/02-O.1-Property/docs/01.%20Tables.md), [테스트 계획](02-Core/02-O.1-Property/docs/02.%20Plans.md), [실행 결과](02-Core/02-O.1-Property/docs/03.%20Results.md)는 해당 모듈의 docs 폴더에서 관리한다.
 
 EventStream 모듈의 [상태·동작 표](02-Core/02-E.3-EventStream/docs/01.%20Tables.md), [테스트 계획](02-Core/02-E.3-EventStream/docs/02.%20Plans.md), [실행 결과](02-Core/02-E.3-EventStream/docs/03.%20Results.md)는 해당 모듈의 docs 폴더에서 관리한다.
 
