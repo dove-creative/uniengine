@@ -10,6 +10,7 @@ namespace Blackthunder.UniEngine.Core
         // Front
         internal int NodeCount { get; private set; }
         internal bool IsPublishing { get; private set; }
+        internal EventDispatchScope Scope { get; } = new();
 
         // Internal
         private const int WhereIndexThreshold = 16;
@@ -20,6 +21,7 @@ namespace Blackthunder.UniEngine.Core
             : null;
 
         private Node _root = new();
+        private readonly EventDispatchScope _terminalScope = new();
         private readonly Action _onEmpty;
         // Only wide parents get an index; routing nodes keep their existing size and layout.
         private Dictionary<Node, Dictionary<Func<T, bool>, WhereNode>> _whereIndexes;
@@ -29,10 +31,18 @@ namespace Blackthunder.UniEngine.Core
 
         // Content --------------------
         // Registration
-        internal EventGraph(Action onEmpty) => _onEmpty = onEmpty;
+        internal EventGraph(Action onEmpty)
+        {
+            _onEmpty = onEmpty;
+            _root.Scope = Scope;
+        }
 
         // An operator stream replaces the root while it is built, before anything can subscribe.
-        internal void Inject(Node root) => _root = root;
+        internal void Inject(Node root)
+        {
+            _root = root;
+            _root.Scope = Scope;
+        }
 
         // Starts a registration at the root. Nodes added from here on stay invisible
         // to a publication that is already running.
@@ -49,27 +59,60 @@ namespace Blackthunder.UniEngine.Core
             Action<T> updated,
             Action completed,
             Action<Exception> errored,
-            IGraphObserver<T> input = null) =>
-            Attach(FindGate(node), updated, completed, errored, input);
+            IGraphObserver<T> input = null,
+            bool sequential = false,
+            EventSubscriptionHandle handle = null) =>
+            Attach(FindGate(node), updated, completed, errored, input, sequential, handle);
 
-        internal Handle Connect(Node node, IGraphObserver<T> input)
+        internal Handle Connect(Node node, IGraphObserver<T> input, EventSubscriptionHandle handle = null)
         {
             var gate = AddChild(node, new OutputGate(isConnection: true));
-            return Attach(gate, input.OnNext, input.OnCompleted, input.OnError, input);
+            return Attach(gate, input.OnNext, input.OnCompleted, input.OnError, input, handle: handle);
         }
 
         // Node operations for paths
-        internal Node FindOrAddGroup(Node parent, int order)
+        internal Node FindOrAddGroup(Node parent, int order, bool parallel = false)
         {
             var ordered = FindOrdered(parent) ?? AddChild(parent, new OrderedNode());
-            var group = ordered.Find(order);
+            var key = (long)order * 2 + (parallel ? 0 : 1);
+            var group = ordered.Find(key);
 
             if (group != null) return group;
 
-            group = AddChild(ordered, new Node(), ordered.FindNext(order));
-            ordered.Add(order, group);
+            group = AddChild(ordered, parallel ? new ParallelGroup() : new Node(), ordered.FindNext(key));
+            group.Scope = ordered.Find(key ^ 1)?.Scope ?? new EventDispatchScope(Scope);
+            ordered.Add(key, group);
 
             return group;
+        }
+
+        // Resolve ownership without creating nodes during an active publication.
+        internal EventDispatchScope RegistrationScope(PathInfo<T> path)
+        {
+            var node = _root;
+            var scope = Scope;
+            for (var info = path; info != null; info = info.Next)
+            {
+                if (info.NodeType == PathNodeType.Group || info.NodeType == PathNodeType.ParallelGroup)
+                {
+                    var ordered = FindOrdered(node);
+                    var key = (long)info.Order * 2;
+                    var existing = ordered?.Find(key) ?? ordered?.Find(key + 1);
+                    // A new numeric order is not an active ancestor.
+                    if (existing == null) return null;
+                    scope = existing.Scope;
+                    node = ordered.Find(key + (info.NodeType == PathNodeType.Group ? 1 : 0));
+                }
+                else if (info.NodeType == PathNodeType.Where)
+                    node = FindWhere(node, info.Predicate, indexWideParent: false);
+                else if (info.NodeType == PathNodeType.Flags)
+                    node = FindFlags(node)?.Find(info.Mask);
+                else
+                    return scope; // Debug always creates a new path.
+
+                if (node == null) return scope;
+            }
+            return scope;
         }
 
         // The groups of a position share one ordered node.
@@ -107,7 +150,7 @@ namespace Blackthunder.UniEngine.Core
             AddChild(parent, new DebugNode(message, logType));
 
         // Small parents avoid hashing. Promote only when a new condition would exceed the scan limit.
-        private WhereNode FindWhere(Node parent, Func<T, bool> predicate)
+        private WhereNode FindWhere(Node parent, Func<T, bool> predicate, bool indexWideParent = true)
         {
             if (_whereIndexes != null && _whereIndexes.TryGetValue(parent, out var index))
                 return index.TryGetValue(predicate, out var existing) ? existing : null;
@@ -120,7 +163,7 @@ namespace Blackthunder.UniEngine.Core
                 count++;
             }
 
-            if (count >= WhereIndexThreshold) IndexWhere(parent, count);
+            if (indexWideParent && count >= WhereIndexThreshold) IndexWhere(parent, count);
 
             return null;
         }
@@ -148,6 +191,7 @@ namespace Blackthunder.UniEngine.Core
         {
             child.Registration = _lastRegistration;
             child.Parent = parent;
+            child.Scope = parent.Scope;
             parent.Children.Insert(child, before);
 
             if (_whereIndexes != null && child is WhereNode whereNode
@@ -167,14 +211,18 @@ namespace Blackthunder.UniEngine.Core
             Action<T> updated,
             Action completed,
             Action<Exception> errored,
-            IGraphObserver<T> input)
+            IGraphObserver<T> input,
+            bool sequential = false,
+            EventSubscriptionHandle handle = null)
         {
-            var subscription = new Subscription(updated, completed, errored, input != null)
+            var subscription = new Subscription(updated, completed, errored, input != null, sequential)
             {
                 Registration = _lastRegistration
             };
 
-            subscription.Handle = new Handle(() =>
+            handle ??= new EventSubscriptionHandle(gate.Scope);
+            subscription.Handle = handle;
+            handle.Bind(gate.Scope, () =>
             {
                 gate.Subscriptions.Remove(subscription);
                 Prune(gate);
@@ -223,17 +271,23 @@ namespace Blackthunder.UniEngine.Core
             if (IsPublishing) throw new InvalidOperationException("Cannot publish recursively to the same stream.");
 
             IsPublishing = true;
+            Scope.Enter();
+            ExceptionDispatchInfo failure = null;
 
             try
             {
-                ExceptionDispatchInfo failure = null;
                 _root.Visit(value, _lastRegistration, ref failure);
-                failure?.Throw();
+            }
+            catch (Exception exception)
+            {
+                failure ??= ExceptionDispatchInfo.Capture(exception);
             }
             finally
             {
-                IsPublishing = false;
+                try { Scope.Exit(ref failure); }
+                finally { IsPublishing = false; }
             }
+            failure?.Throw();
         }
 
         private static void Report(Exception exception, ref ExceptionDispatchInfo failure)
@@ -255,8 +309,16 @@ namespace Blackthunder.UniEngine.Core
             _closed = true;
 
             ExceptionDispatchInfo failure = null;
-            _root.VisitEnd(completed ? Signal.Completed : Signal.Error, error, ref failure);
-            _root.VisitEnd(Signal.Dispose, null, ref failure);
+            _terminalScope.Enter();
+            try
+            {
+                _root.VisitEnd(completed ? Signal.Completed : Signal.Error, error, ref failure);
+            }
+            finally
+            {
+                _terminalScope.Exit(ref failure);
+                _root.VisitEnd(Signal.Dispose, null, ref failure);
+            }
             failure?.Throw();
         }
 

@@ -16,7 +16,7 @@ namespace BlackThunder.UniEngine.Tests
         [TearDown]
         public void TearDown() => ExceptionHandler.SetHandler(null);
 
-        // R1: Removal affects the current publication; new subscriptions wait for the next.
+        // R1: Root mutations commit after publication; additions receive the next value.
         [Test]
         public void EventStreamAppliesSubscriptionChangesAtTheExpectedTime()
         {
@@ -37,7 +37,7 @@ namespace BlackThunder.UniEngine.Tests
             removed = stream.Subscribe(value => calls.Add($"removed:{value}"));
             stream.OnNext(1);
             stream.OnNext(2);
-            Assert.That(calls, Is.EqualTo(new[] { "first:1", "first:2", "late:2" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first:1", "removed:1", "first:2", "late:2" }));
         }
 
         // R1: Fault isolation or propagation still permits a later publication.
@@ -66,20 +66,20 @@ namespace BlackThunder.UniEngine.Tests
             }
 
             stream.OnNext(2);
-            // An unhandled failure is rethrown only after the remaining subscribers receive the value.
-            Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
+            // A failed publication does not prevent the next publication.
+            Assert.That(calls, Is.EqualTo(handled ? new[] { 1, 2 } : new[] { 2 }));
         }
 
-        // R1: Disposal inside a callback stops the remaining receivers and cleans up.
+        // R1: Disposal inside a root callback finishes the unit and cleans up.
         [Test]
-        public void EventStreamDisposalDuringPublicationStopsRemainingCallbacks()
+        public void EventStreamDisposalFinishesTheRootUnit()
         {
             using var stream = new EventStream<int>();
             var laterCalls = 0;
             stream.Subscribe(_ => stream.Dispose());
             stream.Subscribe(_ => laterCalls++);
             stream.OnNext(1);
-            Assert.That(laterCalls, Is.Zero);
+            Assert.That(laterCalls, Is.EqualTo(1));
             Assert.That(stream.IsDisposed, Is.True);
             Assert.Throws<ObjectDisposedException>(() => stream.OnNext(2));
         }

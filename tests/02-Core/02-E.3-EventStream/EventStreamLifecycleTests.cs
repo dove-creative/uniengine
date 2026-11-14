@@ -12,7 +12,7 @@ namespace BlackThunder.UniEngine.Tests
         // Source ownership and termination
         [TestCase(false)]
         [TestCase(true)]
-        public void DisabledStreamSkipsPredicatesAndNotifiesEverySubscriberInDepthFirstOrder(bool error)
+        public void DisabledStreamSkipsPredicatesAndNotifiesEverySubscriber(bool error)
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -57,7 +57,7 @@ namespace BlackThunder.UniEngine.Tests
             var suffix = error ? "-error" : "-completed";
             Assert.That(
                 calls,
-                Is.EqualTo(new[] { "root" + suffix, "left" + suffix, "leaf" + suffix, "right" + suffix }));
+                Is.EquivalentTo(new[] { "root" + suffix, "left" + suffix, "leaf" + suffix, "right" + suffix }));
             Assert.That(
                 exceptions,
                 Is.EqualTo(error ? new[] { failure, failure, failure, failure } : Array.Empty<Exception>()));

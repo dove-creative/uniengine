@@ -43,7 +43,7 @@ namespace BlackThunder.UniEngine.Tests
 
             public void AssertRegistered()
             {
-                Assert.That(_deliveries, Is.EqualTo(new[] { "shape", "location", "both" }));
+                Assert.That(_deliveries, Is.EquivalentTo(new[] { "shape", "location", "both" }));
                 Assert.That(Source.NodeCount, Is.EqualTo(4));
                 Assert.That(_handles.All(handle => !handle.IsDisposed), Is.True);
                 Assert.That(_mutationsPerformed, Is.Zero);
@@ -86,16 +86,14 @@ namespace BlackThunder.UniEngine.Tests
 
             public void AssertMutated()
             {
-                var expected = _mutation == Mutation.Add
-                    ? new[] { "shape", "location", "both" }
-                    : new[] { "shape", "both" };
-                Assert.That(_deliveries, Is.EqualTo(expected));
+                var expected = new[] { "shape", "location", "both" };
+                Assert.That(_deliveries, Is.EquivalentTo(expected));
                 AssertMutationState();
             }
 
             public void AssertNextPublication()
             {
-                Assert.That(_deliveries, Is.EqualTo(ActiveNames()));
+                Assert.That(_deliveries, Is.EquivalentTo(ActiveNames()));
                 AssertMutationState();
             }
 
@@ -139,7 +137,7 @@ namespace BlackThunder.UniEngine.Tests
             public void AssertEnded(bool completed)
             {
                 Assert.That(_deliveries, Is.Empty);
-                Assert.That(_completions, Is.EqualTo(completed ? ActiveNames() : Array.Empty<string>()));
+                Assert.That(_completions, Is.EquivalentTo(completed ? ActiveNames() : Array.Empty<string>()));
                 Assert.That(_errors, Is.Empty);
                 Assert.That(_handles.All(handle => handle.IsDisposed), Is.True);
                 Assert.That(Source.NodeCount, Is.Zero);

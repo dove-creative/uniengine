@@ -37,7 +37,7 @@ namespace Blackthunder.UniEngine.Core
             // Upstream signals
             public void OnNext(T value)
             {
-                if (!_finished && !_stream._isTerminating) _stream.OnNext(value);
+                if (!_finished && !_stream._isTerminating && _stream._terminalRequest == 0) _stream.OnNext(value);
             }
 
             public void OnCompleted()
@@ -51,7 +51,8 @@ namespace Blackthunder.UniEngine.Core
                 }
                 finally
                 {
-                    Release();
+                    // A pending terminal operation owns the connection cleanup at its boundary.
+                    if (_stream._terminalRequest == 0 || _stream._isDisposed) Release();
                 }
             }
 
@@ -66,7 +67,7 @@ namespace Blackthunder.UniEngine.Core
                 }
                 finally
                 {
-                    Release();
+                    if (_stream._terminalRequest == 0 || _stream._isDisposed) Release();
                 }
             }
 

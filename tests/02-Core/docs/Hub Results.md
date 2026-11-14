@@ -189,3 +189,9 @@ dotnet test tests/UniEngine.Tests.csproj -c Release --no-restore --logger 'trx;L
 | 전체 테스트 프로젝트 | 799 / 799 통과 | 0 | 0 |
 
 공개 예외 형식이 바뀌므로 전체 Release 테스트를 실행했다. LifecycleHubTests에서 중복 등록을 확인하던 세 사례의 기대 예외를 InvalidOperationException으로 바꿨으며 사례 수는 그대로이다.
+
+## 2026-11-14 EventStream 경계 계약 적용
+
+EventHub의 갱신 전파에 내부 스트림의 루트 단위 변경 반영을 적용했다. 갱신 중 해제·Disconnect·Dispose는 현재 루트의 구독과 멀티캐스트를 마친 뒤 반영하며, 폐기 알림은 갱신 종료 후 실행한다. 미처리 갱신 예외는 새 호출을 중단한다. 생애주기 알림 자체의 기존 계약과 Builder 유효성 검사는 유지한다.
+
+Release 전체 **926개**, 그중 EventHub **105개**가 모두 통과했다. 기존 무할당 갱신·폐기 검증과 실패한 콜백 참조 회수도 포함한다. 원본 [TRX](../../obj/EventStreamBoundaries/20261114-final.trx)와 [EventStream 검증 기록](../02-E.3-EventStream/docs/03.%20Results.md)에 실행 환경과 결과를 보관한다.

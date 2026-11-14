@@ -113,7 +113,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void PublicationVisitsSubscribersBeforeChildrenInCreationOrder()
+        public void PublicationVisitsEveryMatchingPath()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -128,7 +128,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.Subscribe(_ => calls.Add("root2"));
 
             stream.OnNext(1);
-            Assert.That(calls, Is.EqualTo(new[] { "root1", "root2", "left1", "left2", "leaf", "right" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "root1", "root2", "left1", "left2", "leaf", "right" }));
         }
 
         [Test]
@@ -153,7 +153,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void ManySiblingFiltersKeepCreationOrderAfterRemovalAndReregistration()
+        public void ManySiblingFiltersRemainReachableAfterRemovalAndReregistration()
         {
             using var stream = new EventStream<int>();
             var visited = new List<int>();
@@ -176,7 +176,7 @@ namespace BlackThunder.UniEngine.Tests
                 if (index != 4) expected.Add(index);
 
             expected.Add(4);
-            Assert.That(visited, Is.EqualTo(expected));
+            Assert.That(visited, Is.EquivalentTo(expected));
             Assert.That(stream.NodeCount, Is.EqualTo(filters.Length));
         }
 

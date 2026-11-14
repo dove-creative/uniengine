@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using BlackThunder.UniEngine.Infrastructure;
 
@@ -13,9 +14,14 @@ namespace Blackthunder.UniEngine.Core
         internal abstract class NodeChild : Link<NodeChild>
         {
             internal NodeBase Parent;
+            internal EventDispatchScope Scope;
             internal abstract bool IsEmpty { get; }
 
-            internal abstract void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure);
+            internal abstract void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null);
             internal abstract void VisitEnd(Signal signal, Exception error, ref ExceptionDispatchInfo failure);
         }
 
@@ -25,12 +31,16 @@ namespace Blackthunder.UniEngine.Core
             internal Chain<NodeChild> Children;
             internal override bool IsEmpty => Children.First == null;
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
-                for (var child = Children.First; child != null; child = child.Next)
+                for (var child = Children.First; child != null && failure == null && !Scope.Root.Stopped; child = child.Next)
                 {
                     if (child.Parent != null && child.Registration <= lastVisible)
-                        child.Visit(value, lastVisible, ref failure);
+                        child.Visit(value, lastVisible, ref failure, batch);
                 }
             }
 
@@ -38,6 +48,7 @@ namespace Blackthunder.UniEngine.Core
             {
                 for (var child = Children.First; child != null; child = child.Next)
                 {
+                    if (signal != Signal.Dispose && failure != null) break;
                     if (child.Parent != null) child.VisitEnd(signal, error, ref failure);
                 }
             }
@@ -53,16 +64,16 @@ namespace Blackthunder.UniEngine.Core
         // Keeps children in the order they are added.
         internal class Node : NodeBase { }
 
-        // Keeps one child per order. The list stays sorted by order and is what a publication visits,
+        // Keeps parallel then sequential children per order. A publication visits the linked list,
         // because the index cannot change while it is enumerated.
         private class OrderedNode : NodeBase
         {
-            private readonly SortedList<int, Node> _orders = new();
+            private readonly SortedList<long, Node> _orders = new();
 
-            internal Node Find(int order) => _orders.TryGetValue(order, out var node) ? node : null;
+            internal Node Find(long order) => _orders.TryGetValue(order, out var node) ? node : null;
 
             // The child of the next larger order, so that a new order goes in front of it.
-            internal Node FindNext(int order)
+            internal Node FindNext(long order)
             {
                 for (int i = 0; i < _orders.Count; i++)
                 {
@@ -72,12 +83,44 @@ namespace Blackthunder.UniEngine.Core
                 return null;
             }
 
-            internal void Add(int order, Node node) => _orders.Add(order, node);
+            internal void Add(long order, Node node) => _orders.Add(order, node);
 
             internal void Remove(Node node)
             {
                 var index = _orders.IndexOfValue(node);
                 if (index >= 0) _orders.RemoveAt(index);
+            }
+
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
+            {
+                batch?.Flush(ref failure);
+                if (Parent == null || failure != null || Scope.Root.Stopped) return;
+
+                // Both modes of one numeric order share one commit boundary.
+                var child = Children.First;
+                while (child != null && failure == null && !Scope.Root.Stopped)
+                {
+                    var scope = child.Scope;
+                    scope.Enter();
+                    try
+                    {
+                        do
+                        {
+                            if (child.Parent != null && child.Registration <= lastVisible)
+                                child.Visit(value, lastVisible, ref failure);
+                            child = child.Next;
+                        }
+                        while (child != null && child.Scope == scope && failure == null && !Scope.Root.Stopped);
+                    }
+                    finally
+                    {
+                        scope.Exit(ref failure);
+                    }
+                }
             }
         }
 
@@ -95,17 +138,21 @@ namespace Blackthunder.UniEngine.Core
                 return null;
             }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
                 var bits = _readFlags(value);
                 if (bits == 0)
                     return;
 
-                for (var child = Children.First; child != null; child = child.Next)
+                for (var child = Children.First; child != null && failure == null && !Scope.Root.Stopped; child = child.Next)
                 {
                     if (child.Parent != null && child.Registration <= lastVisible
                         && bits.HasAny(((FlagsEntry)child).Mask))
-                        child.Visit(value, lastVisible, ref failure);
+                        child.Visit(value, lastVisible, ref failure, batch);
                 }
             }
         }
@@ -123,7 +170,11 @@ namespace Blackthunder.UniEngine.Core
 
             internal WhereNode(Func<T, bool> predicate) => Predicate = predicate;
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
                 bool matches;
                 try
@@ -136,7 +187,7 @@ namespace Blackthunder.UniEngine.Core
                     return;
                 }
 
-                if (matches) base.Visit(value, lastVisible, ref failure);
+                if (matches) base.Visit(value, lastVisible, ref failure, batch);
             }
         }
 
@@ -151,7 +202,11 @@ namespace Blackthunder.UniEngine.Core
                 _logType = logType;
             }
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
                 try
                 {
@@ -163,7 +218,7 @@ namespace Blackthunder.UniEngine.Core
                     return;
                 }
 
-                base.Visit(value, lastVisible, ref failure);
+                base.Visit(value, lastVisible, ref failure, batch);
             }
         }
 
@@ -176,11 +231,55 @@ namespace Blackthunder.UniEngine.Core
 
             internal OutputGate(bool isConnection) => IsConnection = isConnection;
 
-            internal override void Visit(T value, long lastVisible, ref ExceptionDispatchInfo failure)
+            internal override void Visit(
+                T value,
+                long lastVisible,
+                ref ExceptionDispatchInfo failure,
+                ParallelBatch batch = null)
             {
-                for (var sub = Subscriptions.First; sub != null && sub.Registration <= lastVisible; sub = sub.Next)
+                if (batch != null)
+                {
+                    Collect(value, lastVisible, ref failure, batch);
+                    return;
+                }
+
+                var scope = EventDispatchScope.Current;
+                var receiver = scope.Receiver;
+                try
+                {
+                    for (var sub = Subscriptions.First;
+                        sub != null && sub.Registration <= lastVisible && failure == null;
+                        sub = sub.Next)
+                    {
+                        if (sub.Handle.IsDisposed) continue;
+                        scope.Receiver = sub;
+                        try { sub.Publish(value); }
+                        catch (Exception exception) { sub.Fail(exception, ref failure); }
+                    }
+                }
+                finally
+                {
+                    scope.Receiver = receiver;
+                }
+            }
+
+            private void Collect(T value, long lastVisible, ref ExceptionDispatchInfo failure, ParallelBatch batch)
+            {
+                for (var sub = Subscriptions.First;
+                    sub != null && sub.Registration <= lastVisible && failure == null && !Scope.Root.Stopped;
+                    sub = sub.Next)
                 {
                     if (sub.Handle.IsDisposed) continue;
+
+                    if (!IsConnection && !sub.IsSequential)
+                    {
+                        batch.Add(sub);
+                        continue;
+                    }
+
+                    batch.Flush(ref failure);
+                    if (failure != null || Scope.Root.Stopped) break;
+                    if (Parent == null || sub.Handle.IsDisposed) continue;
 
                     try
                     {
@@ -197,6 +296,7 @@ namespace Blackthunder.UniEngine.Core
             {
                 for (var sub = Subscriptions.First; sub != null; sub = sub.Next)
                 {
+                    if (signal != Signal.Dispose && failure != null) break;
                     if (sub.Handle.IsDisposed) continue;
 
                     if (signal == Signal.Dispose)
@@ -217,39 +317,65 @@ namespace Blackthunder.UniEngine.Core
             }
         }
 
-        private class Subscription : Link<Subscription>
+        internal class Subscription : Link<Subscription>, IEventFailureHandler
         {
             internal Handle Handle;
             internal bool GraphConnection { get; }
+            internal bool IsSequential { get; }
 
             private readonly Delegate[] _updated;
             private readonly Delegate[] _completed;
             private readonly Delegate[] _errored;
             private bool _notified;
+            private bool _graphFailure;
 
-            internal Subscription(Action<T> updated, Action completed, Action<Exception> errored, bool graphConnection)
+            internal Subscription(
+                Action<T> updated,
+                Action completed,
+                Action<Exception> errored,
+                bool graphConnection,
+                bool sequential = false)
             {
                 GraphConnection = graphConnection;
+                IsSequential = sequential;
                 _updated = updated?.GetInvocationList();
                 _completed = completed?.GetInvocationList();
                 _errored = errored?.GetInvocationList();
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void Publish(T value)
             {
                 if (_updated == null) return;
+                if (IsSequential)
+                {
+                    PublishStream(value);
+                    return;
+                }
 
                 foreach (var callback in _updated)
                 {
-                    if (Handle.IsDisposed) break;
-
                     ((Action<T>)callback)(value);
                 }
             }
 
-            internal void Fail(Exception exception, ref ExceptionDispatchInfo failure)
+            private void PublishStream(T value)
             {
-                if (GraphConnection)
+                var callback = (Action<T>)_updated[0];
+                var accepted = ((EventStream<T>)callback.Target).CanPublish;
+                _graphFailure = false;
+                try { callback(value); }
+                catch
+                {
+                    // Entry rejection has not been reported; an admitted graph reports its own failures.
+                    _graphFailure = accepted;
+                    throw;
+                }
+            }
+
+            public void Fail(Exception exception, ref ExceptionDispatchInfo failure)
+            {
+                if (GraphConnection || _graphFailure)
                 {
                     // The connected graph already reported its subscriber's failure.
                     failure ??= ExceptionDispatchInfo.Capture(exception);

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 using BlackThunder.UniEngine.Infrastructure;
 
 namespace Blackthunder.UniEngine.Core
 {
-    public partial class EventStream<T> : IObservable<T>, IObserver<T>, IDisposable, IRegistrable<T>
+    public partial class EventStream<T> : IObservable<T>, IObserver<T>, IDisposable, IRegistrable<T>, IEventChange
     {
         // Front
         public bool Enabled
@@ -14,8 +15,9 @@ namespace Blackthunder.UniEngine.Core
             set
             {
                 if (value) ThrowIfDisposed();
-
-                _isEnabled = value;
+                var scope = EventDispatchScope.FindDeferral(_graph.Scope);
+                if (scope != null) DeferEnabled(scope, value);
+                else _isEnabled = value;
             }
         }
         public bool IsDisposed => _isDisposed || HaveUpstreamsEnded();
@@ -23,6 +25,7 @@ namespace Blackthunder.UniEngine.Core
         // Internal
         internal int NodeCount => _graph.NodeCount;
         internal int UpstreamDepth { get; }
+        internal bool CanPublish => !IsDisposed && _terminalRequest == 0 && !_isTerminating && !_graph.IsPublishing;
 
         private const int MaximumDepth = 256;
         private readonly EventGraph<T> _graph;
@@ -33,6 +36,8 @@ namespace Blackthunder.UniEngine.Core
         private bool _isEnabled = true;
         private bool _isDisposed;
         private bool _isTerminating;
+        private int _terminalRequest;
+        private Exception _terminalError;
 
 
         // Content --------------------
@@ -77,9 +82,11 @@ namespace Blackthunder.UniEngine.Core
 
         internal void Inject(EventGraph<T>.Node root) => _graph.Inject(root);
 
-        private void PrepareSubscription()
+        private void PrepareSubscription(bool admitted)
         {
-            ThrowIfDisposed();
+            if (_isDisposed || _isTerminating)
+                throw new ObjectDisposedException(GetType().Name);
+            if (!admitted) ThrowIfDisposed();
 
             if (!_isPending) return;
             _isPending = false;
@@ -124,15 +131,19 @@ namespace Blackthunder.UniEngine.Core
         // Propagation
         public void OnNext(T value)
         {
-            if (_graph.IsPublishing || (_isTerminating && !IsDisposed))
-                throw new InvalidOperationException("A stream cannot publish another value during propagation.");
-
             ThrowIfDisposed();
+            if (_graph.IsPublishing)
+                throw new InvalidOperationException("A stream cannot publish another value during propagation.");
+            if (!_isEnabled) return;
 
-            if (_isEnabled) _graph.OnNext(value);
+            // Each graph owns a root scope, even on a worker making an explicit publication.
+            _graph.OnNext(value);
         }
         public void OnCompleted() => Terminate(null, true);
         public void OnError(Exception exception) => Terminate(exception, false);
+
+        private void DeferEnabled(EventDispatchScope scope, bool value) =>
+            scope.Defer(_graph.Scope, () => _isEnabled = value);
 
         // A failed condition releases the relation without a terminal notification.
         internal bool TryEvaluate(Func<T, bool> predicate, T value, out bool matches)
@@ -161,16 +172,27 @@ namespace Blackthunder.UniEngine.Core
 
         private void Terminate(Exception error, bool completed)
         {
-            if (IsDisposed || _isTerminating) return;
-            _isTerminating = true;
+            if (IsDisposed || Interlocked.CompareExchange(ref _terminalRequest, completed ? 2 : 3, 0) != 0)
+                return;
 
+            _terminalError = error;
+            _graph.Scope.RequestStop();
+            var scope = EventDispatchScope.FindDeferral(_graph.Scope);
+            if (scope != null) scope.Defer(_graph.Scope, this);
+            else TerminateImmediately(error, completed);
+        }
+
+        private void TerminateImmediately(Exception error, bool completed)
+        {
+            if (_isDisposed) return;
+            _isTerminating = true;
             try
             {
-                _graph.Terminate(error, completed);
+                if (!EventDispatchScope.IsUnwinding) _graph.Terminate(error, completed);
             }
             finally
             {
-                Dispose();
+                DisposeImmediately();
             }
         }
 
@@ -216,7 +238,41 @@ namespace Blackthunder.UniEngine.Core
         // A path arrives as a chain from the root side, so the graph only needs node operations.
         private IDisposable Register(Registration<T> registration, PathInfo<T> path)
         {
-            PrepareSubscription();
+            ThrowIfDisposed();
+            var target = EventDispatchScope.Current == null ? _graph.Scope : _graph.RegistrationScope(path);
+            var scope = EventDispatchScope.FindDeferral(target);
+            if (scope == null) return RegisterImmediately(registration, path);
+            return DeferRegistration(registration, path, target, scope);
+        }
+
+        private IDisposable DeferRegistration(
+            Registration<T> registration,
+            PathInfo<T> path,
+            EventDispatchScope target,
+            EventDispatchScope scope)
+        {
+            var handle = new EventSubscriptionHandle(target);
+            scope.Defer(target, () =>
+            {
+                try
+                {
+                    if (!handle.IsDisposed) RegisterImmediately(registration, path, handle);
+                }
+                catch
+                {
+                    handle.Dispose();
+                    throw;
+                }
+            });
+            return handle;
+        }
+
+        private IDisposable RegisterImmediately(
+            Registration<T> registration,
+            PathInfo<T> path,
+            EventSubscriptionHandle handle = null)
+        {
+            PrepareSubscription(admitted: handle != null);
 
             var node = _graph.BeginRegistration();
             for (var info = path; info != null; info = info.Next)
@@ -224,6 +280,7 @@ namespace Blackthunder.UniEngine.Core
                 node = info.NodeType switch
                 {
                     PathNodeType.Group => _graph.FindOrAddGroup(node, info.Order),
+                    PathNodeType.ParallelGroup => _graph.FindOrAddGroup(node, info.Order, parallel: true),
                     PathNodeType.Where => _graph.FindOrAddWhere(node, info.Predicate),
                     PathNodeType.Flags => _graph.FindOrAddFlags(node, info.Mask),
                     _ => _graph.AddDebug(node, info.Message, info.LogType)
@@ -231,13 +288,15 @@ namespace Blackthunder.UniEngine.Core
             }
 
             return registration.IsConnection
-                ? _graph.Connect(node, registration.Input)
+                ? _graph.Connect(node, registration.Input, handle)
                 : _graph.Subscribe(
                     node,
                     registration.Updated,
                     registration.Completed,
                     registration.Errored,
-                    registration.Input);
+                    registration.Input,
+                    registration.IsSequential,
+                    handle);
         }
 
         // Relations
@@ -269,14 +328,22 @@ namespace Blackthunder.UniEngine.Core
         // Disposal
         private void ThrowIfDisposed()
         {
-            if (IsDisposed || _isTerminating)
+            if (IsDisposed || _isTerminating || Volatile.Read(ref _terminalRequest) != 0)
                 throw new ObjectDisposedException(GetType().Name);
         }
 
         public void Dispose()
         {
+            if (_isDisposed || Interlocked.CompareExchange(ref _terminalRequest, 1, 0) != 0) return;
+            _graph.Scope.RequestStop();
+            var scope = EventDispatchScope.FindDeferral(_graph.Scope);
+            if (scope != null) scope.Defer(_graph.Scope, this);
+            else DisposeImmediately();
+        }
+
+        private void DisposeImmediately()
+        {
             if (_isDisposed) return;
-            _isDisposed = true;
 
             ExceptionDispatchInfo failure = null;
             DisposeConnection(_graph, ref failure);
@@ -289,7 +356,15 @@ namespace Blackthunder.UniEngine.Core
 
             _inputs = null;
             _isPending = false;
+            _terminalError = null;
+            _isDisposed = true;
             failure?.Throw();
+        }
+
+        void IEventChange.Apply()
+        {
+            if (_terminalRequest == 1) DisposeImmediately();
+            else TerminateImmediately(_terminalError, _terminalRequest == 2);
         }
 
         private static void DisposeConnection(IDisposable connection, ref ExceptionDispatchInfo failure)

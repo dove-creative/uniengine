@@ -122,7 +122,7 @@ public static class Program
 }
 ```
 
-log를 먼저 구독했으므로 Log가 먼저 호출된다. 직접 Updated와 루트 Builder의 OnUpdated는 같은 위치에 등록되어 등록 순서대로 섞여 호출된다. Where·Debug의 자식 경로는 루트 구독을 모두 호출한 뒤 생성 순서대로 방문한다.
+직접 Updated와 Builder의 OnUpdated는 같은 내부 스트림에 등록된다. 이 예제는 Log와 리스너가 모두 호출되는 것을 보여주며, 출력 순서는 보장하지 않는다.
 
 ```text
 Connections: 3

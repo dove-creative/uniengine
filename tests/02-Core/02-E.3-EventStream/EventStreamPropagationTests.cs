@@ -19,7 +19,7 @@ namespace BlackThunder.UniEngine.Tests
         public void TearDown() => ExceptionHandler.SetHandler(null);
 
         [Test]
-        public void SelfRemovalSkipsTheRestOfTheMulticastSubscription()
+        public void SelfRemovalFinishesTheMulticastSubscription()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -38,7 +38,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(1);
             stream.OnNext(2);
 
-            Assert.That(calls, Is.EqualTo(new[] { "first:1", "other:1", "other:2" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first:1", "tail:1", "other:1", "other:2" }));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(3);
             stream.OnNext(2);
 
-            Assert.That(calls, Is.EqualTo(new[] { "ordinary:3", "first:3", "ordinary:2", "late:2" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "ordinary:3", "first:3", "removed:3", "ordinary:2", "late:2" }));
         }
 
         [Test]
@@ -148,7 +148,7 @@ namespace BlackThunder.UniEngine.Tests
 
         // Failure and termination
         [Test]
-        public void DisposalStopsTheMulticastTailAndLaterSubscribers()
+        public void DisposalFinishesTheMulticastAndTheRootUnit()
         {
             using var stream = new EventStream<int>();
             var calls = new List<string>();
@@ -165,7 +165,7 @@ namespace BlackThunder.UniEngine.Tests
 
             stream.OnNext(1);
 
-            Assert.That(calls, Is.EqualTo(new[] { "first" }));
+            Assert.That(calls, Is.EquivalentTo(new[] { "first", "tail", "other" }));
             Assert.That(stream.IsDisposed, Is.True);
             Assert.Throws<ObjectDisposedException>(() => stream.OnNext(2));
         }
@@ -191,8 +191,8 @@ namespace BlackThunder.UniEngine.Tests
 
             stream.OnNext(2);
 
-            // An unhandled failure is rethrown only after the remaining subscribers receive the value.
-            Assert.That(calls, Is.EqualTo(new[] { 1, 2 }));
+            // An unhandled failure stops this value but leaves the next publication available.
+            Assert.That(calls, Is.EqualTo(handled ? new[] { 1, 2 } : new[] { 2 }));
             Assert.That(reported, Is.EqualTo(handled ? new[] { failure } : Array.Empty<Exception>()));
         }
 
@@ -233,8 +233,9 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnCompleted();
             stream.OnError(failure);
 
-            Assert.That(calls, Is.EqualTo(error
-                ? new[] { "errored", "other errored" } : new[] { "completed", "other completed" }));
+            Assert.That(calls, Is.EquivalentTo(error
+                ? new[] { "errored", "errored tail", "other errored" }
+                : new[] { "completed", "completed tail", "other completed" }));
             Assert.That(stream.IsDisposed, Is.True);
         }
 

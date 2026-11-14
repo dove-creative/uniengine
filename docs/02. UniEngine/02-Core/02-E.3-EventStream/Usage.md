@@ -41,7 +41,7 @@ enum RouteEvents
 }
 ```
 
-하나의 ulong 스트림에 서로 다른 enum의 비트를 함께 발행한다. 값에 두 마스크의 비트가 모두 있으므로 shape, location 순서로 출력한다. 마스크에 여러 비트를 넣어도 하나만 겹치면 통과한다. 값 0은 어떤 ForFlags 구독에도 전달하지 않는다.
+하나의 ulong 스트림에 서로 다른 enum의 비트를 함께 발행한다. 두 마스크의 비트가 모두 있으므로 shape와 location이 출력되며 출력 순서는 보장하지 않는다. 마스크에 여러 비트를 넣어도 하나만 겹치면 통과한다. 값 0은 어떤 ForFlags 구독에도 전달하지 않는다.
 
 enum을 비트로 발행할 때는 ulong 캐스트 대신 ToBits를 쓴다. 기반 형식은 강제하지 않으며, ToBits는 부호 비트를 포함해 선언된 크기만큼의 비트를 보존하고 나머지를 0으로 채운다. 같은 부모 아래 마스크 비트가 같으면 enum 형식이 달라도 경로를 공유하므로, 서로 다른 분류로 구분할 비트는 호출자가 배정해야 한다. `[Flags]`가 없는 enum이나 비트가 0인 마스크는 ForFlags 호출 시 ArgumentException이 발생한다.
 
@@ -90,3 +90,18 @@ right.OnCompleted();
 ```
 
 Phase는 Before와 After를 가진 열거형이다. 등록 순서와 관계없이 Simulate가 Render보다 먼저 호출된다. Merge 예제는 7을 전달한 뒤 두 입력이 모두 완료했을 때 종료한다.
+
+## 병렬 계산 뒤 동기 후처리
+
+```csharp
+using var updates = new EventStream<int>();
+var left = 0;
+var right = 0;
+using var leftWork = updates.ForOrderAsync(Phase.Before).Subscribe(value => left = CalculateLeft(value));
+using var rightWork = updates.ForOrderAsync(Phase.Before).Subscribe(value => right = CalculateRight(value));
+using var finish = updates.ForOrder(Phase.Before).Subscribe(_ => Apply(left, right));
+
+updates.OnNext(1);
+```
+
+CalculateLeft와 CalculateRight는 서로 독립된 동기 계산이다. 두 결과를 별도 변수에 기록하고, 둘 다 끝난 뒤 발행 스레드에서 Apply를 실행한다. OnNext가 반환되면 Apply도 완료된 상태이다. 두 계산의 시작·완료 순서는 정하지 않으며, UI나 Unity 메인 스레드 전용 처리는 Apply 쪽에 둔다.

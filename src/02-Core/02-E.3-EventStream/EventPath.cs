@@ -29,6 +29,8 @@ namespace Blackthunder.UniEngine.Core
             new(this, PathInfo<T>.Debug(message, logType));
         public EventPath<T> ForOrder<TOrder>(TOrder order) where TOrder : Enum =>
             new(this, PathInfo<T>.Group(Convert.ToInt32(order)));
+        public EventPath<T> ForOrderAsync<TOrder>(TOrder order) where TOrder : Enum =>
+            new(this, PathInfo<T>.ParallelGroup(Convert.ToInt32(order)));
 
         // Subscriptions
         public IDisposable Subscribe(Action<T> updated) =>
@@ -76,6 +78,9 @@ namespace Blackthunder.UniEngine.Core
             new(stream, PathInfo<T>.Debug(message, logType));
         public static EventPath<T> ForOrder<T, TOrder>(this EventStream<T> stream, TOrder order) where TOrder : Enum =>
             new(stream, PathInfo<T>.Group(Convert.ToInt32(order)));
+        public static EventPath<T> ForOrderAsync<T, TOrder>(this EventStream<T> stream, TOrder order)
+            where TOrder : Enum =>
+            new(stream, PathInfo<T>.ParallelGroup(Convert.ToInt32(order)));
         public static EventPath<ulong> ForFlags<TFlags>(this EventStream<ulong> stream, TFlags mask)
             where TFlags : struct, Enum =>
             new(stream, PathInfo<ulong>.Flags(GetMask(mask)));

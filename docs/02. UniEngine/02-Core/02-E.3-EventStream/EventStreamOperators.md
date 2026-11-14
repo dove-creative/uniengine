@@ -1,6 +1,6 @@
 # 경로 연산자
 
-연산자는 두 종류이다. 상태가 없는 Where, ForFlags, Debug, ForOrder는 경로를 기록하고, 상태가 있는 Take·TakeWhile·Skip·SkipWhile은 새 EventStream을 시작한다. 그래서 공유되는 경로 노드에는 상태가 없다.
+연산자는 두 종류이다. 상태가 없는 Where, ForFlags, Debug, ForOrder, ForOrderAsync는 경로를 기록하고, 상태가 있는 Take·TakeWhile·Skip·SkipWhile은 새 EventStream을 시작한다. 그래서 공유되는 경로 노드에는 상태가 없다.
 
 | 연산 | 값이 도달할 때의 동작 | 결과 | 공유 범위 |
 | --- | --- | --- | --- |
@@ -8,6 +8,7 @@
 | ForFlags(mask) | ulong 값과 마스크에 공통 비트가 하나라도 있을 때 하위를 방문한다. | EventPath | 같은 부모 아래 같은 마스크 비트 |
 | Debug | 값과 메시지를 로그로 기록하고 다음 노드로 전달한다. | EventPath | 해당 경로 등록 |
 | ForOrder(order) | 순서 그룹으로 묶어 같은 위치의 그룹끼리 값이 작은 쪽부터 방문한다. | EventPath | 같은 부모 아래 같은 순서 값 |
+| ForOrderAsync(order) | 같은 순서 값의 ForOrder보다 먼저 병렬 구독을 모두 마친다. | EventPath | 같은 부모 아래 같은 순서 값·실행 방식 |
 | Skip(n) | 처음 n개를 버리고 이후 값을 전달한다. 0 이하이면 처음부터 전달한다. | EventStream | 반환된 스트림 |
 | SkipWhile(predicate) | 처음 거짓인 값부터 전달하며 이후 조건 검사를 멈춘다. | EventStream | 반환된 스트림 |
 | Take(n) | n번째 값을 전달한 뒤 완료한다. 0 이하이면 처음 도달한 값을 전달하지 않고 완료한다. | EventStream | 반환된 스트림 |
@@ -21,9 +22,9 @@
 
 ForFlags는 `EventStream<ulong>`과 `EventPath<ulong>`에서 flags enum을 마스크로 받는다. `(valueBits & maskBits) != 0`인 HasAny 판정이므로 여러 비트 중 하나만 겹쳐도 통과하고, 값이 0이면 어떤 마스크에도 전달하지 않는다. enum 기반 형식은 제한하지 않으며, 마스크는 [ToBits](../01-O.1-Utilities/FlagExtensions.md)로 변환해 선언된 비트 폭을 보존한다. 경로를 구성하는 ForFlags 호출 시점에 `[Flags]`가 없는 enum이나 비트가 0인 마스크는 ArgumentException으로 거부한다. ulong 마스크를 직접 받거나 enum 형식 스트림에서 호출하는 오버로드는 없다.
 
-같은 부모 아래에는 FlagsNode 하나를 두고, 같은 마스크 비트는 FlagsEntry 하나를 공유한다. enum 형식이 달라도 비트가 같으면 공유하며, 다른 마스크나 다른 순서 그룹의 항목은 공유하지 않는다. 각 FlagsNode는 발행마다 값의 비트를 한 번 읽고, 항목을 생성 순서대로 선형 순회하며 판정한다.
+같은 부모 아래에는 FlagsNode 하나를 두고 같은 마스크 비트는 FlagsEntry 하나를 공유한다. enum 형식이 달라도 비트가 같으면 공유한다. 각 FlagsNode는 발행마다 값의 비트를 한 번 읽고 일치하는 항목으로 전달한다. 항목 간 호출 순서는 보장하지 않는다.
 
-FlagsNode 묶음과 Where·Debug·스트림 연결·OrderedNode 형제 사이는 FlagsNode가 생성된 순서를 따른다. 따라서 나중에 같은 FlagsNode에 추가한 항목도 그 묶음의 차례에 방문한다. 같은 위치의 구독자는 첫 자식인 Gate에서 먼저 호출된다. 발행 중 추가한 항목과 구독은 다음 발행부터 보이고, 제거는 즉시 반영된다. 완료·오류·폐기는 마스크와 관계없이 모든 하위에 전달한다.
+FlagsNode와 Where·Debug·스트림 연결 사이에는 순서를 보장하지 않는다. 구독 구성은 루트·Order 종료 때 변경하며, 발행 중 추가한 항목과 구독은 소유 스트림의 다음 발행부터 참여한다. 완료·오류·폐기는 마스크 판정을 거치지 않는다.
 
 ForFlags는 경로 깊이 한 단계로 센다. 앞뒤로 Where·Debug·ForOrder와 Take·Skip·Branch 등을 조합할 수 있으며, ForFlags에서 탈락한 값은 뒤의 상태 있는 연산자에 도달하지 않는다. Where 대비 성능은 측정하지 않았다.
 
@@ -39,9 +40,9 @@ ForFlags는 경로 깊이 한 단계로 센다. 앞뒤로 Where·Debug·ForOrder
 
 ## 실패와 비용
 
-Where 조건이 예외를 던지면 해당 노드와 하위를 통지 없이 정리한다. SkipWhile·TakeWhile 조건이 예외를 던지면 그 스트림을 통지 없이 폐기한다. 어느 쪽이든 형제 경로는 계속 진행한다.
+Where 조건이 실패하면 그 노드와 하위를, SkipWhile·TakeWhile 조건이 실패하면 해당 스트림을 통지 없이 정리한다. ExceptionHandler가 처리하면 다른 경로를 계속하고, 예외를 재전파하면 새 호출을 중단한다.
 
-Take의 마지막 값 콜백과 완료 콜백이 모두 실패해도 남은 수신자에게 값과 완료를 전달하고 연결을 정리한다. 밖으로 전달할 예외는 일반 전파와 같이 처음 발생한 보고 예외이며, 뒤의 완료 콜백 실패가 이를 덮어쓰지 않는다.
+Take의 마지막 값에서 예외가 재전파되면 미실행 값·완료 통지는 생략하고 연결을 정리한다. 값의 실패가 처리되면 완료 통지를 진행하며, 완료 통지의 미처리 실패도 이후 통지를 중단한다. 정리 중의 오류가 먼저 기록한 예외를 덮어쓰지 않는다.
 
 상태 있는 연산자는 호출할 때마다 스트림을 하나 만든다. 고정된 구독에서는 전파 할당이 없지만, 매 프레임 Take(1)을 만드는 코드는 그만큼 할당이 늘어난다. Debug는 값을 문자열로 포맷해 로그를 쓰므로 그 비용은 무할당 전파 측정에서 제외한다. [전파와 실패 규칙](EventStream.md)
 

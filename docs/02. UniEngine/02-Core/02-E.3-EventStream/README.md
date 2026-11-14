@@ -13,7 +13,7 @@ EventStream은 값을 받아 경로 그래프를 따라 구독자에게 나눠 �
 사용자가 다루는 형식은 EventStream과 EventPath이고, 일반 조건은 `Func<T, bool>` 대리자로, ulong 스트림의 비트 조건은 flags enum 마스크로 넘긴다.
 
 - EventStream은 값을 받는 입구와 그래프를 가진다. 어떤 스트림이든 OnNext로 값을 직접 받을 수 있다.
-- EventPath는 Where, ForFlags, Debug, ForOrder로 만든 경로이다. 경로를 만드는 동안 그래프에 구독이 생기지 않는다.
+- EventPath는 Where, ForFlags, Debug, ForOrder, ForOrderAsync로 만든 경로이다. 경로를 만드는 동안 그래프에 구독이 생기지 않는다.
 - 조건 대리자는 Where 노드의 공유 기준이다. 같은 부모 아래 메서드와 대상이 같은 대리자를 쓴 Where만 합쳐진다.
 - ForFlags는 값과 마스크에 공통 비트가 하나라도 있는 경로만 통과시킨다. 같은 부모 아래 마스크 비트가 같으면 enum 형식과 관계없이 항목을 공유한다.
 
@@ -22,12 +22,12 @@ Take·TakeWhile·Skip·SkipWhile·Branch·Merge는 경로 노드가 아니라 �
 ## 경로와 수명
 
 1. EventStream을 만들거나 외부 `IObservable<T>`를 생성자에 전달한다. 외부 공급원의 수명은 호출자에게 있다.
-2. Where, ForFlags, Debug, ForOrder로 경로를 만들거나 Take, Skip, Branch, Merge로 새 스트림을 시작한다.
+2. Where, ForFlags, Debug, ForOrder, ForOrderAsync로 경로를 만들거나 Take, Skip, Branch, Merge로 새 스트림을 시작한다.
 3. Subscribe가 그 지점에 구독을 등록하고 개별 Handle을 반환한다. 새 스트림은 첫 구독 때 상위에 연결된다.
-4. 값은 각 노드의 구독자를 등록 순서로 방문한 뒤 자식을 깊이 우선으로 방문한다. 조건이 거짓이면 그 아래의 구독과 조건을 모두 건너뛴다.
+4. 경로의 조건을 통과한 값만 하위로 전달한다. 명시적인 Order 사이의 순서를 보장하며 일반 노드·구독 사이의 등록 순서는 보장하지 않는다.
 5. 마지막 구독을 해제하면 빈 노드를 루트 방향으로 제거한다. 사용자가 만든 EventStream은 다시 구독할 수 있고, 연산자·Branch·Merge가 만든 스트림은 함께 폐기된다.
 
-완료와 오류는 조건을 평가하지 않고 모든 활성 구독에 전달한다. Dispose는 통지 없이 연결을 해제한다. 값 전파·구독·해제는 같은 스레드에서 수행하는 동기식 작업이다.
+완료와 오류는 조건을 평가하지 않고 활성 구독에 전달한다. Dispose는 통지 없이 연결을 해제한다. 외부 호출은 동기식이다. ForOrderAsync는 내부 구독을 병렬 실행하고 완료를 기다린다. 동기·병렬 경로 모두 등록·삭제는 루트·Order 종료 때 반영한다. 예외가 재전파되면 새 호출을 중단하고 필요한 정리를 마친다. 자세한 내용은 [순서 그룹](OrderGroups.md)을 따른다.
 
 ## 모듈 안내
 
