@@ -34,15 +34,15 @@ Property는 외부 페이로드를 저장하는 별개 책임이다. 이벤트 �
 
 ## 구현 범위
 
-공통 도구·계약·ValueEnumerator, Property, Handle·Token, AdaptiveCollections, EventStream과 LifecycleHub·EventHub에는 구현이 있다. Math·데이터 도구·Loco·Bootstrapper는 현재 계층표에 배치된 설계 항목이다. 이들의 구체 API와 상태를 구현 사실로 설명하지 않는다.
+공통 도구·계약·ValueEnumerator, Property, Handle·Token, AdaptiveCollections, EventStream과 LifecycleHub·EventHub에는 구현이 있다. 수학 계산과 Transform의 근사 비교·직렬화는 Infrastructure에서 제공한다. Loco·Bootstrapper는 현재 계층표에 배치된 설계 항목이다. 이들의 구체 API와 상태를 구현 사실로 설명하지 않는다.
 
 ## 상세 문서
 
 | 층 | Objects | Event System | Utilities·기타 |
 | --- | --- | --- | --- |
 | Level 1 | [Utilities](01-O.1-Utilities/README.md), [Interfaces](01-O.2-Interfaces/README.md), [Objects](01-O.3-Objects/README.md) | — | — |
-| Level 2 | [Property](02-O.1-Property/README.md) | [Handle·Token](02-E.1-HandleToken/README.md), [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md), [EventStream](02-E.3-EventStream/README.md) | [Math·데이터 도구](02-U.1-Utilities/README.md), 설계 단계 |
-| Level 3 | — | [LifecycleHub](03-E.1-LifecycleHub/README.md), [EventHub](03-E.2-EventHub/README.md) | [TransformDataExtensions·Loco](03-U.1-Utilities/README.md), 설계 단계 |
+| Level 2 | [Property](02-O.1-Property/README.md) | [Handle·Token](02-E.1-HandleToken/README.md), [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md), [EventStream](02-E.3-EventStream/README.md) | — |
+| Level 3 | — | [LifecycleHub](03-E.1-LifecycleHub/README.md), [EventHub](03-E.2-EventHub/README.md) | [Loco](03-U.1-Utilities/README.md), 설계 단계 |
 | Top | — | — | [Kernel.Bootstrapper](Top-Kernel/Bootstrapper.md), 설계 단계 |
 
 [전체 계층](../README.md)

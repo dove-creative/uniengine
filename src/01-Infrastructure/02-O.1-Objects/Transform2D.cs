@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Numerics;
+using Blackthunder.UniEngine.Mathematics;
 
 namespace BlackThunder.UniEngine.Objects
 {
@@ -18,6 +19,28 @@ namespace BlackThunder.UniEngine.Objects
         {
             Position = position;
             Rotation = rotation;
+        }
+
+        public readonly bool Is(
+            Transform2D other,
+            float positionTolerance = UniMath.Epsilon,
+            float angularTolerance = UniMath.AngularEpsilon)
+        {
+            if (float.IsNaN(positionTolerance) || float.IsInfinity(positionTolerance) || positionTolerance < 0f)
+                throw new ArgumentOutOfRangeException(
+                    nameof(positionTolerance), "The tolerance must be finite and nonnegative.");
+
+            if (float.IsNaN(angularTolerance) || float.IsInfinity(angularTolerance) || angularTolerance < 0f)
+                throw new ArgumentOutOfRangeException(
+                    nameof(angularTolerance), "The tolerance must be finite and nonnegative.");
+
+            if (float.IsNaN(Rotation) || float.IsInfinity(Rotation)
+                || float.IsNaN(other.Rotation) || float.IsInfinity(other.Rotation))
+                throw new ArgumentException("Transform rotations must be finite.");
+
+            var samePosition = UniMath.Is(Position, other.Position, positionTolerance);
+            var angle = System.Math.IEEERemainder((double)Rotation - other.Rotation, 2d * System.Math.PI);
+            return samePosition && System.Math.Abs(angle) <= angularTolerance;
         }
 
         public readonly bool Equals(Transform2D other) =>

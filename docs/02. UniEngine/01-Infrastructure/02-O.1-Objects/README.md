@@ -19,12 +19,12 @@
 
 ## 구성과 역할
 
-Vector2Int·Vector3Int는 정수 좌표이고 Transform2D·Transform3D는 위치와 회전을 묶은 값이다. 값 형식은 성분과 동등성만 책임지며, 좌표계 변환이나 부모·자식 관계를 소유하지 않는다.
+Vector2Int·Vector3Int는 정수 좌표이고 Transform2D·Transform3D는 위치와 회전을 묶은 값이다. 값 형식은 성분과 동등성을 책임지며, Transform의 Is는 같은 Infrastructure의 앞선 레벨에 있는 [Math](../01-MT.1-Math/README.md)를 사용해 위치와 회전의 근사 일치를 판정한다. 정수 벡터도 Is에 허용 거리를 지정할 수 있으며 기본 오차는 UniMath.Epsilon이다. 좌표계 변환이나 부모·자식 관계를 소유하지 않는다.
 
 ## 대표 흐름
 
 1. 호출자가 좌표나 자세의 성분으로 값을 구성한다.
-2. 소비자는 값을 복사하거나 성분 단위로 비교한다.
+2. 소비자는 값을 복사하거나 정확한 값 동등성을 확인하고, Transform의 자세를 비교할 때는 Is에 거리·각도 오차를 지정한다.
 3. Utilities가 같은 값을 문자열이나 JSON으로 변환한다.
 
 ## 상세 문서

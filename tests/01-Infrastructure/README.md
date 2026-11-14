@@ -7,6 +7,8 @@ Infrastructure의 공개 API 계약은 NUnit으로, 상태가 이어지는 흐�
 | 모듈 | 계획 | 결과 |
 | --- | --- | --- |
 | Configuration | [계획](01-M.1-Configuration/docs/02.%20Plans.md) | [결과](01-M.1-Configuration/docs/03.%20Results.md) |
+| Math | [계획](01-MT.1-Math/docs/02.%20Plans.md) | [결과](01-MT.1-Math/docs/03.%20Results.md) |
+| VectorFunctions | [계획](01-MT.2-VectorFunctions/docs/02.%20Plans.md) | [결과](01-MT.2-VectorFunctions/docs/03.%20Results.md) |
 | Objects | [계획](02-O.1-Objects/docs/02.%20Plans.md) | [결과](02-O.1-Objects/docs/03.%20Results.md) |
 | 표시 유틸리티 | [계획](03-M.1-Utilities/docs/02.%20Plans.md) | [결과](03-M.1-Utilities/docs/03.%20Results.md) |
 | JSON 변환·등록 | [계획](03-M.1-Utilities/Json/docs/02.%20Plans.md) | [결과](03-M.1-Utilities/Json/docs/03.%20Results.md) |

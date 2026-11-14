@@ -21,7 +21,17 @@ tests/
 │  │     ├─ 01. Tables.md
 │  │     ├─ 02. Plans.md
 │  │     └─ 03. Results.md
+│  ├─ 01-MT.1-Math/
+│  │  ├─ UniMathTests.cs
+│  │  └─ docs/
+│  ├─ 01-MT.2-VectorFunctions/
+│  │  ├─ VectorFunctionTests.cs
+│  │  └─ docs/
 │  ├─ 02-O.1-Objects/
+│  │  ├─ InfrastructureObjectTests.cs
+│  │  ├─ TransformComparisonTests.cs
+│  │  ├─ IntegerVectorComparisonTests.cs
+│  │  └─ docs/
 │  ├─ 03-M.1-Utilities/
 │  │  └─ Json/
 │  ├─ 03-M.2-ExceptionHandler/
@@ -169,6 +179,7 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 
 ## 범위
 
+- Math의 절대 오차·거리·방향·회전 비교, 스냅, 직선·이차 베지어 평가와 입력 실패 계약. NUnit 직접 사례이며 `--filter 'TestCategory=Math|TestCategory=VectorFunctions'`으로 실행한다. [검증 계획](01-Infrastructure/01-MT.1-Math/docs/02.%20Plans.md)과 [결과](01-Infrastructure/01-MT.1-Math/docs/03.%20Results.md)는 Math 모듈에서 관리하고 [VectorFunctions 계획](01-Infrastructure/01-MT.2-VectorFunctions/docs/02.%20Plans.md)·[결과](01-Infrastructure/01-MT.2-VectorFunctions/docs/03.%20Results.md)는 별도 모듈에서 관리한다.
 - Property의 등록·형식 지정 조회·실패 시 상태 보존·회수·표준 사전 계약과 IPropertySubject 소비 시나리오·연속 상태 전이 검증
 - 공통 ValueEnumerator의 순회 수명과 실패 처리- AdaptiveCollection·AdaptiveDictionary·AdaptiveHashSet의 순회 중 변경·중단·복사본 처리
 - AdaptiveAction과 EventStream의 순회 소비 회귀 검증
@@ -180,7 +191,7 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 - 직접 순회·사전과 집합의 반복 변경·Action의 등록 후 첫 호출과 반복 호출 할당량 검증
 - 호출 목록 캐시의 등록 경로와 약한 참조 수명 검증
 - UniTest 상태 전이 실행과 재실행
-- Infrastructure 값 형식·표시 유틸리티·JSON 변환과 등록 계약
+- Infrastructure 값 형식의 정확한 동등성·허용 거리·회전각 비교, 표시 유틸리티·JSON 변환과 등록 계약
 - Configuration의 초기화·경로 생성 실패와 Log의 출력·저장·복구
 - ExceptionHandler의 보고 정책과 SafeInvoke 전체 오버로드
 

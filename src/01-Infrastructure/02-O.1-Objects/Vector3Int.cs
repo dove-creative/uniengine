@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Blackthunder.UniEngine.Mathematics;
 
 namespace BlackThunder.UniEngine.Objects
 {
@@ -19,6 +20,18 @@ namespace BlackThunder.UniEngine.Objects
             X = x;
             Y = y;
             Z = z;
+        }
+
+        public readonly bool Is(Vector3Int other, float tolerance = UniMath.Epsilon)
+        {
+            if (float.IsNaN(tolerance) || float.IsInfinity(tolerance) || tolerance < 0f)
+                throw new ArgumentOutOfRangeException(
+                    nameof(tolerance), "The tolerance must be finite and nonnegative.");
+
+            var x = (double)X - other.X;
+            var y = (double)Y - other.Y;
+            var z = (double)Z - other.Z;
+            return x * x + y * y + z * z <= (double)tolerance * tolerance;
         }
 
         public readonly bool Equals(Vector3Int other) => X == other.X && Y == other.Y && Z == other.Z;
