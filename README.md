@@ -79,11 +79,11 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 
 다음 패키지와 개발 지침을 참조한다.
 
-| 프로젝트 | 사용 범위 | 역할 |
-| --- | --- | --- |
-| [Blackbox System](https://github.com/dove-creative/blackbox-system) · BlackThunder.BlackboxSystem | 본체 | 실행 중 발생한 활동과 흐름을 기록·추적한다. |
-| [UniTest](https://github.com/dove-creative/unitest) · BlackThunder.UniTest | 테스트 | 상태 전이와 기대 결과를 구성하고, 여러 단계의 동작을 재현·검증한다. |
-| [BlackThunder Conventions](https://github.com/dove-creative/blackthunder-conventions) | 개발 지침 | 코드·문서 컨벤션과 작업 절차를 제공한다. |
+| 프로젝트                                                                                              | 사용 범위 | 역할                                      |
+| ------------------------------------------------------------------------------------------------- | ----- | --------------------------------------- |
+| [BlackThunder Conventions](https://github.com/dove-creative/blackthunder-conventions)             | 개발 지침 | 코드·문서 컨벤션과 작업 절차를 제공한다.                 |
+| [Blackbox System](https://github.com/dove-creative/blackbox-system) · BlackThunder.BlackboxSystem | 본체    | 실행 중 발생한 활동과 흐름을 기록·추적한다.               |
+| [UniTest](https://github.com/dove-creative/unitest) · BlackThunder.UniTest                        | 테스트   | 상태 전이와 기대 결과를 구성하고, 여러 단계의 동작을 재현·검증한다. |
 
 Blackbox System과 UniTest는 packages 폴더의 로컬 NuGet 피드에서 복원한다. 채택 버전과 배포본의 출처는 [패키지 안내](packages/README.md)에 정리되어 있다.
 
