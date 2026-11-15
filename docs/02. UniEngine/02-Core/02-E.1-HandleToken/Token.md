@@ -30,7 +30,7 @@
 
 ```csharp
 using System;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 var token = new Token(() => Console.WriteLine("initial"));
 var additionalAction = new Action(() => Console.WriteLine("additional"));

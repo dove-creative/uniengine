@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     /// <summary>
     /// Enumerates a source with a value-type cursor and lazy lifetime acquisition.

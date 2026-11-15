@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public static class FlagExtensions
     {

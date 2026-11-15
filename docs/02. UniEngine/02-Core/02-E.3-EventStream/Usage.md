@@ -6,7 +6,7 @@
 
 ```csharp
 using System;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 EventStream.ResetMain();
 var elapsed = 0f;
@@ -30,7 +30,7 @@ Update가 경과 시간을 누적한 뒤 Render가 읽는다. ForOrder에는 순
 
 ```csharp
 using System;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 using var stream = new EventStream<UnitEvent>();
 Func<UnitEvent, bool> death = unitEvent => unitEvent.Kind == EventKind.Death;
@@ -65,7 +65,7 @@ events.OnNext(null);
 
 ```csharp
 using System;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 using var events = new EventStream<ulong>();
 using var shapes = events.ForFlags(GeoEvents.Shape).Subscribe(_ => Console.WriteLine("shape"));

@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public class AdaptiveCollection<T> : ICollection<T>, IEnumerationSource<T>
     {

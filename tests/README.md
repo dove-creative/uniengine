@@ -200,6 +200,8 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 
 ## 범위
 
+- StateMachines.Usm의 직접 생성·소유권·수명·종료·예외, FSM·Direct 전이·Payload·순환 제한, BT 선택·순서·선점·LoopType, Reframe·Parallel과 혼합 계층 검증. `--filter 'TestCategory=Usm'`으로 실행하며 [계획](03-Services/StateMachines/Usm/docs/02.%20Plans.md)과 [결과](03-Services/StateMachines/Usm/docs/03.%20Results.md)는 해당 모듈에서 관리한다.
+- StateMachines.Scp 초안의 기존 NUnit 사례 5개를 이관하였다. `--filter 'TestCategory=Scp'`으로 실행하며 [계획](03-Services/StateMachines/Scp/docs/02.%20Plans.md)과 [결과](03-Services/StateMachines/Scp/docs/03.%20Results.md)는 해당 모듈에서 관리한다.
 - Math의 절대 오차·거리·방향·회전 비교, 스냅, 직선·이차 베지어 평가와 입력 실패 계약. NUnit 직접 사례이며 `--filter 'TestCategory=Math|TestCategory=VectorFunctions'`으로 실행한다. [검증 계획](01-Infrastructure/01-MT.1-Math/docs/02.%20Plans.md)과 [결과](01-Infrastructure/01-MT.1-Math/docs/03.%20Results.md)는 Math 모듈에서 관리하고 [VectorFunctions 계획](01-Infrastructure/01-MT.2-VectorFunctions/docs/02.%20Plans.md)·[결과](01-Infrastructure/01-MT.2-VectorFunctions/docs/03.%20Results.md)는 별도 모듈에서 관리한다.
 - Property의 등록·형식 지정 조회·실패 시 상태 보존·회수·표준 사전 계약과 IPropertySubject 소비 시나리오·연속 상태 전이 검증
 - 공통 ValueEnumerator의 순회 수명과 실패 처리- AdaptiveCollection·AdaptiveDictionary·AdaptiveHashSet의 순회 중 변경·중단·복사본 처리

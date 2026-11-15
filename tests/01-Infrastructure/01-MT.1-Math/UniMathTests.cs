@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using Blackthunder.UniEngine.Mathematics;
+using BlackThunder.UniEngine.Mathematics;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests

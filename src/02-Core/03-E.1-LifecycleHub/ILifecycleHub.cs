@@ -1,4 +1,4 @@
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public interface ILifecycleHub
     {

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests
@@ -200,7 +200,7 @@ namespace BlackThunder.UniEngine.Tests
             stream.OnNext(6);
             Assert.That(checkedValues, Is.EqualTo(2));
             Assert.That(calls, Is.EqualTo(new[] { "value:2", "value:4", "done" }));
-            Assert.That(((Blackthunder.UniEngine.Core.Handle)handle).IsDisposed, Is.True);
+            Assert.That(((BlackThunder.UniEngine.Core.Handle)handle).IsDisposed, Is.True);
             Assert.That(stream.NodeCount, Is.Zero);
             Assert.That(stream.IsDisposed, Is.False);
         }
@@ -229,9 +229,9 @@ namespace BlackThunder.UniEngine.Tests
             using var branch = parent.Take(1).Branch();
             var values = new List<int>();
             var completions = 0;
-            var pending = (Blackthunder.UniEngine.Core.Handle)null;
+            var pending = (BlackThunder.UniEngine.Core.Handle)null;
             branch.Subscribe(
-                _ => pending = (Blackthunder.UniEngine.Core.Handle)branch.Subscribe(
+                _ => pending = (BlackThunder.UniEngine.Core.Handle)branch.Subscribe(
                     values.Add,
                     () => completions++,
                     null));

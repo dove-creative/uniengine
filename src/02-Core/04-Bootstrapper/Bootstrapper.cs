@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Threading;
 using BlackThunder.UniEngine.Infrastructure;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public static class Bootstrapper
     {

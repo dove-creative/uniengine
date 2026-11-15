@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 namespace BlackThunder.UniEngine.Benchmarks
 {

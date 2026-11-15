@@ -9,7 +9,7 @@
 ```csharp
 using System.Diagnostics;
 using BlackThunder.UniEngine.Infrastructure;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 Bootstrapper.Initialize();
 using var subscription = EventStream.Main.Subscribe(deltaTime => Log.Write($"Tick: {deltaTime}"));
@@ -38,7 +38,7 @@ initialize 콜백에서는 로그와 Main을 사용할 수 있다. IsInitialized
 ```csharp
 using System;
 using BlackThunder.UniEngine.Infrastructure;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 IDisposable ticks = null;
 try

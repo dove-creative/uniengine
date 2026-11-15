@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using System.Numerics;
-using Blackthunder.UniEngine.Mathematics;
+using BlackThunder.UniEngine.Mathematics;
 
 namespace BlackThunder.UniEngine.Objects
 {

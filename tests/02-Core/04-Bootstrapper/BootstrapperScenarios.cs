@@ -6,9 +6,9 @@ using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using BlackThunder.UniEngine.Infrastructure;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
-using Handle = Blackthunder.UniEngine.Core.Handle;
+using Handle = BlackThunder.UniEngine.Core.Handle;
 
 namespace BlackThunder.UniEngine.Tests
 {

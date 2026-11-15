@@ -1,6 +1,6 @@
 using System;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     /// <summary>
     /// Represents an object that holds a generic EventHub.

@@ -1,4 +1,4 @@
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     /// <summary>
     /// Supplies values and owns the lifetime of an enumeration.

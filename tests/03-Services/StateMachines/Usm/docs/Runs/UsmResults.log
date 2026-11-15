@@ -1,0 +1,56 @@
+Source: tests/bin/UsmResults/usm.trx
+Start: 2026-11-15T16:34:37.3056739+09:00
+Finish: 2026-11-15T16:34:40.3831382+09:00
+Outcome: Completed
+Passed	00:00:00.0003970	BuilderRejectsDuplicateSiblingsCyclesAndSharedChildren
+Passed	00:00:00.0010210	BuilderRejectsInvalidInputsAndMissingTransitioner
+Passed	00:00:00.0005620	ChildCannotInitializeSeparatelyAndInvalidStopReasonPreservesRunningState
+Passed	00:00:00.0008180	CircularTransitionsShareBudgetIncludingRejectedConditions(False)
+Passed	00:00:00.0001920	CircularTransitionsShareBudgetIncludingRejectedConditions(True)
+Passed	00:00:00.0002760	CommonNamesAcceptStringsTypesAndObjects
+Passed	00:00:00.0003280	DecisionMatrixPrioritizesExplicitResultsAndPayloadMatches
+Passed	00:00:00.0002470	DecisionMatrixSeparatesMissingRulesFromExplicitNullDestinations
+Passed	00:00:00.0009180	DefaultLeafPreservesPayloadAndRecordsExecution
+Passed	00:00:00.0001070	EmptyEvaluatorsComplete(False)
+Passed	00:00:00.0001430	EmptyEvaluatorsComplete(True)
+Passed	00:00:00.0001450	EntryAbsenceKeepsParentRunningAndExplicitExitCompletesIt
+Passed	00:00:00.0037720	ExecutionAndAllCleanupFailuresArePreserved
+Passed	00:00:00.0001299	ExplicitNullTransitionStopsRunningChildAndCompletesParent
+Passed	00:00:00.0004330	FailedInitializationPermanentlyRejectsExecutionAndRetry
+Passed	00:00:00.0002320	FailedSequenceAndExhaustedSelectorDoNotEnterLaterWork(False)
+Passed	00:00:00.0001299	FailedSequenceAndExhaustedSelectorDoNotEnterLaterWork(True)
+Passed	00:00:00.0002330	FailurePropagationCanOverrideRecoveryRule(False)
+Passed	00:00:00.0001590	FailurePropagationCanOverrideRecoveryRule(True)
+Passed	00:00:00.0483660	FixedMachineLifetimes
+Passed	00:00:00.0004820	InactiveParentAndStopCallbackCannotRestartAChild
+Passed	00:00:00.0003720	MatrixBuilderCannotMutateBuiltMatrixThroughSavedSubBuilders
+Passed	00:00:00.0007330	NestedMatrixAndSequencePassPayloadThroughOneFrame
+Passed	00:00:00.0004800	ParentStopInsideChildUpdatePreventsFallbackChildFromStarting
+Passed	00:00:00.0003210	PredicatePayloadRulesShareTheirDefaultAndKeepRegistrationOrder
+Passed	00:00:00.6840950	RandomContinuousMachineLifetimes(0)
+Passed	00:00:00.7109340	RandomContinuousMachineLifetimes(1)
+Passed	00:00:00.6371310	RandomContinuousMachineLifetimes(2)
+Passed	00:00:00.0001180	ReusingAChildFrameRefreshesPayload
+Passed	00:00:00.0003480	RootInitializationReachesEveryWorkAndCannotBeRepeated
+Passed	00:00:00.0002320	RunningCompletionAndRestartHaveBalancedLifetimes
+Passed	00:00:00.0002660	SelectorFallsBackOnFailureAndCompletesOnSuccess
+Passed	00:00:00.0003340	SelectorOnlyPreemptsWhenHigherPriorityChildOptsIn(False)
+Passed	00:00:00.0001510	SelectorOnlyPreemptsWhenHigherPriorityChildOptsIn(True)
+Passed	00:00:00.0002320	SelfConditionFailureFallsBackInSelectorAndStopsSequence(False)
+Passed	00:00:00.0001270	SelfConditionFailureFallsBackInSelectorAndStopsSequence(True)
+Passed	00:00:00.0002599	SelfTransitionYieldsUntilNextUpdate(False)
+Passed	00:00:00.0001190	SelfTransitionYieldsUntilNextUpdate(True)
+Passed	00:00:00.0002300	SequenceCanPreemptBackToEarlierChild
+Passed	00:00:00.0002550	SequenceResumesRunningChildAndRestartsFromFirstAfterCompletion
+Passed	00:00:00.0001900	StopInsideMatrixPredicateDoesNotEnterItsDestination
+Passed	00:00:00.0001920	StopInsideTransitionerStartPreventsItsUpdate
+Passed	00:00:00.0001510	StopInsideWorkCallbackPreventsFurtherExecution(False)
+Passed	00:00:00.0002100	StopInsideWorkCallbackPreventsFurtherExecution(True)
+Passed	00:00:00.0004020	StoppingABranchRejectsUpdatesInItsStillActiveDescendants
+Passed	00:00:00.0005340	StopRunsFromDescendantsToParentExactlyOnce
+Passed	00:00:00.0002580	StopStillCleansUpWorkWhenTransitionerStopThrows
+Passed	00:00:00.0003120	SuccessfulBuildConsumesEveryBuilderButAllowsRepeatedIdsInDifferentBranches
+Passed	00:00:00.0001979	TerminalWorkSkipsTransitionerAndStopsPreviouslyActiveChild
+Passed	00:00:00.0001370	UnknownMatrixSourcesAndDestinationsFailInitialization(False)
+Passed	00:00:00.0002260	UnknownMatrixSourcesAndDestinationsFailInitialization(True)
+Passed	00:00:00.0002410	UpdateReentryThrowsAndCleansUpActiveTree

@@ -11,7 +11,7 @@
 
 ## 공통 계약
 
-Blackthunder.UniEngine.Mathematics.IVectorFunction은 Evaluate(float t)로 System.Numerics.Vector2를 반환한다. 소비자는 구체 곡선의 종류와 관계없이 같은 계약으로 위치를 얻는다. 호출은 보유 상태를 변경하지 않는다.
+BlackThunder.UniEngine.Mathematics.IVectorFunction은 Evaluate(float t)로 System.Numerics.Vector2를 반환한다. 소비자는 구체 곡선의 종류와 관계없이 같은 계약으로 위치를 얻는다. 호출은 보유 상태를 변경하지 않는다.
 
 Configuration·Math와 같은 Infrastructure 레벨이며 두 모듈에 의존하지 않는다.
 

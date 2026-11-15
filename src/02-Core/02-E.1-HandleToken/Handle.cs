@@ -1,7 +1,7 @@
 using System;
 using BlackThunder.UniEngine.Infrastructure;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public class Handle : IDisposable
     {

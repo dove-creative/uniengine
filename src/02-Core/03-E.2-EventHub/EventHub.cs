@@ -1,7 +1,7 @@
 using System;
 using BlackThunder.UniEngine.Infrastructure;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public partial class EventHub<TEventArgs> : IEventHub<TEventArgs>, IDisposable
     {

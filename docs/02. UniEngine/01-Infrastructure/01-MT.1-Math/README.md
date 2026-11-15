@@ -11,7 +11,7 @@
 
 - 개요: 허용 오차를 사용한 값·방향·회전의 비교와 수치 보정을 제공한다.
 - 목적: Unity 의존 없이 공통 수학 규칙을 재사용한다.
-- 구현: Blackthunder.UniEngine.Mathematics의 정적 UniMath 클래스가 System.Numerics와 .NET 기본 수학 함수를 사용한다.
+- 구현: BlackThunder.UniEngine.Mathematics의 정적 UniMath 클래스가 System.Numerics와 .NET 기본 수학 함수를 사용한다.
 
 ## 정의된 범위
 

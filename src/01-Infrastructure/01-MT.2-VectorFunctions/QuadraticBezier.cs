@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Blackthunder.UniEngine.Mathematics
+namespace BlackThunder.UniEngine.Mathematics
 {
     public class QuadraticBezier : IVectorFunction
     {

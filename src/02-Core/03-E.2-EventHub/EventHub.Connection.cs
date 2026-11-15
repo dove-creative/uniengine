@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using BlackThunder.UniEngine.Infrastructure;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public partial class EventHub<TEventArgs>
     {

@@ -1,0 +1,131 @@
+start=2026-11-15T20:08:23.7979270+09:00
+finish=2026-11-15T20:08:29.8162716+09:00
+elapsedSeconds=6.018
+total=111
+executed=111
+passed=111
+failed=0
+error=0
+timeout=0
+aborted=0
+inconclusive=0
+passedButRunAborted=0
+notRunnable=0
+notExecuted=0
+disconnected=0
+warning=0
+completed=0
+inProgress=0
+pending=0
+
+Passed	00:00:00.0003250	AcceptedReframeConditionRunsOnceAndExplicitStopCancelsReplay
+Passed	00:00:00.0008470	ChildCannotInitializeSeparatelyAndInvalidStopReasonPreservesRunningState
+Passed	00:00:00.0009490	CircularTransitionsShareBudgetIncludingRejectedConditions(False)
+Passed	00:00:00.0003610	CircularTransitionsShareBudgetIncludingRejectedConditions(True)
+Passed	00:00:00.0004660	CommonNamesAcceptStringsTypesAndObjects
+Passed	00:00:00.0008290	ConstructionCopiesChildrenAndPreventsArrayMutationFromCreatingACycle
+Passed	00:00:00.0003440	DecisionMatrixPrioritizesExplicitResultsAndPayloadMatches
+Passed	00:00:00.0002780	DecisionMatrixSeparatesMissingRulesFromExplicitNullDestinations
+Passed	00:00:00.0010039	DefaultLeafPreservesPayloadAndRecordsExecution
+Passed	00:00:00.0006480	DirectChildRequestsWaitForNextUpdateAndPreserveTerminalOutput
+Passed	00:00:00.0002060	DirectRejectsUnknownPreinitializedTargetAndMatrixGetNextDistinguishesNull
+Passed	00:00:00.0002720	DirectReplacementStopsRunningChildAndCompletedSelfRequestRestartsNextUpdate
+Passed	00:00:00.0003060	DirectRequestsAreDeferredAndLastRequestWins
+Passed	00:00:00.0001910	EmptyEvaluatorsApplyLoopPolicyToSuccessfulRound(False,Conditional)
+Passed	00:00:00.0000110	EmptyEvaluatorsApplyLoopPolicyToSuccessfulRound(False,Forced)
+Passed	00:00:00.0001299	EmptyEvaluatorsApplyLoopPolicyToSuccessfulRound(False,None)
+Passed	00:00:00.0000060	EmptyEvaluatorsApplyLoopPolicyToSuccessfulRound(True,Conditional)
+Passed	00:00:00.0000080	EmptyEvaluatorsApplyLoopPolicyToSuccessfulRound(True,Forced)
+Passed	00:00:00.0000070	EmptyEvaluatorsApplyLoopPolicyToSuccessfulRound(True,None)
+Passed	00:00:00.0002310	EmptyEvaluatorsComplete(False)
+Passed	00:00:00.0001660	EmptyEvaluatorsComplete(True)
+Passed	00:00:00.0003460	EndlessReframeSharesBudgetAndCleansUp
+Passed	00:00:00.0002190	EntryAbsenceKeepsParentRunningAndExplicitExitCompletesIt
+Passed	00:00:00.0000180	EvaluatorLoopPoliciesApplyAtRoundBoundaries(False,Conditional,False)
+Passed	00:00:00.0000110	EvaluatorLoopPoliciesApplyAtRoundBoundaries(False,Conditional,True)
+Passed	00:00:00.0000080	EvaluatorLoopPoliciesApplyAtRoundBoundaries(False,Forced,False)
+Passed	00:00:00.0000080	EvaluatorLoopPoliciesApplyAtRoundBoundaries(False,Forced,True)
+Passed	00:00:00.0003210	EvaluatorLoopPoliciesApplyAtRoundBoundaries(False,None,False)
+Passed	00:00:00.0001940	EvaluatorLoopPoliciesApplyAtRoundBoundaries(False,None,True)
+Passed	00:00:00.0000070	EvaluatorLoopPoliciesApplyAtRoundBoundaries(True,Conditional,False)
+Passed	00:00:00.0000080	EvaluatorLoopPoliciesApplyAtRoundBoundaries(True,Conditional,True)
+Passed	00:00:00.0000080	EvaluatorLoopPoliciesApplyAtRoundBoundaries(True,Forced,False)
+Passed	00:00:00.0000080	EvaluatorLoopPoliciesApplyAtRoundBoundaries(True,Forced,True)
+Passed	00:00:00.0000090	EvaluatorLoopPoliciesApplyAtRoundBoundaries(True,None,False)
+Passed	00:00:00.0000100	EvaluatorLoopPoliciesApplyAtRoundBoundaries(True,None,True)
+Passed	00:00:00.0033960	ExceptionReportsFailureAndCancelsReframe
+Passed	00:00:00.0060360	ExecutionAndAllCleanupFailuresArePreserved
+Passed	00:00:00.0002320	ExplicitNullTransitionStopsRunningChildAndCompletesParent
+Passed	00:00:00.0003040	ExplicitStopDiscardsReframeRequestsRaisedByStopCallbacks
+Passed	00:00:00.0004250	FailedInitializationPermanentlyRejectsExecutionAndRetry
+Passed	00:00:00.0006370	FailedSequenceAndExhaustedSelectorDoNotEnterLaterWork(False)
+Passed	00:00:00.0002709	FailedSequenceAndExhaustedSelectorDoNotEnterLaterWork(True)
+Passed	00:00:00.0560290	FixedMachineLifetimes
+Passed	00:00:00.0096520	FixedMixedTreeLifetimes
+Passed	00:00:00.0004800	InactiveParentAndStopCallbackCannotRestartAChild
+Passed	00:00:00.0002690	InitializedChildrenCannotBeAttachedToAnotherRootAndBranchIdsMayRepeat
+Passed	00:00:00.0008690	MatrixBuilderCannotMutateBuiltMatrixThroughSavedSubBuilders
+Passed	00:00:00.0006040	MixedMatrixSequenceAndParallelRetainNestedResults
+Passed	00:00:00.0014460	NestedMatrixAndSequencePassPayloadThroughOneFrame
+Passed	00:00:00.0000070	OperationStatusIsDerived(ChildCompleted,Success)
+Passed	00:00:00.0000070	OperationStatusIsDerived(ChildFailed,Failure)
+Passed	00:00:00.0000120	OperationStatusIsDerived(Failure,Failure)
+Passed	00:00:00.0000070	OperationStatusIsDerived(HaltedByExternal,Halted)
+Passed	00:00:00.0000070	OperationStatusIsDerived(HaltedByParent,Halted)
+Passed	00:00:00.0000070	OperationStatusIsDerived(HaltedBySelf,Halted)
+Passed	00:00:00.0007060	OperationStatusIsDerived(NeverRun,NeverRun)
+Passed	00:00:00.0000070	OperationStatusIsDerived(Preempted,Halted)
+Passed	00:00:00.0002110	OperationStatusIsDerived(Running,Running)
+Passed	00:00:00.0000200	OperationStatusIsDerived(Success,Success)
+Passed	00:00:00.0004310	ParallelCleanupContinuesAfterAChildStopThrows
+Passed	00:00:00.0014350	ParallelEarlyCompletionStopsActiveChildrenAndPreservesUnstartedChildren(AllSuccess)
+Passed	00:00:00.0002180	ParallelEarlyCompletionStopsActiveChildrenAndPreservesUnstartedChildren(AnySuccess)
+Passed	00:00:00.0003669	ParallelEmptyPolicyAndAllFailures(AllSuccess)
+Passed	00:00:00.0001789	ParallelEmptyPolicyAndAllFailures(AnySuccess)
+Passed	00:00:00.0015720	ParallelPreservesCompletedChildrenAndReturnsIndependentSnapshots
+Passed	00:00:00.0003010	ParallelSelfAbortDoesNotReexecuteCompletedSiblings
+Passed	00:00:00.0008110	ParentStopInsideChildUpdatePreventsFallbackChildFromStarting
+Passed	00:00:00.0003340	PredicatePayloadRulesShareTheirDefaultAndKeepRegistrationOrder
+Passed	00:00:00.7349520	RandomContinuousMachineLifetimes(0)
+Passed	00:00:00.6091120	RandomContinuousMachineLifetimes(1)
+Passed	00:00:00.6337570	RandomContinuousMachineLifetimes(2)
+Passed	00:00:00.9110690	RandomContinuousMixedTreeLifetimes(0)
+Passed	00:00:00.7819810	RandomContinuousMixedTreeLifetimes(1)
+Passed	00:00:00.6342830	RandomContinuousMixedTreeLifetimes(2)
+Passed	00:00:00.0001700	ReframeCanRevisitMatrixSelfTransitionWithoutRecursiveUpdate
+Passed	00:00:00.0002940	ReframeConditionUsesLatestOutputAndCanHaltCompletedOrRunningNode(False)
+Passed	00:00:00.0001530	ReframeConditionUsesLatestOutputAndCanHaltCompletedOrRunningNode(True)
+Passed	00:00:00.0003170	ReframeConsumesRequestsAndPreservesRequestsRaisedDuringReplay(False)
+Passed	00:00:00.0001480	ReframeConsumesRequestsAndPreservesRequestsRaisedDuringReplay(True)
+Passed	00:00:00.0001410	RepeatedInactiveStopDoesNotConsumeAFutureReframeRequest
+Passed	00:00:00.0001390	ReusingAChildFrameRefreshesPayload
+Passed	00:00:00.0003959	RootInitializationReachesEveryWorkAndCannotBeRepeated
+Passed	00:00:00.0003360	RunningCompletionAndRestartHaveBalancedLifetimes
+Passed	00:00:00.0002960	SelectorFailureOnlyAdvancesWhenChildHasStopOnFailure(False)
+Passed	00:00:00.0001810	SelectorFailureOnlyAdvancesWhenChildHasStopOnFailure(True)
+Passed	00:00:00.0002910	SelectorFallsBackOnFailureAndCompletesOnSuccess
+Passed	00:00:00.0003450	SelectorOnlyPreemptsWhenHigherPriorityChildOptsIn(False)
+Passed	00:00:00.0002090	SelectorOnlyPreemptsWhenHigherPriorityChildOptsIn(True)
+Passed	00:00:00.0002580	SelfConditionFailureFallsBackInSelectorAndStopsSequence(False)
+Passed	00:00:00.0001530	SelfConditionFailureFallsBackInSelectorAndStopsSequence(True)
+Passed	00:00:00.0003100	SelfTransitionYieldsUntilNextUpdate(False)
+Passed	00:00:00.0001320	SelfTransitionYieldsUntilNextUpdate(True)
+Passed	00:00:00.0002490	SequenceCanPreemptBackToEarlierChild
+Passed	00:00:00.0002830	SequenceResumesRunningChildAndRestartsFromFirstAfterCompletion
+Passed	00:00:00.0002250	StopInsideMatrixPredicateDoesNotEnterItsDestination
+Passed	00:00:00.0002020	StopInsideTransitionerStartPreventsItsUpdate
+Passed	00:00:00.0002900	StopInsideWorkCallbackPreventsFurtherExecution(False)
+Passed	00:00:00.0003010	StopInsideWorkCallbackPreventsFurtherExecution(True)
+Passed	00:00:00.0002230	StopOnFailureDoesNotOverrideMatrixRecovery(False)
+Passed	00:00:00.0001450	StopOnFailureDoesNotOverrideMatrixRecovery(True)
+Passed	00:00:00.0002220	StopOnFailureDoesNotTreatExternalHaltAsFailure
+Passed	00:00:00.0007900	StopRunsFromDescendantsToParentExactlyOnce
+Passed	00:00:00.0003180	StopStillCleansUpWorkWhenTransitionerStopThrows
+Passed	00:00:00.0004720	StoppingABranchRejectsUpdatesInItsStillActiveDescendants
+Passed	00:00:00.0002720	TerminalWorkSkipsTransitionerAndStopsPreviouslyActiveChild
+Passed	00:00:00.0001670	UnknownMatrixSourcesAndDestinationsFailInitialization(False)
+Passed	00:00:00.0003160	UnknownMatrixSourcesAndDestinationsFailInitialization(True)
+Passed	00:00:00.0004100	UpdateReentryThrowsAndCleansUpActiveTree
+Passed	00:00:00.0003830	ValidationRejectsMissingTransitionerDuplicateIdsAndSharedChildrenBeforeCallbacks
+Passed	00:00:00.0004080	WorkAndTransitionerCannotBeSharedWithinOrAcrossTrees(False)
+Passed	00:00:00.0001590	WorkAndTransitionerCannotBeSharedWithinOrAcrossTrees(True)

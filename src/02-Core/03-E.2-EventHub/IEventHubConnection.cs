@@ -1,6 +1,6 @@
 using System;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     internal enum EventHubUpdateKind { Typed, Object, Parameterless }
 

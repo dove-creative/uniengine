@@ -11,7 +11,7 @@ UniMath는 실수·벡터의 오차 기반 비교와 보정, 방향·회전 관�
 
 ## 역할과 구성
 
-공개 타입은 Blackthunder.UniEngine.Mathematics의 정적 UniMath 클래스이며 벡터·쿼터니언은 System.Numerics 타입을 사용한다. 추가 수학 패키지와 Unity 의존성은 없다.
+공개 타입은 BlackThunder.UniEngine.Mathematics의 정적 UniMath 클래스이며 벡터·쿼터니언은 System.Numerics 타입을 사용한다. 추가 수학 패키지와 Unity 의존성은 없다.
 
 UniMath는 값을 보관하거나 수정하지 않는다. 비교는 bool을 반환하고 보정은 새 값을 반환한다. 근사 비교는 허용 오차에 따른 판정이므로 Equals·GetHashCode·사전 키 동등성을 대체하지 않는다.
 

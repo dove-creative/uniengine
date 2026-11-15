@@ -19,7 +19,7 @@
 
 ## 구성과 역할
 
-Configuration·Math·VectorFunctions는 같은 레벨이다. Configuration은 데이터 저장 위치를 결정하고 Math는 비교·보정, VectorFunctions는 매개변수에 따른 위치 계산을 제공한다. 세 모듈은 서로 의존하지 않으며 수학 타입은 Blackthunder.UniEngine.Mathematics 네임스페이스에 속한다.
+Configuration·Math·VectorFunctions는 같은 레벨이다. Configuration은 데이터 저장 위치를 결정하고 Math는 비교·보정, VectorFunctions는 매개변수에 따른 위치 계산을 제공한다. 세 모듈은 서로 의존하지 않으며 수학 타입은 BlackThunder.UniEngine.Mathematics 네임스페이스에 속한다.
 
 다음 레벨의 Objects는 좌표·자세를 값으로 표현하고 Transform의 Is가 Math를 사용하여 위치와 회전을 비교한다. Utilities는 값의 표시와 직렬화를 맡는다. 이 기반 위에서 Log가 기록을 저장하며 ExceptionHandler는 애플리케이션의 예외 처리 방침을 연결한다.
 

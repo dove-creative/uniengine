@@ -1,6 +1,6 @@
 using System;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     public interface IEventHubBuilder : ILifecycleHubBuilder
     {

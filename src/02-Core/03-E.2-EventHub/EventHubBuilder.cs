@@ -1,6 +1,6 @@
 using System;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     /// <summary>
     /// Registers update conditions and lifecycle callbacks for one listener connection.

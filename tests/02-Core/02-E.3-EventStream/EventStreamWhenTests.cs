@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BlackThunder.UniEngine.Infrastructure;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests

@@ -19,7 +19,7 @@ UniEngine의 계층별 책임과 객체들이 협력하는 방식을 설명하�
 
 ## 전체 구조
 
-Infrastructure는 공통 데이터·진단 기능을 제공한다. Core는 이를 바탕으로 객체 계약과 연결·이벤트 기능을 구성한다. Surface는 Core의 편의 기능을, Services는 특정 응용 문제를 위한 기능을 담당하는 계층이다. 외부 보조 프레임워크는 이들의 개발·검증·운영을 지원한다.
+Infrastructure는 공통 데이터·진단 기능을 제공한다. Core는 이를 바탕으로 객체 계약과 연결·이벤트 기능을 구성한다. Services는 UniEngine의 공통 기능을 조합하여 특정 응용 문제를 해결한다. 외부 보조 프레임워크는 이들의 개발·검증·운영을 지원한다.
 
 이 구분은 역할과 의존 관계를 설명하기 위한 것이다. 문서 폴더가 프로젝트나 어셈블리의 경계를 뜻하지는 않는다.
 
@@ -36,7 +36,6 @@ Infrastructure는 공통 데이터·진단 기능을 제공한다. Core는 이�
 | 0 | [Supportive Frameworks](00-SupportiveFrameworks/README.md) | 외부 Blackbox System·UniTest의 역할과 연결 |
 | 1 | [Infrastructure](01-Infrastructure/README.md) | 설정·값 형식·유틸리티·예외·로그 |
 | 2 | [UniEngine Core](02-Core/README.md) | 객체 계약·순회·풀링·페이로드·이벤트 |
-| 3 | [UniEngine Surface](03-Surface/README.md) | 편의 기능 계층의 설계 범위 |
-| 4 | [Services](04-Services/README.md) | 응용 서비스의 설계 범위 |
+| 3 | [Services](03-Services/README.md) | USM 실행·Scp 초안과 응용 서비스의 설계 범위 |
 
 [Hierarchy](../01.%20Concepts/02.%20Hierarchy.md)는 계층 분류의 기준이다. 이벤트 계열의 구성과 협력 흐름은 [Core 구성](02-Core/README.md)에서 확인한다. [UniEngine.drawio](UniEngine.drawio)는 기존 전체 다이어그램이다.

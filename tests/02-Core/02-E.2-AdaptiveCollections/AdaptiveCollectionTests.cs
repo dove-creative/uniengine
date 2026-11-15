@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
 
 namespace BlackThunder.UniEngine.Tests

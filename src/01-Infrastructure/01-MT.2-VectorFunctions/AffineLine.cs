@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Blackthunder.UniEngine.Mathematics
+namespace BlackThunder.UniEngine.Mathematics
 {
     public class AffineLine : IVectorFunction
     {

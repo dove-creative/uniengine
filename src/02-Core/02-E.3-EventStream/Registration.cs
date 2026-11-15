@@ -1,6 +1,6 @@
 using System;
 
-namespace Blackthunder.UniEngine.Core
+namespace BlackThunder.UniEngine.Core
 {
     // What a registration attaches at the end of its path:
     // the callbacks of a subscription, or the input of a stream that connects to this place.

@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
-using Handle = Blackthunder.UniEngine.Core.Handle;
+using Handle = BlackThunder.UniEngine.Core.Handle;
 
 namespace BlackThunder.UniEngine.Tests
 {

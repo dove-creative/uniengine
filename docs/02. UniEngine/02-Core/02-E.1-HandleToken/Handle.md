@@ -31,7 +31,7 @@
 
 ```csharp
 using System;
-using Blackthunder.UniEngine.Core;
+using BlackThunder.UniEngine.Core;
 
 var executionCount = 0;
 var handle = new Handle(() => executionCount++);
