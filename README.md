@@ -10,14 +10,6 @@ UniEngine은 객체의 상태·수명·이벤트 흐름을 조합하여 시뮬�
 
 Unity 연동을 고려하여 C# 9와 .NET Standard 2.1을 사용한다. 현재 저장소의 실행 예제와 테스트는 .NET 환경을 대상으로 하며, Unity·Mono·IL2CPP에서의 실행 검증을 대신하지 않는다.
 
-## 주요 기능
-
-- 이벤트 흐름: 값·조건·비트 필터, 실행 순서 그룹, 분기·병합과 병렬 구독을 조합한다.
-- 객체 수명과 연결: Handle·Token으로 연결을 해제하고, LifecycleHub·EventHub로 객체의 갱신과 폐기를 전달한다.
-- 상태 머신: USM의 노드·작업·전이를 조합하여 FSM, 행동 트리와 병렬 실행을 구성한다.
-- 순회 중 변경: AdaptiveCollections로 컬렉션과 콜백 목록의 순회 중 추가·제거를 다룬다.
-- 공통 기반: 수학·벡터 함수, 값 형식, JSON 변환, 설정·로그·예외 처리를 제공한다.
-
 ## 요구 사항과 빌드
 
 저장소의 빌드·예제·테스트 명령에는 .NET 10 SDK를 사용한다. 본체의 대상은 .NET Standard 2.1이며, 예제와 테스트는 .NET 10에서 실행된다.
@@ -64,16 +56,6 @@ dotnet run --project samples/UniEngine.Samples.csproj -c Release
 
 결과는 콘솔에 출력된다. 대화형 프롬프트에서 help로 명령을 확인하고 exit로 종료한다. 예제 초기화 시 문서 폴더 아래에 BlackThunder/UniEngine/Projects/UniEngine.Samples 디렉터리가 생성된다.
 
-## 주요 API
-
-- `Bootstrapper.Initialize(...)`: 호스트의 설정·진단 환경과 기본 틱 스트림을 초기화한다.
-- `EventStream<T>`: 값을 발행하고 필터·순서·구독 경로를 구성한다.
-- `EventStream.Main`: 호스트가 경과 시간을 발행하는 기본 틱 스트림이다.
-- `Handle`·`Token`: 연결의 수명과 1회 정리를 관리한다.
-- `LifecycleHub`·`EventHub`: 객체의 수명·갱신 알림을 구성한다.
-- `Property`: 도메인 객체에 외부 페이로드를 연결한다.
-- `StateMachines.Usm`: 노드·작업·전이로 상태 머신을 구성하는 네임스페이스이다.
-
 ## 문서
 
 - [개요와 개발 원칙](docs/01.%20Concepts/01.%20Overview.md): 목적과 설계 원칙
@@ -92,6 +74,17 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 ```
 
 테스트 구성, 영향 범위에 따른 실행 기준과 검증 기록은 [테스트 안내](tests/README.md)를 참고한다.
+
+## 의존 패키지
+
+다음 두 패키지를 사용한다.
+
+| 패키지 | 사용 범위 | 역할 |
+| --- | --- | --- |
+| [Blackbox System](https://github.com/dove-creative/blackbox-system) · BlackThunder.BlackboxSystem | 본체 | 실행 중 발생한 활동과 흐름을 기록·추적한다. |
+| [UniTest](https://github.com/dove-creative/unitest) · BlackThunder.UniTest | 테스트 | 상태 전이와 기대 결과를 구성하고, 여러 단계의 동작을 재현·검증한다. |
+
+두 패키지는 packages 폴더의 로컬 NuGet 피드에서 복원한다. 채택 버전과 배포본의 출처는 [패키지 안내](packages/README.md)에 정리되어 있다.
 
 ## 라이선스
 
