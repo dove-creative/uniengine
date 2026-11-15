@@ -12,6 +12,37 @@ namespace BlackThunder.UniEngine.Tests
     {
         // Content --------------------
         // Mutation and lifetime
+        // D2: Logically removed keys return the default out value before pending changes are committed.
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public void RemovedKeysReturnDefaultValuesDuringIteration(bool deferred, bool replaceFirst)
+        {
+            var dictionary = new AdaptiveDictionary<int, string>(deferred) { { 1, "original" }, { 2, "retained" } };
+            var cursor = dictionary.GetEnumerator();
+            try
+            {
+                Assert.That(cursor.MoveNext(), Is.True);
+                if (replaceFirst) dictionary[1] = "replacement";
+                Assert.That(dictionary.Remove(1), Is.True);
+                Assert.That(dictionary.TryGetValue(1, out var removed), Is.False);
+                Assert.That(removed, Is.Null);
+                Assert.That(dictionary.ContainsKey(1), Is.False);
+                Assert.That(dictionary.Count, Is.EqualTo(1));
+                Assert.That(dictionary.TryGetValue(2, out var retained), Is.True);
+                Assert.That(retained, Is.EqualTo("retained"));
+            }
+            finally
+            {
+                cursor.Dispose();
+            }
+
+            Assert.That(dictionary.TryGetValue(1, out var missing), Is.False);
+            Assert.That(missing, Is.Null);
+            Assert.That(dictionary.Keys, Is.EquivalentTo(new[] { 2 }));
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void AdditionAndReplacementFollowTheSelectedMode(bool deferred)

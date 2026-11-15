@@ -6,39 +6,42 @@ namespace BlackThunder.UniEngine.Infrastructure
     public static class Configuration
     {
         // Front
-        public static string ProjectPath
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_projectPath))
-                    throw new InvalidOperationException("Configuration has not been initialized.");
-
-                return _projectPath;
-            }
-        }
+        public static string DataPath => CurrentPaths.DataPath;
+        public static string InstallationPath => CurrentPaths.InstallationPath;
 
         // Internal
         private static readonly object _initializationLock = new();
-        private static string _projectPath;
+        private static volatile Paths _paths;
+        private static Paths CurrentPaths =>
+            _paths ?? throw new InvalidOperationException("Configuration has not been initialized.");
 
 
         // Content
-        public static void Initialize(string applicationId)
+        public static void Initialize(string applicationId) => Initialize(applicationId, null);
+        public static void Initialize(string applicationId, string installationPath)
         {
             lock (_initializationLock)
             {
                 ThrowIfAlreadyInitialized();
                 ValidateApplicationId(applicationId);
 
-                string projectPath = Path.Combine(
+                if (installationPath != null && string.IsNullOrWhiteSpace(installationPath))
+                    throw new ArgumentException("Installation path must not be empty.", nameof(installationPath));
+
+                var resolvedInstallationPath = Path.GetFullPath(installationPath ?? AppContext.BaseDirectory);
+                if (!Directory.Exists(resolvedInstallationPath))
+                    throw new DirectoryNotFoundException(
+                        "Installation directory does not exist: " + resolvedInstallationPath);
+
+                var dataPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     "BlackThunder",
                     "UniEngine",
                     "Projects",
                     applicationId);
 
-                ValidatePath(projectPath);
-                _projectPath = projectPath;
+                ValidatePath(dataPath);
+                _paths = new Paths(dataPath, resolvedInstallationPath);
             }
         }
 
@@ -65,8 +68,20 @@ namespace BlackThunder.UniEngine.Infrastructure
 
         private static void ThrowIfAlreadyInitialized()
         {
-            if (!string.IsNullOrEmpty(_projectPath))
+            if (_paths != null)
                 throw new InvalidOperationException("Configuration has already been initialized.");
+        }
+
+        private class Paths
+        {
+            public string DataPath { get; }
+            public string InstallationPath { get; }
+
+            public Paths(string dataPath, string installationPath)
+            {
+                DataPath = dataPath;
+                InstallationPath = installationPath;
+            }
         }
     }
 }

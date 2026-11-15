@@ -65,6 +65,16 @@ tests/
    │     ├─ 01. Tables.md
    │     ├─ 02. Plans.md
    │     └─ 03. Results.md
+   ├─ 02-E.1-HandleToken/
+   │  ├─ HandleTests.cs
+   │  ├─ TokenTests.cs
+   │  ├─ HandleTokenIntegrationTests.cs
+   │  ├─ UniTest/
+   │  │  └─ HandleTokenStateProjectTests.cs
+   │  └─ docs/
+   │     ├─ 01. Tables.md
+   │     ├─ 02. Plans.md
+   │     └─ 03. Results.md
    ├─ 02-E.2-AdaptiveCollections/
    │  ├─ AdaptiveCollectionTests.cs
    │  ├─ AdaptiveActionTests.cs
@@ -73,7 +83,9 @@ tests/
    │  ├─ AdaptiveHashSetTests.cs
    │  ├─ EnumerationAllocationTests.cs
    │  ├─ UniTest/
-   │  │  └─ CollectionStateProjectTests.cs
+   │  │  ├─ CollectionStateProjectTests.cs
+   │  │  ├─ DictionaryStateProjectTests.cs
+   │  │  └─ HashSetStateProjectTests.cs
    │  └─ docs/
    │     ├─ 01. Tables.md
    │     └─ 02. Plans.md
@@ -102,9 +114,12 @@ tests/
    │     └─ Historical Code.md
    ├─ 03-E.1-LifecycleHub/
    │  ├─ LifecycleHubTests.cs
+   │  ├─ UniTest/
+   │  │  └─ LifecycleHubStateProjectTests.cs
    │  └─ docs/
    │     ├─ 01. Tables.md
-   │     └─ 02. Plans.md
+   │     ├─ 02. Plans.md
+   │     └─ 03. Results.md
    ├─ 03-E.2-EventHub/
    │  ├─ EventHubTests.cs
    │  ├─ EventHubFlagsTests.cs
@@ -113,6 +128,10 @@ tests/
    │     ├─ 01. Tables.md
    │     ├─ 02. Plans.md
    │     └─ Historical Code.md
+   ├─ 04-Bootstrapper/
+   │  ├─ BootstrapperTests.cs
+   │  ├─ BootstrapperScenarios.cs
+   │  └─ docs/
    └─ docs/
       └─ Hub Results.md
 ```
@@ -158,6 +177,8 @@ UniTest 실행 이력의 각 행은 노드 ID, 부모 노드 ID, 깊이, 상태,
 
 ## Infrastructure 실행 구성
 
+Core의 [Bootstrapper 테스트](02-Core/04-Bootstrapper/docs/02.%20Plans.md)도 아래 별도 프로세스 실행기를 사용한다. 공통 환경 준비와 애플리케이션 초기화 콜백, 실패 정리와 중복·동시·재진입 호출을 NUnit 직접 사례로 검증한다.
+
 NUnit 직접 사례는 값·입력·실패 계약을 검증한다. UniTest는 Configuration·Log·ExceptionHandler의 연속 상태 전이를 검증하며, 구현은 각 모듈의 UniTest 폴더에 있다. 구성은 [Infrastructure 안내](01-Infrastructure/README.md), 통합 검증 절차는 [공통 계획](01-Infrastructure/docs/02.%20Plans.md)을 따른다.
 
 Configuration과 Log는 직접 사례와 랜덤 검증에 고유 애플리케이션 ID와 새 프로세스를 사용한다. Support의 테스트 전용 진입점은 `--infrastructure-scenario` 인자로 지정한 시나리오만 실행한다. NUnit 테스트 실행은 기존 어댑터로 수행하며 자동 진입점 생성은 끈다.
@@ -187,6 +208,8 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 - EventStream의 멀티캐스트 해제, 순서·필터 공유, 해제한 콜백의 참조 정리 검증
 - EventHub의 OnUpdated·OnUpdatedWhere·OnUpdatedWhen·OnUpdatedForFlags 등록, 단일 조건 공유와 값 기준 중복, 리스너별 수명·직접 구독·실패·수면·폐기와 무할당 순회 검증
 - LifecycleHub의 연결·해제·폐기 완료 알림과 무할당 폐기 검증
+- Handle·Token의 실행 유예·등록·해제·폐기·예외·참조 정리, EventStream·EventHub 소비 사례와 UniTest 고정·랜덤 연속 수명 검증
+- AdaptiveDictionary·AdaptiveHashSet 두 반영 모드의 누적 변경·순회·실패 복구와 LifecycleHub의 등록·해제·폐기 조합에 대한 UniTest 고정 경로 및 랜덤 연속 검증
 - 스트림 연결 수명, 직접 입력, 경로 연산자 경계값, 순서 그룹의 조합, Branch의 Enabled·구독 수명에 대한 UniTest 상태 전이 검증
 - 직접 순회·사전과 집합의 반복 변경·Action의 등록 후 첫 호출과 반복 호출 할당량 검증
 - 호출 목록 캐시의 등록 경로와 약한 참조 수명 검증

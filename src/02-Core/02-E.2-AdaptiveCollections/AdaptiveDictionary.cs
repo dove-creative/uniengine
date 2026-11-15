@@ -192,9 +192,10 @@ namespace Blackthunder.UniEngine.Core
                 if (_pendingItems.TryGetValue(key, out value))
                     return true;
 
-                if (_items.TryGetValue(key, out value))
-                    return !_removingKeys.Contains(key);
+                if (_items.TryGetValue(key, out value) && !_removingKeys.Contains(key))
+                    return true;
 
+                value = default;
                 return false;
             }
             else

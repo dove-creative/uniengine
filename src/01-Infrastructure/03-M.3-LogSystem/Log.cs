@@ -38,7 +38,7 @@ namespace BlackThunder.UniEngine.Infrastructure
         private static Action<string, LogLevel> _logger = WriteToConsole;
 
         private static bool _logWithStackTrace;
-        private static string _projectPath;
+        private static string _dataPath;
         private static string _debugFilePath = string.Empty;
 
 
@@ -47,7 +47,7 @@ namespace BlackThunder.UniEngine.Infrastructure
         {
             lock (_safetyLock)
             {
-                _projectPath = Configuration.ProjectPath;
+                _dataPath = Configuration.DataPath;
                 _logger = logger ?? WriteToConsole;
                 _buffer.Clear();
                 _debugFilePath = string.Empty;
@@ -105,7 +105,7 @@ namespace BlackThunder.UniEngine.Infrastructure
 
         private static string SaveLog(string content)
         {
-            if (_projectPath == null)
+            if (_dataPath == null)
                 throw new InvalidOperationException("Log has not been initialized.");
 
             FileStream stream = CreateLogFile(out string filePath);
@@ -133,7 +133,7 @@ namespace BlackThunder.UniEngine.Infrastructure
             while (true)
             {
                 string suffix = number == 1 ? string.Empty : "-" + number.ToString(CultureInfo.InvariantCulture);
-                filePath = Path.Combine(_projectPath, fileName + suffix + ".txt");
+                filePath = Path.Combine(_dataPath, fileName + suffix + ".txt");
 
                 try
                 {

@@ -205,7 +205,7 @@ namespace BlackThunder.UniEngine.Tests
                 case "SaveFailure":
                     Log.Write("retained");
                     Directory.Delete(path);
-                    InfrastructureProcess.BlockProjectPath(applicationId);
+                    InfrastructureProcess.BlockDataPath(applicationId);
                     Assert.Catch<IOException>(() => Log.Print());
                     Assert.That(Log.DebugFilePath, Is.Empty);
                     Assert.That(File.ReadAllText(path), Is.EqualTo("test-owned path blocker"));
@@ -229,7 +229,7 @@ namespace BlackThunder.UniEngine.Tests
                 {
                     File.Delete(previousPath);
                     Directory.Delete(path);
-                    InfrastructureProcess.BlockProjectPath(applicationId);
+                    InfrastructureProcess.BlockDataPath(applicationId);
                     Log.Write("retained");
                 },
                 () =>

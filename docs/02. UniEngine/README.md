@@ -39,4 +39,4 @@ Infrastructure는 공통 데이터·진단 기능을 제공한다. Core는 이�
 | 3 | [UniEngine Surface](03-Surface/README.md) | 편의 기능 계층의 설계 범위 |
 | 4 | [Services](04-Services/README.md) | 응용 서비스의 설계 범위 |
 
-[Hierarchy](../01.%20Concepts/02.%20Hierarchy.md)는 계층 분류의 기준이다. 이벤트 계열의 협력 흐름은 [Event System](02-Core/EventSystem.md)에서 확인한다. [UniEngine.drawio](UniEngine.drawio)는 기존 전체 다이어그램이다.
+[Hierarchy](../01.%20Concepts/02.%20Hierarchy.md)는 계층 분류의 기준이다. 이벤트 계열의 구성과 협력 흐름은 [Core 구성](02-Core/README.md)에서 확인한다. [UniEngine.drawio](UniEngine.drawio)는 기존 전체 다이어그램이다.

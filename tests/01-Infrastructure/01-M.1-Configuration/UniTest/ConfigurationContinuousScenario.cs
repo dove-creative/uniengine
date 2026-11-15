@@ -60,7 +60,7 @@ namespace BlackThunder.UniEngine.Tests
                         Assert.Throws<ArgumentException>(() => Configuration.Initialize(".."));
                         break;
                     case FailOnBlockedPath:
-                        InfrastructureProcess.BlockProjectPath(applicationId);
+                        InfrastructureProcess.BlockDataPath(applicationId);
                         Assert.Throws<IOException>(() => Configuration.Initialize(applicationId));
                         Assert.That(File.ReadAllText(path), Is.EqualTo("test-owned path blocker"));
                         break;
@@ -84,9 +84,9 @@ namespace BlackThunder.UniEngine.Tests
                 }
 
                 if (initialized)
-                    Assert.That(Configuration.ProjectPath, Is.EqualTo(path));
+                    Assert.That(Configuration.DataPath, Is.EqualTo(path));
                 else
-                    Assert.Throws<InvalidOperationException>(() => _ = Configuration.ProjectPath);
+                    Assert.Throws<InvalidOperationException>(() => _ = Configuration.DataPath);
 
                 Assert.That(Directory.Exists(path), Is.EqualTo(initialized || prepared));
 

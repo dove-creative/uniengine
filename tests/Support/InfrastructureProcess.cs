@@ -16,7 +16,7 @@ namespace BlackThunder.UniEngine.Tests
         public static async Task RunAsync(string scenario, bool writeOutput = false, int timeoutSeconds = 30)
         {
             var applicationId = ApplicationPrefix + Guid.NewGuid().ToString("N");
-            var projectPath = GetOwnedPath(applicationId);
+            var dataPath = GetOwnedPath(applicationId);
             try
             {
                 var host = Path.GetFullPath(
@@ -70,12 +70,12 @@ namespace BlackThunder.UniEngine.Tests
             finally
             {
                 // Revalidate the exact test-owned target before recursive cleanup.
-                Assert.That(GetOwnedPath(applicationId), Is.EqualTo(projectPath));
+                Assert.That(GetOwnedPath(applicationId), Is.EqualTo(dataPath));
 
-                if (Directory.Exists(projectPath))
-                    Directory.Delete(projectPath, recursive: true);
-                else if (File.Exists(projectPath))
-                    File.Delete(projectPath);
+                if (Directory.Exists(dataPath))
+                    Directory.Delete(dataPath, recursive: true);
+                else if (File.Exists(dataPath))
+                    File.Delete(dataPath);
             }
         }
 
@@ -100,7 +100,7 @@ namespace BlackThunder.UniEngine.Tests
             return path;
         }
 
-        public static void BlockProjectPath(string applicationId)
+        public static void BlockDataPath(string applicationId)
         {
             var path = GetOwnedPath(applicationId);
             Directory.CreateDirectory(Path.GetDirectoryName(path));

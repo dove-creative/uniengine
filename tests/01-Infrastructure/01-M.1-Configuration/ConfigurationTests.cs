@@ -12,6 +12,9 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase("AlreadyExistingDirectory")]
         [TestCase("DuplicateInitialization")]
         [TestCase("CreationFailure")]
+        [TestCase("InstallationPath")]
+        [TestCase("InvalidInstallationPaths")]
+        [TestCase("ConcurrentReaders")]
         public Task PublicContractIsPreservedInAFreshProcess(string scenario) =>
             InfrastructureProcess.RunAsync("Configuration." + scenario);
     }

@@ -20,6 +20,8 @@ namespace BlackThunder.UniEngine.Tests
                     await ConfigurationScenarios.RunAsync(args[1].Substring("Configuration.".Length), args[2]);
                 else if (args[1].StartsWith("Log.", StringComparison.Ordinal))
                     await LogScenarios.RunAsync(args[1].Substring("Log.".Length), args[2]);
+                else if (args[1].StartsWith("Bootstrapper.", StringComparison.Ordinal))
+                    await BootstrapperScenarios.RunAsync(args[1].Substring("Bootstrapper.".Length), args[2]);
                 else
                     throw new ArgumentException("Unknown infrastructure scenario: " + args[1]);
 

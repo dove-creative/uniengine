@@ -95,7 +95,7 @@ namespace BlackThunder.UniEngine.Tests
 
                         saved.Clear();
                         Directory.Delete(path);
-                        InfrastructureProcess.BlockProjectPath(applicationId);
+                        InfrastructureProcess.BlockDataPath(applicationId);
                         Assert.Catch<IOException>(() => Log.Print());
                         Assert.That(File.ReadAllText(path), Is.EqualTo("test-owned path blocker"));
                         break;

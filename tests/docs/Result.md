@@ -45,6 +45,18 @@ Property의 직접 계약·경계값·소비 시나리오 43개, 모든 후보�
 
 최초 샌드박스 실행은 testhost 연결 시간 초과로 테스트 시작 전에 중단됐고, 같은 빌드 결과를 샌드박스 밖에서 실행해 통과 결과를 얻었다. seed별 시간·이력·실행 명령·한계는 [Property 검증 결과](../02-Core/02-O.1-Property/docs/03.%20Results.md)에 기록했다.
 
+### 2026-11-15 사전·집합·LifecycleHub 검증
+
+AdaptiveDictionary·AdaptiveHashSet의 두 반영 모드와 LifecycleHub에 UniTest 고정 경로 5개·랜덤 연속 경로 15개를 추가했다. seed 0·1·2가 모두 깊이 100에 도달했다. Dictionary의 삭제 후 TryGetValue out 값 결함을 발견하여 기본값 반환으로 수정하고 직접 회귀 사례 4개를 검증했다.
+
+추가 범위 24개와 전체 일반 테스트 1,302개가 모두 통과했다. Release 빌드의 경고·오류, 테스트 실패·건너뜀은 0개이다. 선택 실행은 약 1분 6초, 전체 실행은 약 2분 17초였다. 새 대상·모드별 세 seed의 합계는 모두 60초 이내이다. 최초 중단·실패 기록, 상세 범위와 원본 TRX는 [공통 결과](../02-Core/docs/State%20Model%20Results.md)에 있다.
+
+### 2026-11-15 Handle·Token 검증
+
+Handle·Token의 일반 직접 사례 23개, EventStream·EventHub 소비 사례 3개, UniTest 고정 경로 2개와 랜덤 연속 경로 6개를 선택 실행했고 총 34개가 모두 통과했다. 두 대상의 seed 0·1·2는 모두 깊이 100에 도달했으며 세 seed 합계는 Handle 835.548 ms, Token 2,610.740 ms이다.
+
+Release 빌드의 경고·오류와 테스트 실패·건너뜀은 0개이다. 본체 변경 없이 테스트를 보강했으며 전체 일반 테스트를 다시 실행한 결과는 아니다. 상태·동작 범위, 실행 명령과 원본 TRX는 [Handle·Token 검증 결과](../02-Core/02-E.1-HandleToken/docs/03.%20Results.md)에 있다.
+
 ### 모듈 문서
 
 각 결과 문서에 seed, 실제 도달 깊이, 실행시간, 결과를 기록했다. 연결된 TRX의 각 NUnit 사례 출력에 동작 이력이 있다.
@@ -52,6 +64,8 @@ Property의 직접 계약·경계값·소비 시나리오 43개, 모든 후보�
 - [Configuration](../01-Infrastructure/01-M.1-Configuration/docs/03.%20Results.md)
 - [LogSystem](../01-Infrastructure/03-M.3-LogSystem/docs/03.%20Results.md)
 - [ExceptionHandler](../01-Infrastructure/03-M.2-ExceptionHandler/docs/03.%20Results.md)
+- [Handle·Token](../02-Core/02-E.1-HandleToken/docs/03.%20Results.md)
 - [AdaptiveCollections](../02-Core/02-E.2-AdaptiveCollections/docs/03.%20Results.md)
+- [LifecycleHub](../02-Core/03-E.1-LifecycleHub/docs/03.%20Results.md)
 - [Property](../02-Core/02-O.1-Property/docs/03.%20Results.md)
 - [EventStream](../02-Core/02-E.3-EventStream/docs/03.%20Results.md)
