@@ -62,7 +62,7 @@ dotnet pack csharp/src/BlackThunder.UniTest/BlackThunder.UniTest.csproj --config
 | UniEngine 소비 테스트 | 사용자 요청으로 실행하지 않음 |
 | 이전 0.4.1 패키지 제거 후 재검증 | 사용자 요청으로 실행하지 않음 |
 
-빌드한 별도 사본의 기준은 [e002925194cc1713d0a34e7e2f277575bbb0556a](https://github.com/dove-creative/uniengine/commit/e002925194cc1713d0a34e7e2f277575bbb0556a)이다. 이 결과는 현재 작업 폴더에 있는 다른 변경의 검증 결과가 아니다. 사용자가 추가 검증 중단을 요청하여 소비 테스트와 삭제 후 복원·빌드는 수행하지 않았다.
+빌드한 별도 사본의 기준은 이력 정리 전 커밋 e002925194cc1713d0a34e7e2f277575bbb0556a이며, 소스가 보존된 [현재 대응 커밋](https://github.com/dove-creative/uniengine/commit/639e608fa37ddd2cd2f25e4af92484f0539d8837)으로 연결한다. 이 결과는 현재 작업 폴더에 있는 다른 변경의 검증 결과가 아니다. 사용자가 추가 검증 중단을 요청하여 소비 테스트와 삭제 후 복원·빌드는 수행하지 않았다.
 
 원본 기록은 [현재 폴더 복원 로그](../tests/obj/UniTestUpdate-e53ef8b/restore-before-cleanup.log), [현재 폴더 빌드 로그](../tests/obj/UniTestUpdate-e53ef8b/build-before-cleanup.log), [별도 사본 복원 로그](../tests/obj/UniTestUpdate-e53ef8b/restore-committed-consumer.log), [별도 사본 빌드 로그](../tests/obj/UniTestUpdate-e53ef8b/build-committed-consumer.log)에 있다. 로그와 검증용 사본은 비추적 산출물이다.
 
