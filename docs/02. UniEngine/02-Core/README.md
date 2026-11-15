@@ -27,14 +27,14 @@ Level 1은 공통 도구와 계약, 그 계약으로 동작하는 재사용 객�
 ## 대표 협력 흐름
 
 1. 제공자가 구독을 만들고 해제 동작을 Handle에 담아 반환한다.
-2. EventStream에 값을 발행하면 등록된 그래프의 조건을 따라 수신자에게 전달한다.
+2. EventStream에 값을 발행하면 등록된 그래프의 조건을 따라 수신자에게 전달한다. 기본 틱은 호스트가 EventStream.Main에 초 단위 경과 시간을 발행한다.
 3. LifecycleHub는 객체별 연결과 폐기 완료 알림을 관리한다. EventHub는 생애주기 계약을 확장하고 내부 스트림을 사용하여 갱신·수면·폐기 전후 알림을 조율한다.
 
 Property는 외부 페이로드를 저장하는 별개 책임이다. 이벤트 객체에 종속되지 않으며 필요한 도메인 객체가 저장소를 제공한다. 연결·전파·폐기의 공통 흐름은 [Event System](EventSystem.md)에 정리한다.
 
 ## 구현 범위
 
-공통 도구·계약·ValueEnumerator, Property, Handle·Token, AdaptiveCollections, EventStream과 LifecycleHub·EventHub에는 구현이 있다. 수학 계산과 Transform의 근사 비교·직렬화는 Infrastructure에서 제공한다. Loco·Bootstrapper는 현재 계층표에 배치된 설계 항목이다. 이들의 구체 API와 상태를 구현 사실로 설명하지 않는다.
+공통 도구·계약·ValueEnumerator, Property, Handle·Token, AdaptiveCollections, EventStream과 LifecycleHub·EventHub에는 구현이 있다. EventStream.Main은 기본 틱 스트림을 제공하며 시간 계산과 실행 루프는 호스트가 담당한다. 수학 계산과 Transform의 근사 비교·직렬화는 Infrastructure에서 제공한다. Bootstrapper는 현재 계층표에 배치된 설계 항목이며 구체 API와 상태를 구현 사실로 설명하지 않는다.
 
 ## 상세 문서
 
@@ -42,7 +42,7 @@ Property는 외부 페이로드를 저장하는 별개 책임이다. 이벤트 �
 | --- | --- | --- | --- |
 | Level 1 | [Utilities](01-O.1-Utilities/README.md), [Interfaces](01-O.2-Interfaces/README.md), [Objects](01-O.3-Objects/README.md) | — | — |
 | Level 2 | [Property](02-O.1-Property/README.md) | [Handle·Token](02-E.1-HandleToken/README.md), [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md), [EventStream](02-E.3-EventStream/README.md) | — |
-| Level 3 | — | [LifecycleHub](03-E.1-LifecycleHub/README.md), [EventHub](03-E.2-EventHub/README.md) | [Loco](03-U.1-Utilities/README.md), 설계 단계 |
+| Level 3 | — | [LifecycleHub](03-E.1-LifecycleHub/README.md), [EventHub](03-E.2-EventHub/README.md) | — |
 | Top | — | — | [Kernel.Bootstrapper](Top-Kernel/Bootstrapper.md), 설계 단계 |
 
 [전체 계층](../README.md)

@@ -10,9 +10,10 @@ EventStream은 값을 받아 경로 그래프를 따라 구독자에게 나눠 �
 
 ## 구성
 
-사용자가 다루는 형식은 EventStream과 EventPath이다. 조건 함수는 Where에 `Func<T, bool>` 대리자로, 값 동등성은 When에 target으로, ulong 스트림의 비트 조건은 ForFlags에 flags enum 마스크로 넘긴다.
+사용자가 만드는 스트림과 경로는 `EventStream<T>`와 `EventPath<T>`이다. 비제네릭 EventStream은 기본 틱 스트림 Main과 초기화 ResetMain을 제공한다. 조건 함수는 Where에 `Func<T, bool>` 대리자로, 값 동등성은 When에 target으로, ulong 스트림의 비트 조건은 ForFlags에 flags enum 마스크로 넘긴다.
 
 - EventStream은 값을 받는 입구와 그래프를 가진다. 어떤 스트림이든 OnNext로 값을 직접 받을 수 있다.
+- EventStream.Main은 호스트가 직전 틱 이후의 경과 시간(float, 초)을 발행하는 기본 스트림이다. 호스트가 초기화·발행·종료를 담당하며 독립 스트림은 기존처럼 생성한다.
 - EventPath는 Where, When, ForFlags, Debug, ForOrder·ForOrderAsync로 만든 경로이다. 경로를 만드는 동안 그래프에 구독이 생기지 않는다.
 - 키 연산은 같은 위치마다 WhereNode·WhenNode·FlagsNode·OrderedNode를 종류별로 하나씩 두고 그 안의 키 행을 공유한다. 행은 키와 뒤의 연결을 가지며, 다음 노드는 연결이 참조하는 별도 노드이다.
 - 조건 대리자는 Where 행의 공유 기준이다. 같은 부모 아래 메서드와 대상이 같은 대리자를 쓴 Where만 합쳐진다.
@@ -35,6 +36,7 @@ Take·TakeWhile·Skip·SkipWhile·Branch·Merge는 경로 노드가 아니라 �
 
 | 필요한 작업 | 문서 |
 | --- | --- |
+| 기본 틱의 발행, 세션 초기화와 종료 | [EventStream](EventStream.md#기본-틱-스트림) · [사용 예제](Usage.md#기본-틱과-재시작) |
 | 입력 방식, 전파 중 변경, 실패와 종료 규칙 확인 | [EventStream](EventStream.md) |
 | 외부 Observable 연결과 발행 권한 제한 | [외부 입력](ExternalInput.md) |
 | 독립 분기를 만들거나 여러 스트림을 합치기 | [Branch와 Merge](BranchAndMerge.md) |

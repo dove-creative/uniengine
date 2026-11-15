@@ -25,13 +25,15 @@
 | --- | --- |
 | [Handle·Token](02-E.1-HandleToken/README.md) | 연결 해제나 정리 동작을 폐기에 묶는다. |
 | [AdaptiveCollections](02-E.2-AdaptiveCollections/README.md) | 순회 중 변경과 반영 시점을 관리한다. |
-| [EventStream](02-E.3-EventStream/README.md) | 구독, 값·완료·오류 전파, 순서·조건·연산자와 연결 수명을 관리한다. |
+| [EventStream](02-E.3-EventStream/README.md) | 구독, 값·완료·오류 전파, 순서·조건·연산자와 연결 수명을 관리하고 Main으로 기본 틱 스트림을 제공한다. |
 | [LifecycleHub](03-E.1-LifecycleHub/README.md) | 객체별 연결과 폐기 완료 알림을 관리한다. |
 | [EventHub](03-E.2-EventHub/README.md) | 생애주기 계약을 확장하여 객체별 연결, Sleep·Awake, 갱신과 폐기 전후 알림을 관리한다. |
 
 ## 연결과 전파
 
 Subscribe는 연결 해제 핸들을 반환한다. Take·Skip·Branch·Merge가 만든 스트림은 상위와의 연결을 스스로 소유하며, 자신이 폐기될 때 그 연결을 해제한다.
+
+기본 틱은 호스트가 EventStream.Main에 직전 틱 이후의 경과 시간(float, 초)을 발행한다. 호스트는 이벤트 전파 밖에서 ResetMain으로 세션을 준비하고 구독을 등록하며, 종료 시 Main을 폐기한다. 초기화로 교체된 스트림의 구독은 새 Main으로 이전하지 않는다. 시간 계산과 실행 루프는 호스트의 책임이다.
 
 EventStream은 UE 이벤트 전파 규칙을 루트·Order 단위에 적용한다. 같은 위치의 Order 값 오름차순과 같은 값의 Async → Sync 순서를 보장하며 일반 노드·구독의 등록 순서는 보장하지 않는다. 등록·삭제는 루트·Order 종료 때 반영하고 새 구독은 소유 스트림의 다음 발행부터 참여한다. 실행 중인 상위 단위의 변경은 그 상위 종료까지 미룬다.
 

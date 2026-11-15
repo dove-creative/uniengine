@@ -1,5 +1,31 @@
 # EventStream 사용 예제
 
+## 기본 틱과 재시작
+
+호스트가 시작·발행·종료를 담당하고, 각 수신자는 자신의 구독 핸들을 관리한다. deltaTime은 호스트가 계산한 직전 틱 이후의 초 단위 경과 시간이다.
+
+```csharp
+using System;
+using Blackthunder.UniEngine.Core;
+
+EventStream.ResetMain();
+var elapsed = 0f;
+using var update = EventStream.Main.ForOrder(TickPhase.Update).Subscribe(deltaTime => elapsed += deltaTime);
+using var render = EventStream.Main.ForOrder(TickPhase.Render).Subscribe(_ => Console.WriteLine(elapsed));
+
+EventStream.Main.OnNext(0.016f);
+EventStream.Main.Dispose();
+
+EventStream.ResetMain();
+using var restarted = EventStream.Main.Subscribe(deltaTime => Console.WriteLine(deltaTime));
+EventStream.Main.OnNext(0.02f);
+EventStream.Main.Dispose();
+
+enum TickPhase { Update, Render }
+```
+
+Update가 경과 시간을 누적한 뒤 Render가 읽는다. ForOrder에는 순서를 나타내는 enum을 전달한다. 재시작 뒤에는 새로 등록한 restarted만 값을 받는다. 이전 update·render 핸들과 경로는 새 Main으로 연결되지 않는다. ResetMain은 구독 콜백 안에서 호출하지 않고 이벤트 전파가 끝난 호스트 루프 경계에서 호출한다.
+
 ## 구독과 필터
 
 ```csharp
