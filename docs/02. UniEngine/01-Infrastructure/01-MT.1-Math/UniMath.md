@@ -22,7 +22,7 @@ UniMath는 값을 보관하거나 수정하지 않는다. 비교는 bool을 반�
 | 실수 비교·SnapTo | 입력값과 같은 단위의 절대 차이 | Epsilon = 0.00001f |
 | 벡터 비교 | 좌표와 같은 단위의 유클리드 거리 | Epsilon = 0.00001f |
 | 평행 판정 | 정규화한 내적의 절대값과 1의 차이, 무차원 | Epsilon = 0.00001f |
-| 회전 판정 | 두 회전 사이의 최단 각도, 라디안 | AngularEpsilon = 0.00001f |
+| 회전 판정 | 두 회전 사이의 최단 각도, 도 단위 | AngularEpsilon = 0.00001f |
 
 허용 오차는 유한한 0 이상 값이며 먼저 검사한다. 음수·NaN·무한대이면 ArgumentOutOfRangeException이 발생한다. 상대 오차는 적용하지 않는다. 실수·벡터의 Is와 IsZero는 경계를 포함하며 오차 0에서도 같은 유한 값은 참이다. 거리와 정규화는 큰 값의 제곱 오버플로와 작은 값의 제곱 언더플로로 판정이 바뀌지 않도록 double 중간 계산을 사용한다.
 
@@ -49,7 +49,7 @@ SnapTo는 기준값과의 절대 차이가 허용 오차 이하면 기준값과 
 
 IsParallelWith는 두 Vector2를 정규화하여 평행 여부를 판정한다. 평행하면서 내적이 양수이면 isSameDirection = true이고, 반대 방향 또는 비평행이면 false이다. 영벡터는 정확히 길이가 0인 값이며 작은 비영 방향도 사용할 수 있다.
 
-IsSameRotationAs는 두 Quaternion이 같은 회전을 나타내는지, IsHalfTurnFrom은 회전 차이가 π인지 판정한다. 입력은 내부적으로 정규화하되 원본을 수정하지 않으며 q와 -q는 같은 회전으로 취급한다. 각도 경계는 포함한다. AngularEpsilon은 라디안 단위의 독립된 상수이다.
+IsSameRotationAs는 두 Quaternion이 같은 회전을 나타내는지, IsHalfTurnFrom은 회전 차이가 180도인지 판정한다. 입력은 내부적으로 정규화하되 원본을 수정하지 않으며 q와 -q는 같은 회전으로 취급한다. 각도 경계는 포함한다. AngularEpsilon은 도 단위의 독립된 상수이며 기본 허용 오차는 0.00001도이다.
 
 기존 Unity 구현의 Quaternion.Is와 allowInverse·isSameDirection 오버로드는 제공하지 않는다. 기존의 180도 차이 허용은 IsHalfTurnFrom으로 표현한다. 이는 쿼터니언의 역원이나 특정 방향 벡터의 반대 방향을 검사하는 API가 아니다.
 

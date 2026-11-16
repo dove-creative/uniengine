@@ -44,7 +44,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void Transform2DConstructionAndCopyPreserveRawPositionAndRadians()
+        public void Transform2DConstructionAndCopyPreserveRawPositionAndDegrees()
         {
             Assert.That(default(Transform2D), Is.EqualTo(Transform2D.Identity));
             Assert.That(Transform2D.Identity.Position, Is.EqualTo(Vector2.Zero));

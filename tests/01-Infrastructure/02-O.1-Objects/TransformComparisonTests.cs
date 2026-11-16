@@ -31,11 +31,12 @@ namespace BlackThunder.UniEngine.Tests
         public void Transform2DRecognizesWholeTurnsWithoutChangingStoredValues(int turns)
         {
             var origin = Transform2D.Identity;
-            var other = new Transform2D(Vector2.Zero, (float)(turns * 2d * Math.PI));
+            var other = new Transform2D(Vector2.Zero, turns * 360f);
             var original = other;
 
             Assert.That(origin.Is(other), Is.True);
             Assert.That(other.Is(origin), Is.True);
+            Assert.That(origin.Is(other, 0f, 0f), Is.True);
             Assert.That(other, Is.EqualTo(original));
             Assert.That(origin.Equals(other), Is.False);
             Assert.That(origin == other, Is.False);
@@ -45,12 +46,15 @@ namespace BlackThunder.UniEngine.Tests
         [Test]
         public void Transform2DUsesTheShortestAngleAcrossTheWrapBoundary()
         {
-            var before = new Transform2D(Vector2.Zero, (float)(2d * Math.PI) - 0.01f);
-            var after = new Transform2D(Vector2.Zero, 0.01f);
+            var before = new Transform2D(Vector2.Zero, 359.875f);
+            var after = new Transform2D(Vector2.Zero, 0.125f);
 
-            Assert.That(before.Is(after, 0f, 0.021f), Is.True);
-            Assert.That(after.Is(before, 0f, 0.019f), Is.False);
-            Assert.That(Transform2D.Identity.Is(new Transform2D(Vector2.Zero, (float)Math.PI)), Is.False);
+            Assert.That(before.Is(after, 0f, 0.25f), Is.True);
+            Assert.That(after.Is(before, 0f, 0.24f), Is.False);
+            var half = new Transform2D(Vector2.Zero, 180f);
+            Assert.That(Transform2D.Identity.Is(half), Is.False);
+            Assert.That(Transform2D.Identity.Is(half, 0f, 180f), Is.True);
+            Assert.That(Transform2D.Identity.Is(half, 0f, 179.99998f), Is.False);
         }
 
         [Test]
@@ -58,7 +62,8 @@ namespace BlackThunder.UniEngine.Tests
         {
             var origin = Transform3D.Identity;
             var other = new Transform3D(
-                new Vector3(0f, 0f, 0.25f), Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.125f));
+                new Vector3(0f, 0f, 0.25f),
+                Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)(0.125d * Math.PI / 180d)));
 
             Assert.That(origin.Is(other, 0.25f, 0.126f), Is.True);
             Assert.That(other.Is(origin, 0.25f, 0.126f), Is.True);
@@ -96,12 +101,25 @@ namespace BlackThunder.UniEngine.Tests
             var oppositeSign = new Transform3D(value.Position, Quaternion.Negate(rotation));
 
             Assert.That(value.Is(oppositeSign), Is.True);
-            var smallRotation = new Transform3D(Vector3.Zero, Quaternion.CreateFromAxisAngle(Vector3.UnitX, 1e-6f));
+            var smallRotation = new Transform3D(
+                Vector3.Zero, Quaternion.CreateFromAxisAngle(Vector3.UnitX, (float)(1e-6d * Math.PI / 180d)));
             Assert.That(Transform3D.Identity.Is(smallRotation), Is.True);
             Assert.That(Transform3D.Identity.Is(smallRotation, 0f, 1e-7f), Is.False);
             Assert.That(
                 Transform3D.Identity.Is(new Transform3D(Vector3.Zero, new Quaternion(0f, 1f, 0f, 0f))),
                 Is.False);
+        }
+
+        [TestCase(0.000005f, true)]
+        [TestCase(0.00002f, false)]
+        public void TransformDefaultAngularTolerancesUseDegrees(float angle, bool expected)
+        {
+            var value2D = new Transform2D(Vector2.Zero, angle);
+            var value3D = new Transform3D(
+                Vector3.Zero, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)(angle * Math.PI / 180d)));
+
+            Assert.That(Transform2D.Identity.Is(value2D), Is.EqualTo(expected));
+            Assert.That(Transform3D.Identity.Is(value3D), Is.EqualTo(expected));
         }
 
         [TestCase(-1f)]
@@ -175,11 +193,11 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(large2D.Is(large2D, 0f, 0f), Is.True);
             Assert.That(large3D.Is(large3D, 0f, 0f), Is.True);
-            Assert.That(large2D.Is(negative2D, float.MaxValue, (float)Math.PI), Is.False);
+            Assert.That(large2D.Is(negative2D, float.MaxValue, 180f), Is.False);
             Assert.That(large3D.Is(negative3D, float.MaxValue, 0f), Is.False);
             Assert.That(
                 new Transform2D(Vector2.Zero, float.MaxValue).Is(
-                    new Transform2D(Vector2.Zero, -float.MaxValue), 0f, (float)Math.PI),
+                    new Transform2D(Vector2.Zero, -float.MaxValue), 0f, 180f),
                 Is.True);
         }
     }

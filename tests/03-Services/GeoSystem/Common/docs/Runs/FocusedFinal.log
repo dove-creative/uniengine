@@ -1,0 +1,19 @@
+2026-11-16 final focused GeoSystem run
+Cases: 16
+Passed: 16
+Passed CallbackFailureDoesNotLeaveDisposedNodeConnected 00:00:00.0211060
+Passed ClearAndDisposeReleaseReciprocalReferences(False) 00:00:00.0014650
+Passed ClearAndDisposeReleaseReciprocalReferences(True) 00:00:00.0005210
+Passed ConnectionNotificationsSeeBothSidesCommitted(False) 00:00:00.0039030
+Passed ConnectionNotificationsSeeBothSidesCommitted(True) 00:00:00.0008440
+Passed DefaultAndEqualityPreserveTheForwardOrigin 00:00:00.0204210
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(False,Length,2.0f,8.0f) 00:00:00.0004500
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(False,Rate,0.2f,8.0f) 00:00:00.0000060
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(True,Length,2.0f,2.0f) 00:00:00.0015600
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(True,Rate,0.2f,2.0f) 00:00:00.0000280
+Passed FixedNavigationTransitions 00:00:00.0697100
+Passed PublicContractsHideInternalConnectionMethods 00:00:00.0011140
+Passed RandomNavigationTransitions(0) 00:00:06.5352030
+Passed RandomNavigationTransitions(1) 00:00:08.0326070
+Passed RandomNavigationTransitions(2) 00:00:08.1505040
+Passed RejectedConnectionsPreserveTheGraph 00:00:00.0023550

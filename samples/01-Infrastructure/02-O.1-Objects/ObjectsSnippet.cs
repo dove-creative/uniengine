@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using BlackThunder.UniEngine.Objects;
 
@@ -18,8 +17,8 @@ namespace BlackThunder.UniEngine.Samples
         public static void CompareTransforms()
         {
             // Is compares poses within tolerances; == compares values exactly.
-            var pose = new Transform2D(new Vector2(1f, 2f), MathF.PI / 2f);
-            var turned = new Transform2D(new Vector2(1f, 2f), MathF.PI / 2f + 2f * MathF.PI);
+            var pose = new Transform2D(new Vector2(1f, 2f), 90f);
+            var turned = new Transform2D(new Vector2(1f, 2f), 450f);
             var samePose = pose.Is(turned); // true, a full turn is the same rotation
             var equalPose = pose == turned; // false
 

@@ -200,6 +200,7 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 
 ## 범위
 
+- GeoSystem의 Navigation 양방향 연결·Location과 Planar 직선·Pin·Clip·Route의 계산·알림·수명 전파를 검증한다. `--filter 'TestCategory=GeoSystem'`으로 실행하며 [공통 계획](03-Services/GeoSystem/Common/docs/02.%20Plans.md)·[결과](03-Services/GeoSystem/Common/docs/03.%20Results.md)와 [Planar 계획](03-Services/GeoSystem/Planar/docs/02.%20Plans.md)·[결과](03-Services/GeoSystem/Planar/docs/03.%20Results.md)를 따른다.
 - StateMachines.Usm의 직접 생성·소유권·수명·종료·예외, FSM·Direct 전이·Payload·순환 제한, BT 선택·순서·선점·LoopType, Reframe·Parallel과 혼합 계층 검증. `--filter 'TestCategory=Usm'`으로 실행하며 [계획](03-Services/StateMachines/Usm/docs/02.%20Plans.md)과 [결과](03-Services/StateMachines/Usm/docs/03.%20Results.md)는 해당 모듈에서 관리한다.
 - StateMachines.Scp 초안의 기존 NUnit 사례 5개를 이관하였다. `--filter 'TestCategory=Scp'`으로 실행하며 [계획](03-Services/StateMachines/Scp/docs/02.%20Plans.md)과 [결과](03-Services/StateMachines/Scp/docs/03.%20Results.md)는 해당 모듈에서 관리한다.
 - Math의 절대 오차·거리·방향·회전 비교, 스냅, 직선·이차 베지어 평가와 입력 실패 계약. NUnit 직접 사례이며 `--filter 'TestCategory=Math|TestCategory=VectorFunctions'`으로 실행한다. [검증 계획](01-Infrastructure/01-MT.1-Math/docs/02.%20Plans.md)과 [결과](01-Infrastructure/01-MT.1-Math/docs/03.%20Results.md)는 Math 모듈에서 관리하고 [VectorFunctions 계획](01-Infrastructure/01-MT.2-VectorFunctions/docs/02.%20Plans.md)·[결과](01-Infrastructure/01-MT.2-VectorFunctions/docs/03.%20Results.md)는 별도 모듈에서 관리한다.

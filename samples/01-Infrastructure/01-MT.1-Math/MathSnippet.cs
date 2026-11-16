@@ -23,8 +23,8 @@ namespace BlackThunder.UniEngine.Samples
             var sameRotation = identity.IsSameRotationAs(Quaternion.Negate(identity)); // true
             var halfTurn = identity.IsHalfTurnFrom(new Quaternion(0f, 1f, 0f, 0f)); // true
 
-            // The angular tolerance is in radians.
-            var rotated = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.01f);
+            // System.Numerics takes radians; UniEngine's angular tolerance uses degrees.
+            var rotated = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)(0.01d * System.Math.PI / 180d));
             var withinAngle = identity.IsSameRotationAs(rotated, 0.02f); // true
         }
     }

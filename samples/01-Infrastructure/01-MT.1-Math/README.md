@@ -11,7 +11,7 @@ UniMath의 근사 비교·격자 보정과 방향·회전 판정을 보여 주�
 - 근사 비교와 보정: Is, IsZero, Snap, SnapTo
 - 방향과 회전: IsParallelWith, IsSameRotationAs, IsHalfTurnFrom
 - 벡터와 쿼터니언은 System.Numerics 형식을 사용한다.
-- IsParallelWith의 epsilon은 정규화한 내적의 차이이고, 회전 비교의 angularTolerance는 라디안이다.
+- IsParallelWith의 epsilon은 정규화한 내적의 차이이고, 회전 비교의 angularTolerance는 도 단위이다. System.Numerics의 회전 생성에는 라디안으로 변환한 각도를 전달한다.
 
 ## 관련 문서
 

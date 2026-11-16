@@ -32,7 +32,7 @@
 ## 설계 기준
 
 - 기본값 구조체의 회전은 영 쿼터니언이므로 Identity와 다르다.
-- Is의 positionTolerance는 위치 거리, angularTolerance는 최단 회전각의 라디안 오차이다. 기본값은 각각 [UniMath](../01-MT.1-Math/UniMath.md)의 Epsilon·AngularEpsilon이며 경계를 포함한다. 회전은 IsSameRotationAs로 비교하므로 q와 -q, 같은 회전을 나타내는 비단위 쿼터니언도 일치한다.
+- Is의 positionTolerance는 위치 거리, angularTolerance는 최단 회전각의 도 단위 오차이다. 기본값은 각각 [UniMath](../01-MT.1-Math/UniMath.md)의 Epsilon·AngularEpsilon이며 경계를 포함한다. 회전은 IsSameRotationAs로 비교하므로 q와 -q, 같은 회전을 나타내는 비단위 쿼터니언도 일치한다.
 - 허용 오차는 유한한 0 이상 값이어야 하며 잘못된 값에는 ArgumentOutOfRangeException이 발생한다. 비유한 위치는 거짓이고 영 쿼터니언·비유한 회전에는 ArgumentException이 발생한다. 위치가 달라도 회전과 두 오차를 검사한다. 따라서 기본값 Transform3D는 Is로 비교할 수 없으며 유효한 기준 자세에는 Identity를 사용한다.
 - Equals·연산자·해시는 저장 성분의 정확한 동등성을 유지한다. Is는 사전·집합의 키 동등성으로 사용하지 않는다. 비교 중 정규화는 계산에만 적용하며 저장된 위치·회전을 수정하지 않는다.
 - 회전을 자동 정규화하지 않는다. 배율·부모 관계·계층 변환을 포함하지 않으며 값의 해석은 소비자가 담당한다.

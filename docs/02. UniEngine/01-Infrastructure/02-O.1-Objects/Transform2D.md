@@ -15,7 +15,7 @@
 보유 정보는 다음과 같다.
 
 - Position: System.Numerics.Vector2로 표현한 위치이다.
-- Rotation: 라디안 단위 float 회전값이다.
+- Rotation: 도 단위 float 회전값이다.
 - Identity: 원점과 회전 0으로 구성된 기준 자세이다.
 
 | 제공 서비스 | 제공 이유 |
@@ -31,8 +31,8 @@
 
 ## 설계 기준
 
-- 각도 단위는 라디안이다. 도 단위 변환을 자동으로 수행하지 않는다.
-- Is의 positionTolerance는 위치 거리, angularTolerance는 최단 회전각의 라디안 오차이다. 기본값은 각각 [UniMath](../01-MT.1-Math/UniMath.md)의 Epsilon·AngularEpsilon이며 경계를 포함한다. 회전은 2π 주기를 고려하므로 0과 한 바퀴 회전도 허용 오차 안에서 같은 자세이다. 비교는 저장된 위치·회전을 수정하지 않는다.
+- 각도 단위는 도이다. 라디안 입력을 자동으로 변환하지 않는다.
+- Is의 positionTolerance는 위치 거리, angularTolerance는 최단 회전각의 도 단위 오차이다. 기본값은 각각 [UniMath](../01-MT.1-Math/UniMath.md)의 Epsilon·AngularEpsilon이며 경계를 포함한다. 회전은 360도 주기를 고려하므로 0과 한 바퀴 회전도 허용 오차 안에서 같은 자세이다. 비교는 저장된 위치·회전을 수정하지 않는다.
 - 허용 오차는 유한한 0 이상 값이어야 하며 잘못된 값에는 ArgumentOutOfRangeException이 발생한다. 비유한 위치는 거짓이고 비유한 회전에는 ArgumentException이 발생한다. 위치가 달라도 회전과 두 오차를 검사한다. float 각도의 반올림 차이는 허용 오차로 처리하며 오차 0은 계산 결과의 정확한 일치를 요구한다.
 - Equals·연산자·해시는 저장 성분의 정확한 동등성을 유지한다. Is는 사전·집합의 키 동등성으로 사용하지 않는다.
 - 배율이나 부모·자식 관계를 보유하지 않는다. 행렬 계산·좌표계 변환은 이 값을 사용하는 기능의 책임이다.

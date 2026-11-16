@@ -32,6 +32,18 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
+        public void Transform2DRotationRoundTripsDegreesWithoutNormalizing()
+        {
+            var options = new JsonSerializerOptions().AddUniEngineConverters();
+            const string Json = "{\"Position\":{\"X\":0,\"Y\":0},\"Rotation\":450}";
+            var value = JsonSerializer.Deserialize<Transform2D>(Json, options);
+
+            Assert.That(value.Rotation, Is.EqualTo(450f));
+            Assert.That(value.Is(new Transform2D(Vector2.Zero, 90f), 0f, 0f), Is.True);
+            Assert.That(JsonSerializer.Serialize(value, options), Is.EqualTo(Json));
+        }
+
+        [Test]
         public void IntegerComponentsRetainBothInt32Boundaries()
         {
             var options = new JsonSerializerOptions().AddUniEngineConverters();

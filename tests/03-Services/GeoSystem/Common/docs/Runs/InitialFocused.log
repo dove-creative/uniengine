@@ -1,0 +1,49 @@
+2026-11-16 initial focused execution
+Passed 38 / 39; failed 1; skipped 0
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,False) 00:00:00.0008300
+Passed RandomPlanarTransitions(0) 00:00:03.4936980
+Passed ClipSourceIsDerivedAndInvalidStatesRecover 00:00:00.0022190
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(True,Rate,0.2f,2.0f) 00:00:00.0000340
+Passed RandomNavigationTransitions(1) 00:00:10.2014900
+Passed RouteCountsRepeatedSourcesAndClearReleasesOnlyItsReferences 00:00:00.0037710
+Passed PublicContractsHideInternalConnectionMethods 00:00:00.0015180
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(False,Rate,0.2f,8.0f,180.0f) 00:00:00.0001380
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,True) 00:00:00.0053020
+Passed DefaultAndEqualityPreserveTheForwardOrigin 00:00:00.0474330
+Passed BoundsDegeneracyAndNonFiniteInputsHaveExplicitFailureBehavior 00:00:00.0106340
+Passed FixedPlanarTransitions 00:00:00.0565970
+Passed GeometricCyclesAreRejectedBeforeChangingAnchorsOrConnections 00:00:00.0070560
+Passed ConnectionNotificationsSeeBothSidesCommitted(False) 00:00:00.0095110
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(False,Length,2.0f,8.0f) 00:00:00.0006930
+Passed RandomNavigationTransitions(2) 00:00:09.6825480
+Passed RandomNavigationTransitions(0) 00:00:11.3216420
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(False,Rate,0.2f,8.0f) 00:00:00.0000490
+Passed ClearAndDisposeReleaseReciprocalReferences(False) 00:00:00.0027120
+Passed RandomPlanarTransitions(2) 00:00:03.4135160
+Passed ClearAndDisposeReleaseReciprocalReferences(True) 00:00:00.0010810
+Passed RouteQueriesComposeViewsAndLocationDirection(False) 00:00:00.0007140
+Passed LayeredInterfacesExposeTheSameReferencesWithoutRecursiveGetters 00:00:00.0030020
+Passed SegmentPinCanBecomeInvalidAndRecoverAfterSourceChanges 00:00:00.0008080
+Passed CallbackFailureDoesNotLeaveDisposedNodeConnected 00:00:00.0358790
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(True,Length,2.0f,2.0f,0.0f) 00:00:00.0004250
+Passed AnchorRebindingDetachesOldSubscriptionsAndHoldOwnsOnlyItsPin 00:00:00.0419280
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(True,Length,2.0f,2.0f) 00:00:00.0030959
+Passed ShapeEventsPropagateWhenLengthIsUnchanged 00:00:00.0023290
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(False,Length,2.0f,8.0f,180.0f) 00:00:00.0006700
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(True,Rate,0.2f,2.0f,0.0f) 00:00:00.0001850
+Passed ConnectionNotificationsSeeBothSidesCommitted(True) 00:00:00.0015670
+Passed RejectedConnectionsPreserveTheGraph 00:00:00.0032490
+Passed RouteQueriesComposeViewsAndLocationDirection(True) 00:00:00.0065180
+Failed SourceDisposalPropagatesThroughPinsClipHoldAndRoute 00:00:00.0833350
+  Expected: True
+  But was:  False
+
+   at BlackThunder.UniEngine.Tests.PlanarGeoSystemTests.SourceDisposalPropagatesThroughPinsClipHoldAndRoute() in C:\Users\user\Documents\dove\Projects\uniengine\tests\03-Services\GeoSystem.Planar\PlanarGeoSystemTests.cs:line 271
+
+1)    at BlackThunder.UniEngine.Tests.PlanarGeoSystemTests.SourceDisposalPropagatesThroughPinsClipHoldAndRoute() in C:\Users\user\Documents\dove\Projects\uniengine\tests\03-Services\GeoSystem.Planar\PlanarGeoSystemTests.cs:line 271
+
+
+Passed RandomPlanarTransitions(1) 00:00:03.1385620
+Passed FixedNavigationTransitions 00:00:00.1392210
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,True) 00:00:00.0001830
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,False) 00:00:00.0001760

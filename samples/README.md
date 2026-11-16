@@ -1,12 +1,13 @@
 # UniEngine 사용 예시
 
-UniEngine의 Infrastructure·Core·Services 모듈 사용 흐름을 실행 가능한 예시와 컴파일되는 스니펫으로 보여 주는 예시 모음이다.
+UniEngine의 Infrastructure·Core·Services 모듈 사용 흐름을 콘솔 예시, 데스크톱 시각화와 컴파일되는 스니펫으로 보여 주는 예시 모음이다.
 
 ## 목차
 
 - 실행
 - 구성
 - 실행 예시
+- 시각화 예시
 - 스니펫
 - 실행 환경
 - 출력
@@ -35,13 +36,14 @@ dotnet run --project samples/UniEngine.Samples.csproj -- all
 
 ## 구성
 
-하나의 프로젝트가 모든 모듈의 예시를 담는다. 모듈 폴더는 src·tests·docs와 같은 계층·모듈 이름을 사용하고, 각 폴더에 코드와 README를 둔다. BT 예시 프로젝트 지침은 samples 아래에 PascalCase 폴더를 권하지만, 이 저장소는 모듈 문서·소스·테스트와 같은 경로로 예시를 찾을 수 있도록 번호 폴더를 따른다.
+`UniEngine.Samples.csproj`는 콘솔 예시와 스니펫을 담는다. GeoSystem 시각화는 UI 의존성을 가진 독립 실행 프로젝트로 분리한다. 모듈 폴더는 src·tests·docs와 같은 계층·모듈 이름을 사용하고, 각 폴더에 코드와 README를 둔다. BT 예시 프로젝트 지침은 samples 아래에 PascalCase 폴더를 권하지만, 이 저장소는 모듈 문서·소스·테스트와 같은 경로로 예시를 찾을 수 있도록 번호 폴더를 따른다.
 
-예시는 두 종류이다.
+예시는 세 종류이다.
 
 | 종류 | 파일 | 용도 |
 | --- | --- | --- |
 | 실행 예시 | 모듈Sample.cs | 콜백 순서·순회 중 변경·폐기 알림처럼 실행 결과를 보아야 이해하기 쉬운 동작을 명령으로 실행한다. |
+| 시각화 예시 | 독립 프로젝트 | GUI에서 객체를 조작하며 공간·경로의 변화를 확인한다. |
 | 스니펫 | 모듈Snippet.cs | 실행 명령 없이 사용 코드만 보여 준다. 결과는 각 줄의 주석에 적는다. |
 
 스니펫도 프로젝트를 빌드할 때 함께 컴파일되므로 API가 바뀌면 빌드에서 드러난다. 다만 주석에 적은 결과는 실행으로 확인하지 않으므로 동작이 바뀌면 직접 고친다.
@@ -62,12 +64,16 @@ samples/
 │  │  └─ README.md
 │  └─ ...
 └─ 03-Services/
-   └─ StateMachines/Usm/
-      ├─ UsmSample.cs
+   ├─ StateMachines/Usm/
+   │  ├─ UsmSample.cs
+   │  └─ README.md
+   └─ GeoSystem/
+      ├─ UniEngine.GeoSystem.Sample.csproj
+      ├─ GeoDemoScene.cs
       └─ README.md
 ```
 
-Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니펫에서 IEnumerationSource를 구현하여 함께 보여 준다. Services 계층은 StateMachines.Usm의 실행 예시를 제공한다.
+Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니펫에서 IEnumerationSource를 구현하여 함께 보여 준다. Services 계층은 StateMachines.Usm의 콘솔 예시와 GeoSystem의 시각화 예시를 제공한다.
 
 ## 실행 예시
 
@@ -82,9 +88,19 @@ Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니
 | lifecycle-hub | [LifecycleHub](02-Core/03-E.1-LifecycleHub/README.md) | 폐기 완료 알림과 연결 해제 |
 | event-hub | [EventHub](02-Core/03-E.2-EventHub/README.md) | 갱신·조건 갱신·수면·폐기 알림 |
 | usm | [StateMachines.Usm](03-Services/StateMachines/Usm/README.md) | FSM·BT·Direct 전이, 자식 우선 종료, LoopType·Reframe·Parallel |
-| all | - | 모든 실행 예시를 순서대로 실행한다. |
+| all | - | 모든 콘솔 실행 예시를 순서대로 실행한다. |
 | help | - | 명령 목록을 출력한다. |
 | exit | - | 대화형 프롬프트를 종료한다. |
+
+## 시각화 예시
+
+[GeoSystem Lab](03-Services/GeoSystem/README.md)은 Avalonia 데스크톱 창에서 노드를 드래그하고 Pin·Clip·Route·Hold의 변화와 경로 위 이동을 확인한다. UI 의존성은 예제 프로젝트에만 있으며 UniEngine 본체는 POCO로 유지한다.
+
+```powershell
+dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -c Release
+```
+
+이 프로젝트는 콘솔 `all`에 포함되지 않는다. 창 없는 시나리오 검증은 같은 명령에 `-- verify`를 붙여 실행한다.
 
 ## 스니펫
 
@@ -103,6 +119,8 @@ Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니
 
 ## 실행 환경
 
+아래는 콘솔 예시의 실행 환경이다. 시각화 프로젝트의 실행 환경은 해당 README를 따른다.
+
 - 프로세스가 시작할 때 SampleEnvironment가 Bootstrapper.Initialize를 한 번 호출하고, 종료할 때 EventStream.Main을 폐기한다. Bootstrapper는 프로세스당 한 번만 초기화할 수 있으므로 대화형 프롬프트의 모든 명령은 같은 환경을 공유한다.
 - ExceptionHandler에 보고된 예외는 '[Reported] 형식: 메시지', 로그는 '[수준] 메시지' 형태로 콘솔에 출력된다.
 - 각 실행 예시는 자신이 만든 구독과 객체를 정리한다.
@@ -110,4 +128,4 @@ Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니
 
 ## 출력
 
-실행 예시는 결과 파일을 만들지 않는다. 다만 Bootstrapper가 초기화하는 Configuration은 문서 폴더 아래에 BlackThunder/UniEngine/Projects/UniEngine.Samples 디렉터리를 만든다.
+콘솔 실행 예시는 결과 파일을 만들지 않는다. 다만 Bootstrapper가 초기화하는 Configuration은 문서 폴더 아래에 BlackThunder/UniEngine/Projects/UniEngine.Samples 디렉터리를 만든다. 시각화 예제의 출력 위치는 해당 README에서 안내한다.

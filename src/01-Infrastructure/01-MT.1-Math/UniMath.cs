@@ -7,7 +7,7 @@ namespace BlackThunder.UniEngine.Mathematics
     {
         // Front
         public const float Epsilon = 0.00001f;
-        public const float AngularEpsilon = 0.00001f;
+        public const float AngularEpsilon = 0.00001f; // Degrees
 
 
         // Content --------------------
@@ -122,7 +122,7 @@ namespace BlackThunder.UniEngine.Mathematics
             return parallel;
         }
 
-        // Rotation comparisons
+        // Rotation comparisons (degrees)
         public static bool IsSameRotationAs(
             this Quaternion value, Quaternion other, float angularTolerance = AngularEpsilon)
         {
@@ -134,7 +134,7 @@ namespace BlackThunder.UniEngine.Mathematics
             this Quaternion value, Quaternion other, float angularTolerance = AngularEpsilon)
         {
             ValidateTolerance(angularTolerance, nameof(angularTolerance));
-            return System.Math.Abs(System.Math.PI - RotationDifference(value, other)) <= angularTolerance;
+            return System.Math.Abs(180d - RotationDifference(value, other)) <= angularTolerance;
         }
 
         // Shared numerical operations
@@ -191,7 +191,8 @@ namespace BlackThunder.UniEngine.Mathematics
             var sw = first.W + second.W;
             var difference = System.Math.Sqrt(dx * dx + dy * dy + dz * dz + dw * dw);
             var sum = System.Math.Sqrt(sx * sx + sy * sy + sz * sz + sw * sw);
-            return System.Math.Min(System.Math.PI, 4d * System.Math.Atan2(difference, sum));
+            var angle = 4d * System.Math.Atan2(difference, sum) * (180d / System.Math.PI);
+            return System.Math.Min(180d, angle);
         }
     }
 }

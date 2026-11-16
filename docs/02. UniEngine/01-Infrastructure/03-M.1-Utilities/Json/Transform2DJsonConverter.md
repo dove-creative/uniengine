@@ -19,7 +19,7 @@ Transform2D의 위치와 회전을 명시적인 JSON 구조로 변환하는 변�
 
 | 제공 서비스 | 제공 이유 |
 | --- | --- |
-| Read | Position 객체와 라디안 float Rotation을 읽어 완전한 Transform2D를 복원한다. |
+| Read | Position 객체와 도 단위 float Rotation을 읽어 완전한 Transform2D를 복원한다. |
 | Write | 위치와 회전을 구분하여 기록함으로써 복합 값의 저장 구조를 명시한다. |
 
 ## 동작 흐름
@@ -29,6 +29,7 @@ Position은 [Vector2JsonConverter](Vector2JsonConverter.md)에, Rotation은 [Jso
 ## 설계 기준
 
 - 자세 구조의 검증은 이 변환기가, 벡터 성분 검증은 내부 변환기가 담당한다.
+- Rotation은 도 단위 숫자를 그대로 읽고 쓰며 0~360 범위로 정규화하지 않는다. 단위 표식이 없으므로 이전 라디안 데이터는 읽기 전에 Rotation에 180/π를 곱해 변환해야 한다. 변환기는 단위를 추측하거나 자동으로 이전 데이터를 변환하지 않는다.
 - 두 속성이 모두 필요하며 중복·알 수 없는 속성은 거부한다. 내부 성분 변환은 options에 등록된 다른 변환기를 다시 선택하지 않는다.
 
 [모듈 구성](README.md)

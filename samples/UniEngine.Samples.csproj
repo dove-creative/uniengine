@@ -2,6 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- The desktop demo has its own entry point and UI dependencies. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);03-Services/GeoSystem/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

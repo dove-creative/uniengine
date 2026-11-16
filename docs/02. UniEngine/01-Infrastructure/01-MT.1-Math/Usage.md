@@ -6,6 +6,7 @@
 - 방향과 회전
 - 위치 함수
 - Unity 코드 이전
+- 라디안 API에서 이전
 
 ## 비교와 보정
 
@@ -33,11 +34,12 @@ var identity = Quaternion.Identity;
 var sameRotation = identity.IsSameRotationAs(Quaternion.Negate(identity)); // true
 var halfTurn = new Quaternion(0f, 1f, 0f, 0f);
 var separatedByHalfTurn = identity.IsHalfTurnFrom(halfTurn); // true
-var rotated = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 0.01f);
-var withinAngle = identity.IsSameRotationAs(rotated, 0.02f); // true, radians
+// System.Numerics takes radians; UniEngine's angular tolerance uses degrees.
+var rotated = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)(0.01d * System.Math.PI / 180d));
+var withinAngle = identity.IsSameRotationAs(rotated, 0.02f); // true, degrees
 ```
 
-거리 오차와 각도 오차는 서로 다른 단위이다. IsParallelWith의 epsilon은 정규화한 내적의 차이이며, 회전 비교의 angularTolerance는 라디안이다.
+거리 오차와 각도 오차는 서로 다른 단위이다. IsParallelWith의 epsilon은 정규화한 내적의 차이이며, 회전 비교의 angularTolerance는 도 단위이다.
 
 ## 위치 함수
 
@@ -56,6 +58,12 @@ var extrapolated = curve.Evaluate(2f); // (8, -16)
 
 - UniEngine.Math 대신 BlackThunder.UniEngine.Mathematics를 가져오고 UnityEngine 벡터·쿼터니언을 System.Numerics 타입으로 바꾼다. Unity 타입 변환 어댑터는 제공하지 않는다.
 - Quaternion.Is의 기본 회전 동등성은 IsSameRotationAs로 옮긴다. 기존 allowInverse = true처럼 같은 회전 또는 180도 차이를 모두 허용하려면 두 판정 결과를 OR로 결합한다.
-- 기존 Quaternion 비교의 epsilon은 도 단위였으므로 라디안으로 환산하여 angularTolerance에 전달한다. 새 기본값은 AngularEpsilon이며 기존 기본 각도 오차와 수치적으로 동일한 각도를 뜻하지 않는다.
+- 기존 Quaternion 비교의 epsilon과 angularTolerance는 모두 도 단위이므로 명시적으로 지정한 오차는 그대로 전달한다. 기본값은 AngularEpsilon = 0.00001f이며 0.00001도를 뜻한다.
+
+## 라디안 API에서 이전
+
+- 이전 UniEngine API에 라디안으로 전달하던 Transform2D.Rotation과 명시적 angularTolerance는 180/π를 곱해 도 단위로 바꾼다. Transform2D JSON의 Rotation 숫자도 같은 변환이 필요하다.
+- AngularEpsilon의 수치는 0.00001f로 유지되며 단위는 도이다. 이전 기본값 0.00001라디안과 같은 허용 범위가 필요하면 환산한 오차를 명시적으로 전달한다.
+- System.Numerics의 각도 기반 쿼터니언 생성 API와 삼각함수의 라디안 계약은 그대로이다. 도 단위 각도를 전달할 때 π/180을 곱하고, Transform3D의 쿼터니언 성분은 변환하지 않는다.
 
 [모듈 구성](README.md)

@@ -273,26 +273,39 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(0.000001f)]
         [TestCase(0.00001f)]
         [TestCase(0.25f)]
-        public void AngularToleranceUsesRadiansAndRetainsSmallDifferences(float angle)
+        public void AngularToleranceUsesDegreesAndRetainsSmallDifferences(float angle)
         {
-            var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
+            var radians = angle * (System.Math.PI / 180d);
+            var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)radians);
             Assert.That(Quaternion.Identity.IsSameRotationAs(rotation, angle * 2f), Is.True);
             Assert.That(Quaternion.Identity.IsSameRotationAs(rotation, angle * 0.5f), Is.False);
             var nearHalf = new Quaternion(0f, 0f,
-                (float)System.Math.Cos(angle / 2d), (float)System.Math.Sin(angle / 2d));
+                (float)System.Math.Cos(radians / 2d), (float)System.Math.Sin(radians / 2d));
             Assert.That(Quaternion.Identity.IsHalfTurnFrom(nearHalf, angle * 2f), Is.True);
             Assert.That(Quaternion.Identity.IsHalfTurnFrom(nearHalf, angle * 0.5f), Is.False);
         }
 
-        [Test]
-        public void RotationToleranceHandlesPiBoundary()
+        [TestCase(0.000005f, true)]
+        [TestCase(0.00002f, false)]
+        public void DefaultAngularToleranceIsOneHundredThousandthOfADegree(float angle, bool expected)
         {
-            // A half turn is just below the nearest float representation of pi.
+            var radians = angle * (System.Math.PI / 180d);
+            var rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, (float)radians);
+            var nearHalf = new Quaternion(0f, 0f,
+                (float)System.Math.Cos(radians / 2d), (float)System.Math.Sin(radians / 2d));
+
+            Assert.That(Quaternion.Identity.IsSameRotationAs(rotation), Is.EqualTo(expected));
+            Assert.That(Quaternion.Identity.IsHalfTurnFrom(nearHalf), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void RotationToleranceIncludesThe180DegreeBoundary()
+        {
             var half = new Quaternion(1f, 0f, 0f, 0f);
-            Assert.That(Quaternion.Identity.IsSameRotationAs(half, (float)System.Math.PI), Is.True);
-            Assert.That(Quaternion.Identity.IsSameRotationAs(half, 3.1415925f), Is.False);
-            Assert.That(Quaternion.Identity.IsHalfTurnFrom(Quaternion.Identity, (float)System.Math.PI), Is.True);
-            Assert.That(Quaternion.Identity.IsHalfTurnFrom(Quaternion.Identity, 3.1415925f), Is.False);
+            Assert.That(Quaternion.Identity.IsSameRotationAs(half, 180f), Is.True);
+            Assert.That(Quaternion.Identity.IsSameRotationAs(half, 179.99998f), Is.False);
+            Assert.That(Quaternion.Identity.IsHalfTurnFrom(Quaternion.Identity, 180f), Is.True);
+            Assert.That(Quaternion.Identity.IsHalfTurnFrom(Quaternion.Identity, 179.99998f), Is.False);
         }
     }
 }

@@ -1,0 +1,26 @@
+2026-11-16 final focused GeoSystem run
+Cases: 23
+Passed: 23
+Passed AnchorRebindingDetachesOldSubscriptionsAndHoldOwnsOnlyItsPin 00:00:00.0205009
+Passed BoundsDegeneracyAndNonFiniteInputsHaveExplicitFailureBehavior 00:00:00.0086260
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,False) 00:00:00.0001200
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,True) 00:00:00.0001480
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,False) 00:00:00.0007620
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,True) 00:00:00.0053450
+Passed ClipSourceIsDerivedAndInvalidStatesRecover 00:00:00.0012760
+Passed FixedPlanarTransitions 00:00:00.0265920
+Passed GeometricCyclesAreRejectedBeforeChangingAnchorsOrConnections 00:00:00.0080540
+Passed LayeredInterfacesExposeTheSameReferencesWithoutRecursiveGetters 00:00:00.0037610
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(False,Length,2.0f,8.0f,180.0f) 00:00:00.0007270
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(False,Rate,0.2f,8.0f,180.0f) 00:00:00.0000710
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(True,Length,2.0f,2.0f,0.0f) 00:00:00.0006620
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(True,Rate,0.2f,2.0f,0.0f) 00:00:00.0001860
+Passed RandomPlanarTransitions(0) 00:00:02.9822880
+Passed RandomPlanarTransitions(1) 00:00:02.5578480
+Passed RandomPlanarTransitions(2) 00:00:02.8168230
+Passed RouteCountsRepeatedSourcesAndClearReleasesOnlyItsReferences 00:00:00.0038080
+Passed RouteQueriesComposeViewsAndLocationDirection(False) 00:00:00.0005710
+Passed RouteQueriesComposeViewsAndLocationDirection(True) 00:00:00.0045790
+Passed SegmentPinCanBecomeInvalidAndRecoverAfterSourceChanges 00:00:00.0007450
+Passed ShapeEventsPropagateWhenLengthIsUnchanged 00:00:00.0018900
+Passed SourceDisposalPropagatesThroughPinsClipHoldAndRoute 00:00:00.0030530

@@ -9,7 +9,7 @@ namespace BlackThunder.UniEngine.Objects
     {
         // Front
         public Vector2 Position { get; set; }
-        public float Rotation { get; set; }
+        public float Rotation { get; set; } // Degrees
 
         public static Transform2D Identity => new(Vector2.Zero, 0f);
 
@@ -39,7 +39,7 @@ namespace BlackThunder.UniEngine.Objects
                 throw new ArgumentException("Transform rotations must be finite.");
 
             var samePosition = UniMath.Is(Position, other.Position, positionTolerance);
-            var angle = System.Math.IEEERemainder((double)Rotation - other.Rotation, 2d * System.Math.PI);
+            var angle = System.Math.IEEERemainder((double)Rotation - other.Rotation, 360d);
             return samePosition && System.Math.Abs(angle) <= angularTolerance;
         }
 
