@@ -11,7 +11,6 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
         // Front
         public Vector2 Position { get; protected set; }
         public new IEnumerable<ISegment> Segments => base.Segments.Cast<ISegment>();
-        IEnumerable<Geometry.ISegment> Geometry.INode.Segments => Segments;
 
 
         // Content

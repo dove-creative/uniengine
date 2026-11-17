@@ -238,9 +238,6 @@ namespace BlackThunder.UniEngine.Tests
             route.Remove(source);
             b.Position = new Vector2(30f, 0f);
             Assert.That(route.Length, Is.EqualTo(30f));
-            Assert.Throws<NotImplementedException>(() => route.ConnectNode(ConnectionSide.From, a));
-            Assert.Throws<NotImplementedException>(() => route.DisconnectNode(ConnectionSide.From));
-            Assert.Throws<NotImplementedException>(() => route.DisconnectNode(a));
             Assert.That(route.Views.Count, Is.EqualTo(1));
             route.ClearNodes();
             var before = updates;

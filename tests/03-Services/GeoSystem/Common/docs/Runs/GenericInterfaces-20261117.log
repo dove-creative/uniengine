@@ -1,0 +1,58 @@
+GeoSystem generic interfaces verification - 2026-11-17
+Command: dotnet test tests/UniEngine.Tests.csproj -c Release --no-build --no-restore --filter TestCategory=GeoSystem
+TRX: tests/bin/GeoSystem/GenericInterfaces/geosystem.trx
+Total: 44; passed: 44; failed: 0; skipped: 0
+
+Passed	AnchorRebindingDetachesOldSubscriptionsAndHoldOwnsOnlyItsPin	00:00:00.0051320
+Passed	BoundsDegeneracyAndNonFiniteInputsHaveExplicitFailureBehavior	00:00:00.0081840
+Passed	CallbackFailureDoesNotLeaveDisposedNodeConnected	00:00:00.0047040
+Passed	ClearAndDisposeReleaseReciprocalReferences(False)	00:00:00.0034400
+Passed	ClearAndDisposeReleaseReciprocalReferences(True)	00:00:00.0006700
+Passed	ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,False)	00:00:00.0003210
+Passed	ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,True)	00:00:00.0002450
+Passed	ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,False)	00:00:00.0007750
+Passed	ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,True)	00:00:00.0013230
+Passed	ClipSourceIsDerivedAndInvalidStatesRecover	00:00:00.0018400
+Passed	ConnectionNotificationsSeeBothSidesCommitted(False)	00:00:00.0020490
+Passed	ConnectionNotificationsSeeBothSidesCommitted(True)	00:00:00.0004950
+Passed	DefaultAndEqualityPreserveTheForwardOrigin	00:00:00.0029430
+Passed	DirectionIsMeasuredFromTheSelectedEndpoint(False,Length,2.0f,8.0f)	00:00:00.0006910
+Passed	DirectionIsMeasuredFromTheSelectedEndpoint(False,Rate,0.2f,8.0f)	00:00:00.0000200
+Passed	DirectionIsMeasuredFromTheSelectedEndpoint(True,Length,2.0f,2.0f)	00:00:00.0176220
+Passed	DirectionIsMeasuredFromTheSelectedEndpoint(True,Rate,0.2f,2.0f)	00:00:00.0000270
+Passed	FixedNavigationTransitions	00:00:00.0803240
+Passed	FixedPlanarTransitions	00:00:00.0258230
+Passed	GenericConnectionsExposeTheSameObjectsAcrossAllContracts	00:00:00.0824350
+Passed	GenericConsumersObservePlanarPinsClipsAndRoutesAfterSourceUpdates	00:00:00.0273590
+Passed	GenericQueriesPreserveFailureOutputsToleranceAndLifetime	00:00:00.0113480
+Passed	GeometricCyclesAreRejectedBeforeChangingAnchorsOrConnections	00:00:00.0024540
+Passed	IncompatiblePositionTypesAreRejectedBeforeEitherConnectionChanges	00:00:00.0023800
+Passed	LayeredInterfacesExposeTheSameReferencesWithoutRecursiveGetters	00:00:00.0030920
+Passed	LinearQueriesRespectDistanceDirectionAndDegrees(False,Length,2.0f,8.0f,180.0f)	00:00:00.0008780
+Passed	LinearQueriesRespectDistanceDirectionAndDegrees(False,Rate,0.2f,8.0f,180.0f)	00:00:00.0001160
+Passed	LinearQueriesRespectDistanceDirectionAndDegrees(True,Length,2.0f,2.0f,0.0f)	00:00:00.0006460
+Passed	LinearQueriesRespectDistanceDirectionAndDegrees(True,Rate,0.2f,2.0f,0.0f)	00:00:00.0001430
+Passed	PositionOnlyImplementationDoesNotRequireRotationOrSegmentBaseClass	00:00:00.0014830
+Passed	PublicContractsHideInternalConnectionMethods	00:00:00.0009780
+Passed	RandomNavigationTransitions(0)	00:00:09.0636770
+UniTest continuous seed=0 depth=100/100 elapsedMs=9052.425 outcome=Passed
+Passed	RandomNavigationTransitions(1)	00:00:07.4031730
+UniTest continuous seed=1 depth=100/100 elapsedMs=7399.303 outcome=Passed
+Passed	RandomNavigationTransitions(2)	00:00:08.5621100
+UniTest continuous seed=2 depth=100/100 elapsedMs=8551.138 outcome=Passed
+Passed	RandomPlanarTransitions(0)	00:00:02.9392920
+UniTest continuous seed=0 depth=100/100 elapsedMs=2937.538 outcome=Passed
+Passed	RandomPlanarTransitions(1)	00:00:02.9843320
+UniTest continuous seed=1 depth=100/100 elapsedMs=2983.099 outcome=Passed
+Passed	RandomPlanarTransitions(2)	00:00:02.6468670
+UniTest continuous seed=2 depth=100/100 elapsedMs=2645.780 outcome=Passed
+Passed	RejectedConnectionsPreserveTheGraph	00:00:00.0023000
+Passed	RouteCountsRepeatedSourcesAndClearReleasesOnlyItsReferences	00:00:00.0052210
+Passed	RouteQueriesComposeViewsAndLocationDirection(False)	00:00:00.0007810
+Passed	RouteQueriesComposeViewsAndLocationDirection(True)	00:00:00.0024170
+Passed	SegmentPinCanBecomeInvalidAndRecoverAfterSourceChanges	00:00:00.0014330
+Passed	ShapeEventsPropagateWhenLengthIsUnchanged	00:00:00.0020569
+Passed	SourceDisposalPropagatesThroughPinsClipHoldAndRoute	00:00:00.0027240
+
+Random transition histories are preserved in the TRX StdOut entries.
+Full suite: not run, as requested by the user.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using BlackThunder.GeoSystem.RouteSystem;
 
-namespace BlackThunder.GeoSystem.Geometry.Planar
+namespace BlackThunder.GeoSystem.Geometry
 {
     internal static class GeoDependency
     {
@@ -32,6 +32,8 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
                 else if (candidate is IRoute route)
                 {
                     foreach (var view in route.Views) pending.Push(view.Source);
+                    pending.Push(route.From);
+                    pending.Push(route.To);
                 }
                 else if (candidate is Geometry.IReadOnlySegment segment)
                 {

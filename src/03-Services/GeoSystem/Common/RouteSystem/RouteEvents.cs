@@ -10,7 +10,8 @@ namespace BlackThunder.GeoSystem.RouteSystem
         Disconnect = 2,
         Shape = 4,
         Location = 8,
+        Traversal = 16,
         AnyConnection = Connect | Disconnect,
-        All = Connect | Disconnect | Shape | Location
+        All = Connect | Disconnect | Shape | Location | Traversal,
     }
 }

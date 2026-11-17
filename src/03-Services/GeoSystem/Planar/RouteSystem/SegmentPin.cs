@@ -44,7 +44,9 @@ namespace BlackThunder.GeoSystem.RouteSystem.Planar
                 AnchorSegment?.EventHub.Disconnect(this);
                 AnchorSegment = anchor;
                 anchor.EventHub.Connect(this)
-                    .OnUpdatedWhere(events => (events & (int)GeoEvents.All) != 0, () => UpdatePosition(0))
+                    .OnUpdatedWhere(
+                        events => (events & (int)(GeoEvents.AnyConnection | GeoEvents.Shape)) != 0,
+                        () => UpdatePosition(0))
                     .OnDisposing(Dispose);
             }
 

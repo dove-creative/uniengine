@@ -16,4 +16,21 @@ namespace BlackThunder.GeoSystem.Geometry
         IEnumerable<INavSegment> INavNode.Segments => Segments;
         IEnumerable<IReadOnlyNavSegment> IReadOnlyNavNode.Segments => Segments;
     }
+
+    public interface IReadOnlyNode<P> : IReadOnlyNode, IPositioned<P>
+    {
+        new IEnumerable<IReadOnlySegment<P>> Segments { get; }
+        IEnumerable<IReadOnlySegment> IReadOnlyNode.Segments => Segments;
+        IEnumerable<IReadOnlyNavSegment> IReadOnlyNavNode.Segments => Segments;
+    }
+
+    public interface INode<P> : IReadOnlyNode<P>, INode
+    {
+        new IEnumerable<ISegment<P>> Segments { get; }
+        IEnumerable<IReadOnlySegment<P>> IReadOnlyNode<P>.Segments => Segments;
+        IEnumerable<ISegment> INode.Segments => Segments;
+        IEnumerable<IReadOnlySegment> IReadOnlyNode.Segments => Segments;
+        IEnumerable<INavSegment> INavNode.Segments => Segments;
+        IEnumerable<IReadOnlyNavSegment> IReadOnlyNavNode.Segments => Segments;
+    }
 }

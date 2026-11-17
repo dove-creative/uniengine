@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BlackThunder.GeoSystem.Geometry;
+using BlackThunder.GeoSystem.Navigation;
 
 namespace BlackThunder.GeoSystem.RouteSystem
 {
@@ -12,6 +13,7 @@ namespace BlackThunder.GeoSystem.RouteSystem
     public interface IRoute : ISegment
     {
         IReadOnlyList<ISegmentView> Views { get; }
+        bool TryConnectNode(ConnectionSide side, INavNode node);
         void Append(ISegmentView view, bool toTail = true);
         void Remove(ISegment segment);
         void Clear();

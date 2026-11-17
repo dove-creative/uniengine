@@ -21,11 +21,29 @@ namespace BlackThunder.GeoSystem.Navigation
         public float Length { get; protected set; }
 
         // Property
+        public Property Property => _property ??= new();
         public bool IsDisposed => _disposeRequested || EventHubInstance.IsDisposed;
         public IEventHub<int> EventHub => EventHubInstance;
         protected EventHub<int> EventHubInstance { get; }
 
+        // Control
+        public TraversalOptions TraversalOptions
+        {
+            get => _traversalOptions;
+            set
+            {
+                ThrowIfDisposed();
+                if ((value & ~TraversalOptions.Both) != 0)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                if (_traversalOptions == value) return;
+                _traversalOptions = value;
+                OnUpdated((int)GeoEvents.Traversal);
+            }
+        }
+
         // Internal
+        private Property _property;
+        private TraversalOptions _traversalOptions = TraversalOptions.Both;
         private INavNode _from;
         private INavNode _to;
         private bool _disposeRequested;

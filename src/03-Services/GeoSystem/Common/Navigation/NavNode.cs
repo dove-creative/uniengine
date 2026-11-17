@@ -13,11 +13,13 @@ namespace BlackThunder.GeoSystem.Navigation
         IEnumerable<INavSegment> INavNode.Segments => Segments;
 
         // Property
+        public Property Property => _property ??= new();
         public bool IsDisposed => _disposeRequested || EventHubInstance.IsDisposed;
         public IEventHub<int> EventHub => EventHubInstance;
         protected EventHub<int> EventHubInstance { get; }
 
         // Internal
+        private Property _property;
         private readonly List<INavSegment> _segments = new();
         private bool _disposeRequested;
 

@@ -1,12 +1,19 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.UniEngine.Objects;
 
 namespace BlackThunder.GeoSystem.Geometry.Planar
 {
-    public class LinearSegment : Segment, ILinearSegment
+    public class LinearSegment : Geometry.LinearSegment<Vector2, float>, ILinearSegment
     {
+        // Front
+        public new INode From => (INode)base.From;
+        public new INode To => (INode)base.To;
+        public new IEnumerable<INode> Nodes => base.Nodes.Cast<INode>();
+
         // Internal
         private Vector2 _start;
         private Vector2 _end;
@@ -29,26 +36,14 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
             }
         }
 
-        protected override int OnNodeConnected(INavNode node)
+        protected override void OnNodeConnecting(ConnectionSide side, INavNode node)
         {
-            node.EventHub.Connect(this)
-                .OnUpdatedWhere(events => (events & (int)GeoEvents.Shape) != 0, () =>
-                {
-                    UpdateShape();
-                    OnUpdated((int)GeoEvents.Shape);
-                });
-            UpdateShape();
-            return (int)GeoEvents.Shape;
+            if (node is not INode)
+                throw new ArgumentException("A planar segment requires a planar node.", nameof(node));
+            base.OnNodeConnecting(side, node);
         }
 
-        protected override int OnNodeDisconnected(INavNode node)
-        {
-            node.EventHub.Disconnect(this);
-            UpdateShape();
-            return (int)GeoEvents.Shape;
-        }
-
-        private void UpdateShape()
+        protected override void UpdateShape()
         {
             if (From == null || To == null)
             {
@@ -64,7 +59,19 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
             _rotation = (float)(System.Math.Atan2(y, x) * 180d / System.Math.PI);
         }
 
-        public override bool TryGetTransform(Location location, out Transform2D transform, float? epsilon = null)
+        public override bool TryGetTransform(
+            Location location,
+            out Vector2 position,
+            out float rotation,
+            float? epsilon = null)
+        {
+            var success = TryGetTransform(location, out var transform, epsilon);
+            position = success ? transform.Position : default;
+            rotation = success ? transform.Rotation : default;
+            return success;
+        }
+
+        public bool TryGetTransform(Location location, out Transform2D transform, float? epsilon = null)
         {
             ThrowIfDisposed();
             var tolerance = epsilon ?? Epsilon;

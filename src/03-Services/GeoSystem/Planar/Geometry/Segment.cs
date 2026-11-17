@@ -14,6 +14,8 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
         public new INode From => (INode)base.From;
         public new INode To => (INode)base.To;
         public new IEnumerable<INode> Nodes => base.Nodes.Cast<INode>();
+        public IDictionary<string, float> Values => EmptySegmentInputs<Vector2>.Values;
+        public IList<SegmentHandle<Vector2>> Handles => EmptySegmentInputs<Vector2>.Handles;
         public float Epsilon
         {
             get => _epsilon;

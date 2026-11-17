@@ -1,0 +1,185 @@
+Route editing integration regression, 2026-11-18
+Configuration: Release; C# 9; netstandard2.1 library; net10.0 tests
+Total: 168; Passed: 168; Failed: 0; Skipped: 0
+TRX elapsed seconds: 24.672
+TRX: tests/bin/GeoSystem/RouteEditing/focused.trx
+BlackThunder.UniEngine.Tests.PropertyTests | AddReturnsThePayloadAndSupportsSelfKeys | Passed | 00:00:00.0007030
+BlackThunder.UniEngine.Tests.PathfindingTests | AlgorithmsChooseTheirDocumentedPath(0,1,30) | Passed | 00:00:00.0037560
+BlackThunder.UniEngine.Tests.PathfindingTests | AlgorithmsChooseTheirDocumentedPath(1,2,18) | Passed | 00:00:00.0016400
+BlackThunder.UniEngine.Tests.PathfindingTests | AlgorithmsChooseTheirDocumentedPath(2,2,2) | Passed | 00:00:00.0005040
+BlackThunder.UniEngine.Tests.PathfindingTests | AlgorithmsChooseTheirDocumentedPath(3,2,2) | Passed | 00:00:00.0015680
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | AnchorRebindingDetachesOldSubscriptionsAndHoldOwnsOnlyItsPin | Passed | 00:00:00.0010960
+BlackThunder.UniEngine.Tests.PathfindingTests | AStarReopensNodesForAnAdmissibleInconsistentHeuristic | Passed | 00:00:00.0012390
+BlackThunder.UniEngine.Tests.PathfindingTests | AStarValidatesHeuristicsAndTheUntypedAdapter | Passed | 00:00:00.0010590
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | BoundsDegeneracyAndNonFiniteInputsHaveExplicitFailureBehavior | Passed | 00:00:00.0015120
+BlackThunder.UniEngine.Tests.NavigationTests | CallbackFailureDoesNotLeaveDisposedNodeConnected | Passed | 00:00:00.0020250
+BlackThunder.UniEngine.Tests.NavigationTests | ClearAndDisposeReleaseReciprocalReferences(False) | Passed | 00:00:00.0004860
+BlackThunder.UniEngine.Tests.NavigationTests | ClearAndDisposeReleaseReciprocalReferences(True) | Passed | 00:00:00.0002990
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,False) | Passed | 00:00:00.0000749
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,True) | Passed | 00:00:00.0000900
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,False) | Passed | 00:00:00.0003530
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,True) | Passed | 00:00:00.0005970
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | ClipSourceIsDerivedAndInvalidStatesRecover | Passed | 00:00:00.0040080
+BlackThunder.UniEngine.Tests.RouteTests | CoincidentEndpointsClearAndLifetimePreserveMetadata | Passed | 00:00:00.0051880
+BlackThunder.UniEngine.Tests.RouteTests | CommonRouteSupportsNonPlanarGeometryAndReferenceDistinctNodes | Passed | 00:00:00.0008300
+BlackThunder.UniEngine.Tests.NavigationTests | ConnectionNotificationsSeeBothSidesCommitted(False) | Passed | 00:00:00.0011130
+BlackThunder.UniEngine.Tests.NavigationTests | ConnectionNotificationsSeeBothSidesCommitted(True) | Passed | 00:00:00.0002760
+BlackThunder.UniEngine.Tests.PropertyTests | ConstructorStoresTheInitialValue(False) | Passed | 00:00:00.0002430
+BlackThunder.UniEngine.Tests.PropertyTests | ConstructorStoresTheInitialValue(True) | Passed | 00:00:00.0002270
+BlackThunder.UniEngine.Tests.RouteTests | CyclicPathAndCyclesThroughStandaloneEndpointsAreRejected | Passed | 00:00:00.0018570
+BlackThunder.UniEngine.Tests.LocationTests | DefaultAndEqualityPreserveTheForwardOrigin | Passed | 00:00:00.0016620
+BlackThunder.UniEngine.Tests.RouteTests | DefaultProvidersAndExplicitOverrideChooseExpectedEqualCostPaths | Passed | 00:00:00.0014600
+BlackThunder.UniEngine.Tests.PathfindingTests | DepthFirstSearchHandlesADeepChainWithoutRecursion | Passed | 00:00:00.1183840
+BlackThunder.UniEngine.Tests.PropertyTests | DictionaryAndCollectionViewsShareTheSameStore | Passed | 00:00:00.0005700
+BlackThunder.UniEngine.Tests.LocationTests | DirectionIsMeasuredFromTheSelectedEndpoint(False,Length,2.0f,8.0f) | Passed | 00:00:00.0003640
+BlackThunder.UniEngine.Tests.LocationTests | DirectionIsMeasuredFromTheSelectedEndpoint(False,Rate,0.2f,8.0f) | Passed | 00:00:00.0000050
+BlackThunder.UniEngine.Tests.LocationTests | DirectionIsMeasuredFromTheSelectedEndpoint(True,Length,2.0f,2.0f) | Passed | 00:00:00.0003540
+BlackThunder.UniEngine.Tests.LocationTests | DirectionIsMeasuredFromTheSelectedEndpoint(True,Rate,0.2f,2.0f) | Passed | 00:00:00.0000150
+BlackThunder.UniEngine.Tests.RouteTests | DisconnectKeepsTheOtherEndpointAndReconnects(From) | Passed | 00:00:00.0009550
+BlackThunder.UniEngine.Tests.RouteTests | DisconnectKeepsTheOtherEndpointAndReconnects(To) | Passed | 00:00:00.0002810
+BlackThunder.UniEngine.Tests.PropertyTests | DisplayDescribesEmptyAndNullContainingStores | Passed | 00:00:00.0078100
+BlackThunder.UniEngine.Tests.NavigationContractsTests | DistanceHeuristicReturnsTypedPlanarReferencesThroughBothInterfaces | Passed | 00:00:00.0079530
+BlackThunder.UniEngine.Tests.PropertyTests | DuplicateAddsPreserveTheOriginalValue("Collection") | Passed | 00:00:00.0001110
+BlackThunder.UniEngine.Tests.PropertyTests | DuplicateAddsPreserveTheOriginalValue("Dictionary") | Passed | 00:00:00.0002630
+BlackThunder.UniEngine.Tests.PropertyTests | DuplicateAddsPreserveTheOriginalValue("Direct") | Passed | 00:00:00.0003680
+BlackThunder.UniEngine.Tests.PropertyTests | EmptyAndNullStoresHaveNoValue | Passed | 00:00:00.0001410
+BlackThunder.UniEngine.Tests.PathfindingTests | EmptySuccessAndUnreachableGoalsAreDifferent(0) | Passed | 00:00:00.0008260
+BlackThunder.UniEngine.Tests.PathfindingTests | EmptySuccessAndUnreachableGoalsAreDifferent(1) | Passed | 00:00:00.0005780
+BlackThunder.UniEngine.Tests.PathfindingTests | EmptySuccessAndUnreachableGoalsAreDifferent(2) | Passed | 00:00:00.0000310
+BlackThunder.UniEngine.Tests.PathfindingTests | EmptySuccessAndUnreachableGoalsAreDifferent(3) | Passed | 00:00:00.0000640
+BlackThunder.UniEngine.Tests.PropertyTests | EnumerationAndCopyExposeEachPairWithoutRequiringOrder(False) | Passed | 00:00:00.0043990
+BlackThunder.UniEngine.Tests.PropertyTests | EnumerationAndCopyExposeEachPairWithoutRequiringOrder(True) | Passed | 00:00:00.0002540
+BlackThunder.UniEngine.Tests.PathfindingTests | EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(0) | Passed | 00:00:00.0025630
+BlackThunder.UniEngine.Tests.PathfindingTests | EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(1) | Passed | 00:00:00.0002660
+BlackThunder.UniEngine.Tests.PathfindingTests | EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(2) | Passed | 00:00:00.0002910
+BlackThunder.UniEngine.Tests.PathfindingTests | EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(3) | Passed | 00:00:00.0000510
+BlackThunder.UniEngine.Tests.RouteTests | FailedSearchAndProviderExceptionPreserveAllOldState | Passed | 00:00:00.0011490
+BlackThunder.UniEngine.Tests.RouteTests | FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(False,From) | Passed | 00:00:00.0025469
+BlackThunder.UniEngine.Tests.RouteTests | FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(False,To) | Passed | 00:00:00.0004070
+BlackThunder.UniEngine.Tests.RouteTests | FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(True,From) | Passed | 00:00:00.0003010
+BlackThunder.UniEngine.Tests.RouteTests | FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(True,To) | Passed | 00:00:00.0003470
+BlackThunder.UniEngine.Tests.NavigationStateProjectTests | FixedNavigationTransitions | Passed | 00:00:00.0408070
+BlackThunder.UniEngine.Tests.PlanarStateProjectTests | FixedPlanarTransitions | Passed | 00:00:00.0113510
+BlackThunder.UniEngine.Tests.RouteStateProjectTests | FixedRouteEditingTransitions | Passed | 00:00:00.0202160
+BlackThunder.UniEngine.Tests.PropertyStateProjectTests | FixedTransitionsExerciseEveryOperationIncludingFailureRecovery | Passed | 00:00:00.0184840
+BlackThunder.UniEngine.Tests.RouteTests | FromReplacementSearchesForwardAndTraversalDoesNotAutomaticallyRepath | Passed | 00:00:00.0005320
+BlackThunder.UniEngine.Tests.GenericGeometryTests | GenericConnectionsExposeTheSameObjectsAcrossAllContracts | Passed | 00:00:00.0388210
+BlackThunder.UniEngine.Tests.GenericGeometryTests | GenericConsumersObservePlanarPinsClipsAndRoutesAfterSourceUpdates | Passed | 00:00:00.0176380
+BlackThunder.UniEngine.Tests.GenericGeometryTests | GenericQueriesPreserveFailureOutputsToleranceAndLifetime | Passed | 00:00:00.0043819
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | GeometricCyclesAreRejectedBeforeChangingAnchorsOrConnections | Passed | 00:00:00.0010880
+BlackThunder.UniEngine.Tests.PropertyTests | GetAndRemoveConsumesNullValues(False) | Passed | 00:00:00.0003100
+BlackThunder.UniEngine.Tests.PropertyTests | GetAndRemoveConsumesNullValues(True) | Passed | 00:00:00.0001840
+BlackThunder.UniEngine.Tests.PropertyTests | GetAndRemoveConsumesOnlyTheRequestedEntry(False) | Passed | 00:00:00.0005680
+BlackThunder.UniEngine.Tests.PropertyTests | GetAndRemoveConsumesOnlyTheRequestedEntry(True) | Passed | 00:00:00.0004570
+BlackThunder.UniEngine.Tests.GenericGeometryTests | IncompatiblePositionTypesAreRejectedBeforeEitherConnectionChanges | Passed | 00:00:00.0011060
+BlackThunder.UniEngine.Tests.PropertyTests | IndexerInsertsAndReplacesWithoutIncreasingTheCount | Passed | 00:00:00.0002480
+BlackThunder.UniEngine.Tests.PathfindingTests | InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(0) | Passed | 00:00:00.0007440
+BlackThunder.UniEngine.Tests.PathfindingTests | InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(1) | Passed | 00:00:00.0002599
+BlackThunder.UniEngine.Tests.PathfindingTests | InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(2) | Passed | 00:00:00.0000720
+BlackThunder.UniEngine.Tests.PathfindingTests | InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(3) | Passed | 00:00:00.0000570
+BlackThunder.UniEngine.Tests.RouteTests | InvalidArgumentsAndDisposedEditsDoNotChangeEndpoints | Passed | 00:00:00.0008390
+BlackThunder.UniEngine.Tests.PropertyTests | InvalidCopyArgumentsDoNotModifyTheTargetOrStore | Passed | 00:00:00.0014890
+BlackThunder.UniEngine.Tests.RouteTests | InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(0) | Passed | 00:00:00.0015790
+BlackThunder.UniEngine.Tests.RouteTests | InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(1) | Passed | 00:00:00.0004010
+BlackThunder.UniEngine.Tests.RouteTests | InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(2) | Passed | 00:00:00.0001840
+BlackThunder.UniEngine.Tests.RouteTests | InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(3) | Passed | 00:00:00.0000830
+BlackThunder.UniEngine.Tests.RouteTests | InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(4) | Passed | 00:00:00.0000440
+BlackThunder.UniEngine.Tests.RouteTests | InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(5) | Passed | 00:00:00.0000380
+BlackThunder.UniEngine.Tests.PropertyTests | KeysUseValueEqualityAndKeepDifferentTypesDistinct | Passed | 00:00:00.0008080
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | LayeredInterfacesExposeTheSameReferencesWithoutRecursiveGetters | Passed | 00:00:00.0010860
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | LinearQueriesRespectDistanceDirectionAndDegrees(False,Length,2.0f,8.0f,180.0f) | Passed | 00:00:00.0003760
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | LinearQueriesRespectDistanceDirectionAndDegrees(False,Rate,0.2f,8.0f,180.0f) | Passed | 00:00:00.0000200
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | LinearQueriesRespectDistanceDirectionAndDegrees(True,Length,2.0f,2.0f,0.0f) | Passed | 00:00:00.0002870
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | LinearQueriesRespectDistanceDirectionAndDegrees(True,Rate,0.2f,2.0f,0.0f) | Passed | 00:00:00.0000410
+BlackThunder.UniEngine.Tests.PropertyTests | MissingReadsReportAbsenceWithoutChangingOtherEntries | Passed | 00:00:00.0006800
+BlackThunder.UniEngine.Tests.PathfindingTests | MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(0,1) | Passed | 00:00:00.0007490
+BlackThunder.UniEngine.Tests.PathfindingTests | MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(1,1) | Passed | 00:00:00.0002840
+BlackThunder.UniEngine.Tests.PathfindingTests | MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(2,3) | Passed | 00:00:00.0000380
+BlackThunder.UniEngine.Tests.PathfindingTests | MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(3,3) | Passed | 00:00:00.0000260
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("Add") | Passed | 00:00:00.0002650
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("Constructor") | Passed | 00:00:00.0005980
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("ContainsKey") | Passed | 00:00:00.0000570
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("Get") | Passed | 00:00:00.0000630
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("GetAndRemove") | Passed | 00:00:00.0000560
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("IndexerGet") | Passed | 00:00:00.0000710
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("IndexerSet") | Passed | 00:00:00.0000840
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("Remove") | Passed | 00:00:00.0000550
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("SelfKey") | Passed | 00:00:00.0000900
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("TryGet") | Passed | 00:00:00.0000649
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("TypedGet") | Passed | 00:00:00.0000640
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("TypedGetAndRemove") | Passed | 00:00:00.0000570
+BlackThunder.UniEngine.Tests.PropertyTests | NullKeysAreRejectedWithoutChangingTheStore("TypedTryGet") | Passed | 00:00:00.0000620
+BlackThunder.UniEngine.Tests.PropertyTests | NullValuesArePresentForReferenceAndNullableTypes | Passed | 00:00:00.0004310
+BlackThunder.UniEngine.Tests.RouteTests | ObserverExceptionLeavesTheCompletedRouteAndSubscriptionsIntact | Passed | 00:00:00.0006360
+BlackThunder.UniEngine.Tests.PropertyTests | PairContainsAndRemoveRequireBothKeyAndValue(7) | Passed | 00:00:00.0001750
+BlackThunder.UniEngine.Tests.PropertyTests | PairContainsAndRemoveRequireBothKeyAndValue(null) | Passed | 00:00:00.0004050
+BlackThunder.UniEngine.Tests.PathfindingTests | PathAndDartConstructorsRejectBrokenChains | Passed | 00:00:00.0010090
+BlackThunder.UniEngine.Tests.PathfindingTests | PathCopiesItsDartsAndRetainsReferencesAfterSourceChanges | Passed | 00:00:00.0009910
+BlackThunder.UniEngine.Tests.GenericGeometryTests | PositionOnlyImplementationDoesNotRequireRotationOrSegmentBaseClass | Passed | 00:00:00.0008640
+BlackThunder.UniEngine.Tests.NavigationContractsTests | PropertiesAreIndependentAcrossInterfacesAndSurviveOwnerDisposal | Passed | 00:00:00.0055880
+BlackThunder.UniEngine.Tests.NavigationContractsTests | PropertyStorageIsLazyEvenWhenFirstAccessFollowsDisposal(BlackThunder.GeoSystem.Navigation.NavNode) | Passed | 00:00:00.0029250
+BlackThunder.UniEngine.Tests.NavigationContractsTests | PropertyStorageIsLazyEvenWhenFirstAccessFollowsDisposal(BlackThunder.GeoSystem.Navigation.NavSegment) | Passed | 00:00:00.0002110
+BlackThunder.UniEngine.Tests.NavigationContractsTests | PropertyStorageIsLazyEvenWhenFirstAccessFollowsDisposal(BlackThunder.GeoSystem.RouteSystem.Planar.Route) | Passed | 00:00:00.0000300
+BlackThunder.UniEngine.Tests.NavigationTests | PublicContractsHideInternalConnectionMethods | Passed | 00:00:00.0005460
+BlackThunder.UniEngine.Tests.PropertyStateProjectTests | RandomContinuousMutations(0) | Passed | 00:00:01.2051630
+UniTest continuous seed=0 depth=100/100 elapsedMs=1204.075 outcome=Passed
+BlackThunder.UniEngine.Tests.PropertyStateProjectTests | RandomContinuousMutations(1) | Passed | 00:00:01.0013830
+UniTest continuous seed=1 depth=100/100 elapsedMs=1000.683 outcome=Passed
+BlackThunder.UniEngine.Tests.PropertyStateProjectTests | RandomContinuousMutations(2) | Passed | 00:00:01.0528720
+UniTest continuous seed=2 depth=100/100 elapsedMs=1052.305 outcome=Passed
+BlackThunder.UniEngine.Tests.NavigationStateProjectTests | RandomNavigationTransitions(0) | Passed | 00:00:03.3424870
+UniTest continuous seed=0 depth=100/100 elapsedMs=3335.866 outcome=Passed
+BlackThunder.UniEngine.Tests.NavigationStateProjectTests | RandomNavigationTransitions(1) | Passed | 00:00:02.1696640
+UniTest continuous seed=1 depth=100/100 elapsedMs=2167.577 outcome=Passed
+BlackThunder.UniEngine.Tests.NavigationStateProjectTests | RandomNavigationTransitions(2) | Passed | 00:00:02.1332010
+UniTest continuous seed=2 depth=100/100 elapsedMs=2129.093 outcome=Passed
+BlackThunder.UniEngine.Tests.PlanarStateProjectTests | RandomPlanarTransitions(0) | Passed | 00:00:01.1061660
+UniTest continuous seed=0 depth=100/100 elapsedMs=1105.464 outcome=Passed
+BlackThunder.UniEngine.Tests.PlanarStateProjectTests | RandomPlanarTransitions(1) | Passed | 00:00:00.9356460
+UniTest continuous seed=1 depth=100/100 elapsedMs=934.786 outcome=Passed
+BlackThunder.UniEngine.Tests.PlanarStateProjectTests | RandomPlanarTransitions(2) | Passed | 00:00:00.9904080
+UniTest continuous seed=2 depth=100/100 elapsedMs=989.835 outcome=Passed
+BlackThunder.UniEngine.Tests.RouteStateProjectTests | RandomRouteEditingTransitions(0) | Passed | 00:00:02.7534860
+UniTest continuous seed=0 depth=100/100 elapsedMs=2752.474 outcome=Passed
+BlackThunder.UniEngine.Tests.RouteStateProjectTests | RandomRouteEditingTransitions(1) | Passed | 00:00:02.6433100
+UniTest continuous seed=1 depth=100/100 elapsedMs=2642.246 outcome=Passed
+BlackThunder.UniEngine.Tests.RouteStateProjectTests | RandomRouteEditingTransitions(2) | Passed | 00:00:02.9661749
+UniTest continuous seed=2 depth=100/100 elapsedMs=2951.664 outcome=Passed
+BlackThunder.UniEngine.Tests.PathfindingTests | ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(0) | Passed | 00:00:00.0009670
+BlackThunder.UniEngine.Tests.PathfindingTests | ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(1) | Passed | 00:00:00.0002070
+BlackThunder.UniEngine.Tests.PathfindingTests | ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(2) | Passed | 00:00:00.0001180
+BlackThunder.UniEngine.Tests.PathfindingTests | ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(3) | Passed | 00:00:00.0000840
+BlackThunder.UniEngine.Tests.NavigationTests | RejectedConnectionsPreserveTheGraph | Passed | 00:00:00.0010380
+BlackThunder.UniEngine.Tests.PropertyTests | ReleasingReferencesDoesNotDisposePayloads("Clear") | Passed | 00:00:00.0061360
+BlackThunder.UniEngine.Tests.PropertyTests | ReleasingReferencesDoesNotDisposePayloads("Remove") | Passed | 00:00:00.0002660
+BlackThunder.UniEngine.Tests.PropertyTests | ReleasingReferencesDoesNotDisposePayloads("Replace") | Passed | 00:00:00.0000150
+BlackThunder.UniEngine.Tests.RouteTests | ReplacementRebuildsTheWholePathAndPublishesCompletedStateOnce | Passed | 00:00:00.0019530
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | RouteCountsRepeatedSourcesAndClearReleasesOnlyItsReferences | Passed | 00:00:00.0008580
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | RouteQueriesComposeViewsAndLocationDirection(False) | Passed | 00:00:00.0002900
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | RouteQueriesComposeViewsAndLocationDirection(True) | Passed | 00:00:00.0008480
+BlackThunder.UniEngine.Tests.PathfindingTests | SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(0) | Passed | 00:00:00.0010790
+BlackThunder.UniEngine.Tests.PathfindingTests | SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(1) | Passed | 00:00:00.0002620
+BlackThunder.UniEngine.Tests.PathfindingTests | SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(2) | Passed | 00:00:00.0000640
+BlackThunder.UniEngine.Tests.PathfindingTests | SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(3) | Passed | 00:00:00.0000699
+BlackThunder.UniEngine.Tests.PathfindingTests | SeededDirectedGraphsMatchIndependentShortestDistances(0) | Passed | 00:00:00.0073630
+BlackThunder.UniEngine.Tests.PathfindingTests | SeededDirectedGraphsMatchIndependentShortestDistances(1) | Passed | 00:00:00.0204000
+BlackThunder.UniEngine.Tests.PathfindingTests | SeededDirectedGraphsMatchIndependentShortestDistances(2) | Passed | 00:00:00.0037210
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | SegmentPinCanBecomeInvalidAndRecoverAfterSourceChanges | Passed | 00:00:00.0004600
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | ShapeEventsPropagateWhenLengthIsUnchanged | Passed | 00:00:00.0007680
+BlackThunder.UniEngine.Tests.PlanarGeoSystemTests | SourceDisposalPropagatesThroughPinsClipHoldAndRoute | Passed | 00:00:00.0004580
+BlackThunder.UniEngine.Tests.NavigationContractsTests | SourceTraversalDoesNotPropagateShapeOrOverrideIndependentOptions | Passed | 00:00:00.0022710
+BlackThunder.UniEngine.Tests.PropertyTests | SubjectPayloadsRemainIndependentAcrossFailedAndSuccessfulConsumption | Passed | 00:00:00.0005590
+BlackThunder.UniEngine.Tests.RouteTests | SubscriptionFailureRollsBackOnlyNewSubscriptions | Passed | 00:00:00.0005599
+BlackThunder.UniEngine.Tests.NavigationContractsTests | TraversalChangesNotifyOnceAfterStateUpdateAndRejectInvalidEdits(False) | Passed | 00:00:00.0023770
+BlackThunder.UniEngine.Tests.NavigationContractsTests | TraversalChangesNotifyOnceAfterStateUpdateAndRejectInvalidEdits(True) | Passed | 00:00:00.0003790
+BlackThunder.UniEngine.Tests.PathfindingTests | TraversalOptionsControlBothDirectionsWithoutDisconnecting(0) | Passed | 00:00:00.0007580
+BlackThunder.UniEngine.Tests.PathfindingTests | TraversalOptionsControlBothDirectionsWithoutDisconnecting(1) | Passed | 00:00:00.0003010
+BlackThunder.UniEngine.Tests.PathfindingTests | TraversalOptionsControlBothDirectionsWithoutDisconnecting(2) | Passed | 00:00:00.0001100
+BlackThunder.UniEngine.Tests.PathfindingTests | TraversalOptionsControlBothDirectionsWithoutDisconnecting(3) | Passed | 00:00:00.0000770
+BlackThunder.UniEngine.Tests.PropertyTests | TypedReadsAcceptAssignableTypesAndNullableValues | Passed | 00:00:00.0002310
+BlackThunder.UniEngine.Tests.PropertyTests | TypeMismatchThrowsAndPreservesTheEntry("42") | Passed | 00:00:00.0001880
+BlackThunder.UniEngine.Tests.PropertyTests | TypeMismatchThrowsAndPreservesTheEntry(42L) | Passed | 00:00:00.0000410
+BlackThunder.UniEngine.Tests.PropertyTests | TypeMismatchThrowsAndPreservesTheEntry(null) | Passed | 00:00:00.0004500
+BlackThunder.UniEngine.Tests.RouteTests | ViewEditingDropsStandaloneAnchorsAndReferenceCountsRepeatedSources | Passed | 00:00:00.0005999
+BlackThunder.UniEngine.Tests.PathfindingTests | WeightedSearchRejectsInvalidLengthsAndAccumulatesBeyondFloatRange(2) | Passed | 00:00:00.0007090
+BlackThunder.UniEngine.Tests.PathfindingTests | WeightedSearchRejectsInvalidLengthsAndAccumulatesBeyondFloatRange(3) | Passed | 00:00:00.0002560

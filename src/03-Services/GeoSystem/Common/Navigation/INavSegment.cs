@@ -3,13 +3,14 @@ using BlackThunder.UniEngine.Core;
 
 namespace BlackThunder.GeoSystem.Navigation
 {
-    public interface IReadOnlyNavSegment : IEventSubject<int>
+    public interface IReadOnlyNavSegment : IEventSubject<int>, IPropertySubject
     {
         IReadOnlyNavNode From { get; }
         IReadOnlyNavNode To { get; }
         IEnumerable<IReadOnlyNavNode> Nodes { get; }
         bool IsIsolated { get; }
         float Length { get; }
+        TraversalOptions TraversalOptions { get; }
         bool IsFromNode(IReadOnlyNavNode node);
         IReadOnlyNavNode GetCounterNode(IReadOnlyNavNode node);
         string FormatLogMessage(string message);
@@ -17,6 +18,8 @@ namespace BlackThunder.GeoSystem.Navigation
 
     public interface INavSegment : IReadOnlyNavSegment
     {
+        new TraversalOptions TraversalOptions { get; set; }
+        TraversalOptions IReadOnlyNavSegment.TraversalOptions => TraversalOptions;
         new INavNode From { get; }
         new INavNode To { get; }
         new IEnumerable<INavNode> Nodes { get; }

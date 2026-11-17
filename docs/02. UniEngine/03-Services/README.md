@@ -22,6 +22,6 @@ UniEngine의 공통 기능을 조합하여 특정 응용 문제를 해결하는 
 | Mesh 편집 | [MEP](MEP.md) | Mesh Extension Package |
 | 그래프 모델링 | [GeoSystem](GeoSystem/README.md) | Navigation 연결, 평면 공간 계산과 경로 참조 |
 
-StateMachines.Usm은 Node·Work·Transitioner를 직접 조립하여 FSM·BT·Parallel을 구성하고 외부 호출로 실행한다. EventStream과 독립적이다. StateMachines.Scp는 클립·조건·Sequence·Delay로 재생 흐름을 구성하는 기존 구현을 보존하며, 정식 설계는 후속 범위이다. GeoSystem은 Navigation·평면 직선·Pin·Clip·Route를 제공하며, PolySegment와 경로 탐색은 후속 범위이다. MEP는 후속 구현 범위이다.
+StateMachines.Usm은 Node·Work·Transitioner를 직접 조립하여 FSM·BT·Parallel을 구성하고 외부 호출로 실행한다. EventStream과 독립적이다. StateMachines.Scp는 클립·조건·Sequence·Delay로 재생 흐름을 구성하는 기존 구현을 보존하며, 정식 설계는 후속 범위이다. GeoSystem은 Navigation·평면 직선·PolySegment·Pin·Clip·Route와 경로 탐색을 제공한다. PolySegment는 FreeHandle·Bezier2·Bezier3를 지원하고 Circular·Offset은 후속 범위이다. MEP는 후속 구현 범위이다.
 
 [전체 계층](../README.md)

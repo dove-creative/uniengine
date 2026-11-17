@@ -24,7 +24,7 @@ namespace BlackThunder.GeoSystem.RouteSystem.Planar
             if (anchor.IsDisposed || ReferenceEquals(anchor, this))
                 throw new ArgumentException("The anchor must be a live, different node.", nameof(anchor));
             if (ReferenceEquals(anchor, AnchorNode)) return;
-            GeoDependency.Validate(this, anchor);
+            Geometry.GeoDependency.Validate(this, anchor);
 
             AnchorNode?.EventHub.Disconnect(this);
             AnchorNode = anchor;

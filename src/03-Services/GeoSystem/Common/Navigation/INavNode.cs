@@ -3,7 +3,7 @@ using BlackThunder.UniEngine.Core;
 
 namespace BlackThunder.GeoSystem.Navigation
 {
-    public interface IReadOnlyNavNode : IEventSubject<int>
+    public interface IReadOnlyNavNode : IEventSubject<int>, IPropertySubject
     {
         IEnumerable<IReadOnlyNavSegment> Segments { get; }
         bool IsIsolated { get; }
