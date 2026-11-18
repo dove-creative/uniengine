@@ -11,6 +11,7 @@ namespace BlackThunder.GeoSystem.Navigation
         public IReadOnlyList<INavSegment> Segments { get; }
         public bool IsIsolated => _segments.Count == 0;
         IEnumerable<INavSegment> INavNode.Segments => Segments;
+        IEnumerable<IReadOnlyNavSegment> IReadOnlyNavNode.Segments => Segments;
 
         // Property
         public Property Property => _property ??= new();

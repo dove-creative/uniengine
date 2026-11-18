@@ -23,9 +23,6 @@ namespace BlackThunder.GeoSystem.Navigation
         new INavNode From { get; }
         new INavNode To { get; }
         new IEnumerable<INavNode> Nodes { get; }
-        IReadOnlyNavNode IReadOnlyNavSegment.From => From;
-        IReadOnlyNavNode IReadOnlyNavSegment.To => To;
-        IEnumerable<IReadOnlyNavNode> IReadOnlyNavSegment.Nodes => Nodes;
 
         void ConnectNode(ConnectionSide side, INavNode node);
         void DisconnectNode(ConnectionSide side);

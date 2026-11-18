@@ -171,7 +171,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void DistanceHeuristicReturnsTypedPlanarReferencesThroughBothInterfaces()
+        public void AStarAndAdaptedDijkstraReturnTheSamePlanarReferences()
         {
             using var from = new Planar.Node(Vector2.Zero);
             using var near = new Planar.Node(Vector2.UnitX);
@@ -184,11 +184,38 @@ namespace BlackThunder.UniEngine.Tests
             IPathfinder<Vector2> typed = new AStarPathfinder<Vector2>(Vector2.Distance);
             Assert.That(typed.TryPathfind(from, new[] { goal, far }, out var path), Is.True);
             Assert.That(path.Arrows.Select(arrow => arrow.Segment), Is.EqualTo(new[] { c, d }));
-            IPathfinder raw = typed;
-            Assert.That(raw.TryPathfind(from, new[] { goal, far }, out var untyped), Is.True);
-            Assert.That(untyped, Is.InstanceOf<Path<Vector2>>());
-            Assert.That(untyped.From, Is.SameAs(path.From));
-            Assert.That(untyped.Arrows.Select(arrow => arrow.Segment), Is.EqualTo(new[] { c, d }));
+            var adapted = new PathfinderAdapter<Vector2>(new DijkstraPathfinder());
+            Assert.That(adapted.TryPathfind(from, new[] { goal, far }, out var adaptedPath), Is.True);
+            Assert.That(adaptedPath.From, Is.SameAs(path.From));
+            Assert.That(adaptedPath.Arrows.Select(arrow => arrow.Segment), Is.EqualTo(new[] { c, d }));
+        }
+
+        [Test]
+        public void PlanarRouteFindsTheOriginalEndpointsThroughEveryPathfinder()
+        {
+            using var from = new Planar.Node(Vector2.Zero);
+            using var to = new Planar.Node(Vector2.UnitX);
+            using var track = new Planar.LinearSegment(from, to);
+            IPathfinder<Vector2>[] finders =
+            {
+                new AStarPathfinder<Vector2>(Vector2.Distance),
+                new PathfinderAdapter<Vector2>(new BfsPathfinder()),
+                new PathfinderAdapter<Vector2>(new DfsPathfinder()),
+                new PathfinderAdapter<Vector2>(new DijkstraPathfinder()),
+            };
+
+            foreach (var finder in finders)
+            {
+                using var route = new Route(finder);
+                route.ConnectNode(ConnectionSide.From, from);
+                route.ConnectNode(ConnectionSide.To, to);
+                Assert.That(route.Views.Single().Source, Is.SameAs(track));
+                Assert.That(route.Length, Is.EqualTo(1f));
+                Assert.That(((IReadOnlyNavNode)from).Segments.Single(), Is.SameAs(track));
+                Assert.That(((IReadOnlySegment)track).From, Is.SameAs(from));
+                Assert.That(((IReadOnlySegment<Vector2>)route).To, Is.SameAs(to));
+                Assert.That(((IReadOnlyNavSegment)route).Nodes, Is.EquivalentTo(new[] { from, to }));
+            }
         }
 
         private class Payload : IDisposable

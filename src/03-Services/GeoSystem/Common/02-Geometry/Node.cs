@@ -21,6 +21,7 @@ namespace BlackThunder.GeoSystem.Geometry
             }
         }
         public new IEnumerable<ISegment<TPosition>> Segments => base.Segments.Cast<ISegment<TPosition>>();
+        IEnumerable<IReadOnlySegment<TPosition>> IReadOnlyNode<TPosition>.Segments => Segments;
 
         // Internal
         private TPosition _position;

@@ -36,6 +36,9 @@ namespace BlackThunder.GeoSystem.RouteSystem
             }
         }
         public bool IsIsolated => _views.Count == 0 && _from == null && _to == null;
+        IReadOnlyNode IReadOnlySegment.From => From;
+        IReadOnlyNode IReadOnlySegment.To => To;
+        IEnumerable<IReadOnlyNode> IReadOnlySegment.Nodes => Nodes;
         public float Length { get; private set; }
 
         // Property
@@ -62,7 +65,8 @@ namespace BlackThunder.GeoSystem.RouteSystem
         internal TerminalPath TerminalPath => _terminalPath ??= new TerminalPath(this);
         internal virtual float TerminalEpsilon => BlackThunder.UniEngine.Mathematics.UniMath.Epsilon;
         private TerminalPath _terminalPath;
-        private readonly IPathfinder _pathfinder;
+        protected delegate bool FindPath(INode from, INode to, out Navigation.Path path);
+        private readonly FindPath _findPath;
         private readonly EventHub<int> _eventHub;
         private readonly List<ISegmentView> _views = new();
         private Dictionary<ISegment, int> _sources = new(new ReferenceComparer<ISegment>());
@@ -97,11 +101,20 @@ namespace BlackThunder.GeoSystem.RouteSystem
         // Content --------------------
         // Construction
         public Route() : this(new DijkstraPathfinder()) { }
-        public Route(IPathfinder pathfinder)
+        public Route(IPathfinder pathfinder) : this(Bind(pathfinder)) { }
+
+        protected Route(FindPath findPath)
         {
-            _pathfinder = pathfinder ?? throw new ArgumentNullException(nameof(pathfinder));
+            _findPath = findPath ?? throw new ArgumentNullException(nameof(findPath));
             Views = _views.AsReadOnly();
             _eventHub = new EventHub<int>(this);
+        }
+
+        private static FindPath Bind(IPathfinder pathfinder)
+        {
+            if (pathfinder == null) throw new ArgumentNullException(nameof(pathfinder));
+            return (INode from, INode to, out Navigation.Path path) =>
+                pathfinder.TryPathfind(from, new[] { to }, out path);
         }
 
         // Endpoints
@@ -124,7 +137,7 @@ namespace BlackThunder.GeoSystem.RouteSystem
             var views = new List<ISegmentView>();
             if (from != null && to != null && !ReferenceEquals(from, to))
             {
-                if (!_pathfinder.TryPathfind(from, new[] { to }, out var path)) return false;
+                if (!_findPath(from, to, out var path)) return false;
                 views = ValidatePath(path, from, to);
             }
 

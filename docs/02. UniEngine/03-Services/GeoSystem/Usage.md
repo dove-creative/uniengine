@@ -134,6 +134,7 @@ Route의 끝점을 연결하면 경로를 찾아 Views로 반영한다. 경로 �
 using System.Numerics;
 using BlackThunder.GeoSystem.Geometry.Planar;
 using BlackThunder.GeoSystem.Navigation;
+using BlackThunder.GeoSystem.Geometry;
 using Route = BlackThunder.GeoSystem.RouteSystem.Planar.Route;
 
 using var a = new Node(Vector2.Zero);
@@ -154,7 +155,7 @@ journey.DisconnectNode(ConnectionSide.To);
 journey.ConnectNode(ConnectionSide.To, b);
 // The entire a-to-b route is searched again.
 
-using var custom = new Route(new DijkstraPathfinder());
+using var custom = new Route(new PathfinderAdapter<Vector2>(new DijkstraPathfinder()));
 using var common = new BlackThunder.GeoSystem.RouteSystem.Route(); // Defaults to DijkstraPathfinder.
 ```
 

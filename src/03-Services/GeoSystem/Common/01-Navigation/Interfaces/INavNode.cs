@@ -13,7 +13,6 @@ namespace BlackThunder.GeoSystem.Navigation
     public interface INavNode : IReadOnlyNavNode
     {
         new IEnumerable<INavSegment> Segments { get; }
-        IEnumerable<IReadOnlyNavSegment> IReadOnlyNavNode.Segments => Segments;
 
         void ConnectSegment(INavSegment segment, ConnectionSide side);
         void DisconnectSegment(INavSegment segment);

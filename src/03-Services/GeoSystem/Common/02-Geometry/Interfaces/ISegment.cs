@@ -18,15 +18,9 @@ namespace BlackThunder.GeoSystem.Geometry
         new INode From { get; }
         new INode To { get; }
         new IEnumerable<INode> Nodes { get; }
-        IReadOnlyNode IReadOnlySegment.From => From;
-        IReadOnlyNode IReadOnlySegment.To => To;
-        IEnumerable<IReadOnlyNode> IReadOnlySegment.Nodes => Nodes;
         INavNode INavSegment.From => From;
         INavNode INavSegment.To => To;
         IEnumerable<INavNode> INavSegment.Nodes => Nodes;
-        IReadOnlyNavNode IReadOnlyNavSegment.From => From;
-        IReadOnlyNavNode IReadOnlyNavSegment.To => To;
-        IEnumerable<IReadOnlyNavNode> IReadOnlyNavSegment.Nodes => Nodes;
     }
 
     public interface IReadOnlySegment<TPosition> : IReadOnlySegment
@@ -37,9 +31,6 @@ namespace BlackThunder.GeoSystem.Geometry
         IReadOnlyNode IReadOnlySegment.From => From;
         IReadOnlyNode IReadOnlySegment.To => To;
         IEnumerable<IReadOnlyNode> IReadOnlySegment.Nodes => Nodes;
-        IReadOnlyNavNode IReadOnlyNavSegment.From => From;
-        IReadOnlyNavNode IReadOnlyNavSegment.To => To;
-        IEnumerable<IReadOnlyNavNode> IReadOnlyNavSegment.Nodes => Nodes;
 
         bool TryGetPosition(Location location, out TPosition position, float? epsilon = null);
     }
@@ -49,21 +40,9 @@ namespace BlackThunder.GeoSystem.Geometry
         new INode<TPosition> From { get; }
         new INode<TPosition> To { get; }
         new IEnumerable<INode<TPosition>> Nodes { get; }
-        IReadOnlyNode<TPosition> IReadOnlySegment<TPosition>.From => From;
-        IReadOnlyNode<TPosition> IReadOnlySegment<TPosition>.To => To;
-        IEnumerable<IReadOnlyNode<TPosition>> IReadOnlySegment<TPosition>.Nodes => Nodes;
         INode ISegment.From => From;
         INode ISegment.To => To;
         IEnumerable<INode> ISegment.Nodes => Nodes;
-        IReadOnlyNode IReadOnlySegment.From => From;
-        IReadOnlyNode IReadOnlySegment.To => To;
-        IEnumerable<IReadOnlyNode> IReadOnlySegment.Nodes => Nodes;
-        INavNode INavSegment.From => From;
-        INavNode INavSegment.To => To;
-        IEnumerable<INavNode> INavSegment.Nodes => Nodes;
-        IReadOnlyNavNode IReadOnlyNavSegment.From => From;
-        IReadOnlyNavNode IReadOnlyNavSegment.To => To;
-        IEnumerable<IReadOnlyNavNode> IReadOnlyNavSegment.Nodes => Nodes;
     }
 
     public interface IReadOnlySegment<TPosition, TRotation> : IReadOnlySegment<TPosition>
