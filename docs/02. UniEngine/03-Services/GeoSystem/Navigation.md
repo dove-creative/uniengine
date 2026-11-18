@@ -31,7 +31,7 @@ IReadOnlyNavSegment는 TraversalOptions를 조회하고 INavSegment는 이를 �
 
 미정의 비트는 ArgumentOutOfRangeException이고 폐기 이후 설정은 ObjectDisposedException이다. 같은 값의 재설정에는 알리지 않는다. 옵션은 연결 편집이나 TryGetPosition·TryGetTransform을 제한하지 않는다. Clip·Route는 원본과 독립된 옵션을 가진다.
 
-IPathfinder.TryPathfind는 출발 노드와 목표 목록을 받아 목표 중 하나까지의 Path를 반환한다. Navigation.Pathfinders.Bfs는 최소 구간 수, Dfs는 인접 열거 순서의 첫 경로, Dijkstra는 최소 Length 합을 선택한다. 각 탐색은 현재 끝점 관계와 통행 옵션을 확인한다. 결과·예외·실행 계약은 [경로 탐색](Pathfinding.md)을 따른다.
+IPathfinder.TryPathfind는 출발 노드와 목표 목록을 받아 목표 중 하나까지의 Path를 반환한다. Navigation.BfsPathfinder는 최소 구간 수, DfsPathfinder는 인접 열거 순서의 첫 경로, DijkstraPathfinder는 최소 Length 합을 선택한다. 각 탐색은 현재 끝점 관계와 통행 옵션을 확인한다. 결과·예외·실행 계약은 [경로 탐색](Pathfinding.md)을 따른다.
 
 ## 변경과 알림
 

@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlackThunder.GeoSystem.Geometry;
-using BlackThunder.GeoSystem.Geometry.Pathfinders;
 using BlackThunder.GeoSystem.Navigation;
-using BlackThunder.GeoSystem.Navigation.Pathfinders;
 using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
 
@@ -222,7 +220,7 @@ namespace BlackThunder.UniEngine.Tests
             graph.Connect(2, 1, 1, TraversalOptions.Forward);
             graph.Connect(1, 3, 3, TraversalOptions.Forward);
             var estimates = new[] { 0f, 0f, 4f, 0f };
-            var search = new AStar<int>((position, _) => estimates[position]);
+            var search = new AStarPathfinder<int>((position, _) => estimates[position]);
             Assert.That(search.TryPathfind(graph.Nodes[0], new[] { graph.Nodes[3] }, out var path), Is.True);
             Assert.That(path.Arrows.Select(arrow => arrow.To.Position), Is.EqualTo(new[] { 2, 1, 3 }));
             Assert.That(PathCost(path), Is.EqualTo(5));
@@ -237,16 +235,16 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph(2);
             graph.Connect(0, 1);
-            Assert.Throws<ArgumentNullException>(() => new AStar<int>(null));
+            Assert.Throws<ArgumentNullException>(() => new AStarPathfinder<int>(null));
             foreach (var invalid in new[] { -1f, float.NaN, float.PositiveInfinity })
             {
-                var search = new AStar<int>((_, _) => invalid);
+                var search = new AStarPathfinder<int>((_, _) => invalid);
                 Assert.Throws<InvalidOperationException>(() =>
                     search.TryPathfind(graph.Nodes[0], new[] { graph.Nodes[1] }, out _));
                 Assert.That(search.TryPathfind(graph.Nodes[0], new[] { graph.Nodes[0] }, out var path), Is.True);
                 Assert.That(path.Arrows, Is.Empty);
             }
-            IPathfinder untyped = new AStar<int>((_, _) => 0);
+            IPathfinder untyped = new AStarPathfinder<int>((_, _) => 0);
             using var foreign = new NavNode();
             Assert.Throws<ArgumentException>(() => untyped.TryPathfind(foreign, new[] { graph.Nodes[1] }, out _));
             Assert.Throws<ArgumentException>(() => untyped.TryPathfind(graph.Nodes[0], new[] { foreign }, out _));
@@ -327,9 +325,9 @@ namespace BlackThunder.UniEngine.Tests
                 var scale = Enumerable.Range(0, 6).Select(_ => random.NextDouble()).ToArray();
                 IPathfinder[] searches =
                 {
-                    new Dijkstra(),
-                    new AStar<int>((_, _) => 0f),
-                    new AStar<int>((a, b) => double.IsInfinity(distances[a, b])
+                    new DijkstraPathfinder(),
+                    new AStarPathfinder<int>((_, _) => 0f),
+                    new AStarPathfinder<int>((a, b) => double.IsInfinity(distances[a, b])
                         ? 0f : (float)(distances[a, b] * scale[a] * 0.5)),
                 };
                 foreach (var search in searches)
@@ -359,7 +357,8 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph(10000);
             for (int i = 1; i < graph.Nodes.Count; i++) graph.Connect(i - 1, i, 1, TraversalOptions.Forward);
-            Assert.That(new Dfs().TryPathfind(graph.Nodes[0], new[] { graph.Nodes.Last() }, out var path), Is.True);
+            Assert.That(new DfsPathfinder().TryPathfind(
+                graph.Nodes[0], new[] { graph.Nodes.Last() }, out var path), Is.True);
             Assert.That(path.Arrows.Count, Is.EqualTo(9999));
         }
 
@@ -430,10 +429,10 @@ namespace BlackThunder.UniEngine.Tests
 
         private static IPathfinder CreateSearch(int algorithm) => algorithm switch
         {
-            0 => new Bfs(),
-            1 => new Dfs(),
-            2 => new Dijkstra(),
-            3 => new AStar<int>((_, _) => 0f),
+            0 => new BfsPathfinder(),
+            1 => new DfsPathfinder(),
+            2 => new DijkstraPathfinder(),
+            3 => new AStarPathfinder<int>((_, _) => 0f),
             _ => throw new ArgumentOutOfRangeException(nameof(algorithm)),
         };
 

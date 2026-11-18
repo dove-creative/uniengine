@@ -16,7 +16,8 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
         public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                desktop.MainWindow = new DemoWindow();
+                desktop.MainWindow = desktop.Args is { Length: 1 } && desktop.Args[0] == "tracer"
+                    ? new TracerWindow() : new DemoWindow();
             base.OnFrameworkInitializationCompleted();
         }
     }

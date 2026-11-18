@@ -94,7 +94,7 @@ Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니
 
 ## 시각화 예시
 
-[GeoSystem Lab](03-Services/GeoSystem/README.md)은 Avalonia 데스크톱 창에서 노드를 드래그하고 Pin·Clip·Route·Hold의 변화와 경로 위 이동을 확인한다. UI 의존성은 예제 프로젝트에만 있으며 UniEngine 본체는 POCO로 유지한다.
+[GeoSystem Lab](03-Services/GeoSystem/README.md)은 노드를 드래그해 Pin·Clip·Route·Hold의 변화를 확인한다. Tracer 비교 창에서는 RouteBased와 Absolute의 위치, Route 해제 후의 상태와 Wheel 분기 선택을 살펴본다.
 
 ```powershell
 dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -c Release

@@ -16,6 +16,7 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
 
         // Internal
         private readonly GeoDemoScene _scene;
+        private readonly TracerDemoScene _tracers;
         private Point _origin;
         private double _scale = 45d;
         private bool _initialized;
@@ -31,13 +32,16 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
         private static readonly IBrush _route = new SolidColorBrush(Color.Parse("#64CDE5"));
         private static readonly IBrush _clip = new SolidColorBrush(Color.Parse("#F5B866"));
         private static readonly IBrush _hold = new SolidColorBrush(Color.Parse("#BFA3FF"));
+        private static readonly IBrush _absolute = new SolidColorBrush(Color.Parse("#FFBD70"));
+        private static readonly IBrush _relative = new SolidColorBrush(Color.Parse("#93F0BC"));
         private static readonly Typeface _typeface = new("Segoe UI");
 
 
         // Content
-        public GraphViewport(GeoDemoScene scene)
+        public GraphViewport(GeoDemoScene scene, TracerDemoScene tracers = null)
         {
             _scene = scene;
+            _tracers = tracers;
             Focusable = true;
             ClipToBounds = true;
             MinWidth = 440;
@@ -57,6 +61,11 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
             {
                 min = Vector2.Min(min, node.Position);
                 max = Vector2.Max(max, node.Position);
+            }
+            if (_tracers != null)
+            {
+                min = Vector2.Min(min, Vector2.Min(_tracers.Bend.Position, _tracers.BranchEnd.Position));
+                max = Vector2.Max(max, Vector2.Max(_tracers.Bend.Position, _tracers.BranchEnd.Position));
             }
             var center = (min + max) / 2f;
             var width = Math.Max(1d, max.X - min.X);
@@ -93,7 +102,17 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
                 Label(context, $"S{i + 1}  {segment.Length:F2}", middle + new Vector(10d, -28d), _muted, 12d);
             }
 
-            if (_scene.Clip.IsValid)
+            if (_tracers != null)
+            {
+                var branchPen = new Pen(_muted, 3d);
+                var bend = ToScreen(_tracers.Bend.Position);
+                var end = ToScreen(_tracers.BranchEnd.Position);
+                context.DrawLine(branchPen, ToScreen(_scene.Nodes[2].Position), bend);
+                context.DrawLine(branchPen, bend, end);
+                context.DrawEllipse(_background, new Pen(_text, 2d), end, 11d, 11d);
+                Label(context, "E", end + new Vector(-4d, -9d), _text, 12d);
+            }
+            else if (_scene.Clip.IsValid)
             {
                 context.DrawLine(
                     new Pen(_clip, 8d),
@@ -104,8 +123,11 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
                 DrawArrow(context, ToScreen(middle), Math.Atan2(-direction.Y, direction.X), _clip, 11d);
             }
 
-            if (_scene.ClipStart.IsValid) DrawPin(context, _scene.ClipStart.Position, "From pin", -36d);
-            if (_scene.ClipEnd.IsValid) DrawPin(context, _scene.ClipEnd.Position, "To pin", 14d);
+            if (_tracers == null)
+            {
+                if (_scene.ClipStart.IsValid) DrawPin(context, _scene.ClipStart.Position, "From pin", -36d);
+                if (_scene.ClipEnd.IsValid) DrawPin(context, _scene.ClipEnd.Position, "To pin", 14d);
+            }
 
             for (var i = 0; i < _scene.Nodes.Count; i++)
             {
@@ -121,7 +143,14 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
                     11d);
             }
 
-            if (_scene.TryGetPose(out var pose))
+            if (_tracers != null)
+            {
+                if (_tracers.Relative.TryGetTransform(out var relative, out _))
+                    context.DrawEllipse(null, new Pen(_relative, 3d), ToScreen(relative), 14d, 14d);
+                if (_tracers.Absolute.TryGetTransform(out var absolute, out var rotation))
+                    DrawArrow(context, ToScreen(absolute), -rotation * Math.PI / 180d, _absolute, 11d);
+            }
+            else if (_scene.TryGetPose(out var pose))
             {
                 var point = ToScreen(pose.Position);
                 context.DrawEllipse(null, new Pen(_hold, 2d), ToScreen(_scene.Hold.Position), 18d, 18d);
@@ -245,6 +274,7 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
         {
             base.OnKeyDown(e);
             if (e.Key == Key.F) FitToScene();
+            else if (e.Key == Key.Space && _tracers != null) _tracers.Move(1f);
             else if (e.Key == Key.Space) _scene.SetPlaying(!_scene.IsPlaying);
             else return;
             e.Handled = true;

@@ -1,0 +1,67 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using BlackThunder.GeoSystem.Geometry.Planar;
+using BlackThunder.GeoSystem.Navigation;
+
+namespace BlackThunder.GeoSystem.RouteSystem.Planar
+{
+    public class NodePin : NavNode, INode, INodePin, IPin
+    {
+        // Front
+        public Vector2 Position { get; protected set; }
+        public new IEnumerable<ISegment> Segments => base.Segments.Cast<ISegment>();
+        public IReadOnlyNode AnchorNode { get; private set; }
+        public bool IsValid => !IsDisposed && AnchorNode != null && !AnchorNode.IsDisposed
+            && (AnchorNode is not RouteSystem.IPin pin || pin.IsValid);
+        Geometry.IReadOnlyNode INodePin.AnchorNode => AnchorNode;
+
+
+        // Content
+        public NodePin() { }
+        public NodePin(IReadOnlyNode anchor) => Connect(anchor);
+
+        protected override void OnSegmentConnecting(INavSegment segment)
+        {
+            if (segment is not ISegment)
+                throw new ArgumentException("A planar node requires a planar segment.", nameof(segment));
+        }
+
+        public void Connect(IReadOnlyNode anchor)
+        {
+            ThrowIfDisposed();
+            if (anchor == null) throw new ArgumentNullException(nameof(anchor));
+            if (anchor.IsDisposed || ReferenceEquals(anchor, this))
+                throw new ArgumentException("The anchor must be a live, different node.", nameof(anchor));
+            if (ReferenceEquals(anchor, AnchorNode)) return;
+            Geometry.GeoDependency.Validate(this, anchor);
+
+            AnchorNode?.EventHub.Disconnect(this);
+            AnchorNode = anchor;
+            anchor.EventHub.Connect(this)
+                .OnUpdatedWhere(events => (events & (int)GeoEvents.Shape) != 0, UpdatePosition)
+                .OnDisposing(Dispose);
+            UpdatePosition();
+        }
+
+        void INodePin.Connect(Geometry.IReadOnlyNode anchor) => Connect(
+            anchor as IReadOnlyNode ?? throw new ArgumentException("A planar anchor is required.", nameof(anchor)));
+
+        public void Disconnect()
+        {
+            if (AnchorNode == null) return;
+            AnchorNode.EventHub.Disconnect(this);
+            AnchorNode = null;
+            OnUpdated((int)GeoEvents.Shape);
+        }
+
+        private void UpdatePosition()
+        {
+            Position = AnchorNode.Position;
+            OnUpdated((int)GeoEvents.Shape);
+        }
+
+        protected override void OnDisposing() => Disconnect();
+    }
+}

@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using BlackThunder.GeoSystem.RouteSystem;
 
 namespace BlackThunder.UniEngine.Samples.GeoSystem
 {
@@ -46,6 +47,46 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
             scene.Dispose();
             Require(route.IsDisposed && hold.IsDisposed, "scene disposal releases owned objects");
             Console.WriteLine("GeoSystem scene verification passed (17 checks).");
+            VerifyTracers();
+        }
+
+        private static void VerifyTracers()
+        {
+            using var scene = new TracerDemoScene();
+            Require(scene.Relative.State == TracerState.Tracking && scene.Absolute.State == TracerState.Tracking,
+                "both tracers start tracking");
+            Require(scene.Absolute.TryGetTransform(out var start, out _)
+                && scene.Relative.TryGetTransform(out var same, out _) && Vector2.Distance(same, start) < 0.0001f,
+                "the two markers start together");
+            scene.Graph.MoveNode(0, scene.Graph.Nodes[0].Position - new Vector2(1f, 0f));
+            Require(scene.Absolute.TryGetTransform(out var anchored, out _) && Vector2.Distance(start, anchored) < 0.0001f
+                && scene.Relative.TryGetTransform(out var relative, out _) && Vector2.Distance(start, relative) > 0.1f,
+                "editing the preceding edge separates the two position sources");
+            scene.Place();
+            scene.ReserveBranch();
+            scene.Detach();
+            Require(scene.Relative.State == TracerState.Derailed && scene.Absolute.State == TracerState.Rolling,
+                "detaching separates Derailed and Rolling");
+            scene.SetFailureOption(true);
+            scene.Move(1f);
+            Require(scene.AbsoluteMove == (false, 1f) && scene.Absolute.Wheel.ReservedRoutes.Count == 1,
+                "TrackingFailure preserves the position, request distance and reservation");
+            scene.SetFailureOption(false);
+            scene.Move(1f);
+            Require(scene.RelativeMove == (false, 1f) && scene.AbsoluteMove == (true, 0f)
+                && scene.Absolute.Wheel.ReservedRoutes.Count == 1, "only the rolling tracer moves before the junction");
+            scene.Move(2f);
+            Require(ReferenceEquals(scene.Absolute.Segment, scene.Branch) && scene.Absolute.Wheel.ReservedRoutes.Count == 0,
+                "crossing C consumes index one and enters the polyline");
+            scene.Move(20f);
+            Require(scene.AbsoluteMove.Value.Remaining > 0f && scene.Absolute.TryGetTransform(out var end, out _)
+                && Vector2.Distance(end, scene.BranchEnd.Position) < 0.0001f, "the polyline ends at E with excess distance");
+            scene.Place();
+            scene.Detach();
+            scene.Move(3f);
+            Require(ReferenceEquals(scene.Absolute.Segment, scene.Graph.Segments[2]),
+                "without a reservation the smallest turn leads to D");
+            Console.WriteLine("Tracer and Wheel comparison passed (9 checks).");
         }
 
         private static void Require(bool condition, string contract)

@@ -71,8 +71,8 @@ Parallel의 두 자식은 같은 input을 받는다. 완료된 fast는 두 번�
 
 ## 관련 문서
 
-- [USM 설계](../../../../docs/02.%20UniEngine/03-Services/StateMachines/Usm.md)
-- [USM 사용 예제](../../../../docs/02.%20UniEngine/03-Services/StateMachines/Usm%20Usage.md)
+- [USM 설계](../../../../docs/02.%20UniEngine/03-Services/StateMachines/Usm/README.md)
+- [USM 사용 예제](../../../../docs/02.%20UniEngine/03-Services/StateMachines/Usm/Usage.md)
 - [예시 코드](UsmSample.cs)
 - [예시 목록](../../../README.md)
 

@@ -8,6 +8,8 @@ RouteSystem은 원본 그래프의 특정 위치와 부분 구간을 참조하�
 - Clip
 - SegmentView와 Route
 - Route 끝점 편집
+- 말단 조회와 Tracer
+- Wheel과 분기 예약
 - 통신과 수명
 
 ## Pin과 Hold
@@ -44,11 +46,11 @@ IRoute는 `bool TryConnectNode(ConnectionSide side, INavNode node)`를 제공한
 
 | 생성자 | 탐색기 선택 |
 | --- | --- |
-| RouteSystem.Route() | Dijkstra |
-| RouteSystem.Planar.Route() | AStar&lt;Vector2&gt;(Vector2.Distance) |
+| RouteSystem.Route() | DijkstraPathfinder |
+| RouteSystem.Planar.Route() | AStarPathfinder&lt;Vector2&gt;(Vector2.Distance) |
 | 각 Route(IPathfinder) | 전달한 탐색기를 그대로 사용, null 거부 |
 
-기본 제공자는 생성자에서 선택하며 노드 타입을 보고 실행 중 탐색기를 바꾸지 않는다. Planar 기본 A*의 최단 경로 보장에는 거리 휴리스틱이 실제 남은 비용을 과대평가하지 않아야 한다는 조건이 있다. 거리보다 작은 비용의 사용자 구간을 사용하면 조건에 맞는 탐색기나 Dijkstra를 명시적으로 전달한다.
+기본 제공자는 생성자에서 선택하며 노드 타입을 보고 실행 중 탐색기를 바꾸지 않는다. Planar 기본 A*의 최단 경로 보장에는 거리 휴리스틱이 실제 남은 비용을 과대평가하지 않아야 한다는 조건이 있다. 거리보다 작은 비용의 사용자 구간을 사용하면 조건에 맞는 탐색기나 DijkstraPathfinder를 명시적으로 전달한다.
 
 | 상태와 요청 | 결과 |
 | --- | --- |
@@ -67,6 +69,29 @@ TryConnectNode가 false를 반환하거나 탐색·결과 검증이 실패하면
 연결 성공은 상태와 구독을 완성한 뒤 Connect|Shape를, 기존 끝점·경로 교체는 Connect|Disconnect|Shape를 한 번 발행한다. 해제는 Disconnect|Shape이며 무변경 요청은 알리지 않는다. 관찰자 예외는 호출자에게 전달하지만 이미 완료된 경로는 유지한다. 원본 형상은 계속 따라가되 원본 연결·통행 옵션 변경에 따른 자동 재탐색은 수행하지 않는다. 탐색·편집 도중 그래프 변경과 재진입 편집은 지원하지 않는다.
 
 기존 IRoute 직접 구현자는 TryConnectNode 계약을 추가해야 한다. 공통과 Planar 네임스페이스를 함께 가져오는 소비자는 Route 타입을 별칭이나 전체 이름으로 구분한다.
+
+## 말단 조회와 Tracer
+
+Route의 TryGetTerminalSegment는 Route 기준 Location을 실제 말단 Segment와 그 Segment 기준 Location으로 변환한다. 중첩 Route의 View 방향과 Clip의 시작·끝을 모두 반영한다. 힌트를 받는 오버로드의 hintIndex와 반환 index는 Route의 From에서부터 세는 말단 구간 순번이다. 같은 Segment가 여러 번 등장하면 각각 다른 순번을 갖는다. 힌트가 오래되었거나 범위를 벗어나도 일반 조회와 같은 결과를 반환한다. 빈 경로나 범위 밖 위치에서는 false, null Segment, 기본 Location, index -1을 반환한다.
+
+`ITracer<TPosition, TRotation>`은 Route, 현재 말단 Segment, Location, IsForward, Wheel과 상태를 제공한다. PlaceOnRoute는 Route 기준 위치에서 시작하고, PlaceOnSegment는 지정한 말단 위치에서 Absolute 주행을 시작한다. 배치가 실패하면 기존 위치를 보존한다. TryGetTransform으로 현재 위치와 회전을 읽는다. PolyTracer는 연속 조회에서 Hinge 인덱스를 내부적으로 재사용한다.
+
+| 위치 기준 | Route를 추적할 때 | Route 폐기 또는 현재 뷰 제거 |
+| --- | --- | --- |
+| RouteBased | 보관한 Route 기준 Location을 현재 경로에서 해석한다. | Route와 위치가 유효하면 새 말단을 찾고, 위치 기준을 잃으면 Derailed가 된다. |
+| Absolute | 현재 말단과 말단 기준 Location을 보관한다. 앞선 구간이 길어져도 말단 내 위치를 유지한다. | 말단이 유효하면 그 위치에서 Rolling으로 전환한다. |
+
+USM의 첫 Selector는 유효한 말단을 가진 OnTrack과 Derailed를 구분한다. OnTrack의 두 번째 Selector는 Route를 따라가는 Tracking과 연결 구간을 따라가는 Rolling을 구분한다. IsForward는 Tracking 중에는 Route, Rolling 중에는 말단의 방향이다. 값을 뒤집으면 같은 위치에서 반대쪽을 바라본다.
+
+Move는 유한한 0 이상의 거리를 받아 한 번에 여러 구간을 진행하고 성공 여부와 실제 종료 상태, 남은 거리를 돌려준다. 정상적인 Route 끝과 출구 없는 말단 끝에서는 성공하며 초과 거리만 남는다. Wheel의 기본값 Derailed(0)는 Absolute에서 Rolling을 허용한다. TrackingFailure(1)는 Tracking을 계속할 수 없는 지점에서 실패하고 유효한 위치를 보존한다. 이미 Rolling인 상태에서는 요청한 거리 전체가 남는다.
+
+DetachRoute는 해당 트레이서의 Route 참조를 해제한다. 같은 Route를 쓰는 다른 트레이서는 계속 추적한다.
+
+## Wheel과 분기 예약
+
+Rolling에서 Wheel은 접점에서 나갈 수 있는 구간을 연결 순서대로 열거한다. 들어온 구간을 제외하고, 양끝 연결과 출발 방향의 TraversalOptions, 진입 위치를 확인한다. 연결된 Clip으로 들어가면 트레이서의 Segment는 실제 말단을 가리키고, Wheel은 Clip의 반대쪽 Pin에서 다음 출구를 찾는다. 단일 출구이면 그대로 진행한다. 분기에서는 ReservedRoutes에 넣은 인덱스를 FIFO로 사용한다. 예약은 실제로 분기를 통과한 경우에만 한 개 소비한다.
+
+유효한 예약이 없으면 진입 방향과 각 후보의 진출 방향 사이의 최소 각도를 고른다. 동률은 앞선 후보, 측정 가능한 각도가 하나도 없으면 후보 0을 선택한다. Planar는 접점의 도 단위 회전을 사용한다. 다른 회전 표현은 Tracer 생성자에 두 회전 사이의 각도를 구하는 함수를 전달할 수 있다.
 
 ## 통신과 수명
 

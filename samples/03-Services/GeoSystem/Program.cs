@@ -13,19 +13,20 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
             {
                 Console.WriteLine("GeoSystem desktop sample");
                 Console.WriteLine("  no arguments : open the interactive Avalonia demo");
+                Console.WriteLine("  tracer       : open the Tracer and Wheel comparison");
                 Console.WriteLine("  verify       : verify the POCO scenario without opening a window");
                 return 0;
             }
-            if (args.Length > 1 || (args.Length == 1 && args[0] != "verify"))
+            if (args.Length > 1 || (args.Length == 1 && args[0] != "verify" && args[0] != "tracer"))
             {
-                Console.Error.WriteLine("Unknown command. Use help or verify, or run without arguments.");
+                Console.Error.WriteLine("Unknown command. Use help, tracer or verify, or run without arguments.");
                 return 1;
             }
 
             try
             {
                 Bootstrapper.Initialize();
-                if (args.Length == 1)
+                if (args.Length == 1 && args[0] == "verify")
                 {
                     SceneVerification.Run();
                     return 0;

@@ -3,6 +3,7 @@
 ## 목차
 
 - 비교와 보정
+- 벡터 계산
 - 방향과 회전
 - 위치 함수
 - Unity 코드 이전
@@ -23,6 +24,20 @@ var value = 1.125f.SnapTo(1f, 0.125f, out var snapped); // 1, true
 ```
 
 근사 비교의 기준은 [UniMath](UniMath.md)에서 확인한다.
+
+## 벡터 계산
+
+```csharp
+var from = new Vector2(1f, 2f);
+var to = new Vector2(4f, 6f);
+var valid = UniMath.IsFinite(to); // true
+double distance = UniMath.Distance(from, to); // 5
+var midpoint = UniMath.Lerp(from, to, 0.5d); // (2.5, 4)
+var beyond = UniMath.Lerp(from, to, 2d); // (7, 10), extrapolation
+float degrees = UniMath.Rotation(Vector2.Zero, Vector2.UnitY); // 90
+```
+
+Distance는 double을 반환하며 Lerp의 비율도 double이다. Rotation은 도 단위이고 비율·각도를 별도로 제한하지 않는다.
 
 ## 방향과 회전
 

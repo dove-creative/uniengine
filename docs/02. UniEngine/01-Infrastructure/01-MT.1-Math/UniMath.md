@@ -7,11 +7,14 @@ UniMath는 실수·벡터의 오차 기반 비교와 보정, 방향·회전 관�
 - 역할과 구성
 - 오차와 실패 계약
 - 비교와 보정
+- 벡터 계산
 - 방향과 회전
 
 ## 역할과 구성
 
 공개 타입은 BlackThunder.UniEngine.Mathematics의 정적 UniMath 클래스이며 벡터·쿼터니언은 System.Numerics 타입을 사용한다. 추가 수학 패키지와 Unity 의존성은 없다.
+
+소스는 partial 클래스로 나눈다. UniMath.cs에는 상수·스칼라 연산·쿼터니언 비교를, UniMath.Vectors.cs에는 벡터 비교·스냅·방향 판정과 공통 벡터 계산을 둔다. 호출자는 같은 UniMath 타입을 사용한다.
 
 UniMath는 값을 보관하거나 수정하지 않는다. 비교는 bool을 반환하고 보정은 새 값을 반환한다. 근사 비교는 허용 오차에 따른 판정이므로 Equals·GetHashCode·사전 키 동등성을 대체하지 않는다.
 
@@ -44,6 +47,20 @@ Is와 IsZero는 float 및 Vector2·Vector3·Vector4를 지원한다. 벡터는 �
 Snap은 값을 단위의 배수로 반올림하며 중간값은 짝수 배수를 선택한다. 단위는 유한한 양수여야 하며 Epsilon보다 작은 값도 허용한다. 잘못된 단위에는 ArgumentOutOfRangeException이 발생한다. Vector2·Vector3에는 공통 단위 또는 성분별 단위를 지정할 수 있다. 값의 NaN·무한대와 반환 float의 표현 범위를 벗어난 결과에는 .NET 부동소수점 규칙을 적용한다.
 
 SnapTo는 기준값과의 절대 차이가 허용 오차 이하면 기준값과 isSnapped = true를 반환한다. 그 밖에는 원래 값과 false를 반환한다. 비유한 피연산자도 보정하지 않는다.
+
+## 벡터 계산
+
+IsFinite는 Vector2·Vector3·Vector4의 모든 성분이 유한한지 검사한다. 하나라도 NaN·무한대이면 false이다.
+
+Distance·Lerp·Rotation은 Vector2 양끝점을 받는다. 좌표 차이와 중간 계산에는 double을 사용하여 큰 유한 좌표의 차이나 제곱이 float 범위를 넘더라도 계산을 이어간다.
+
+| 연산 | 결과와 기준 |
+| --- | --- |
+| Distance | 유클리드 거리를 double로 반환하며, 같은 점의 거리는 0이다. |
+| Lerp | double 비율로 보간하고 Vector2를 반환한다. 비율을 0~1로 제한하지 않으므로 외삽을 허용한다. |
+| Rotation | From→To 방향을 +X 기준의 도 단위 float 각도로 반환한다. +Y 방향은 90도이며 일반적인 동일 좌표 입력은 0도이다. 부호 있는 0을 포함한 경계는 Atan2의 규칙을 따른다. |
+
+이 세 계산은 입력을 사전 거부하거나 결과를 보정하지 않는다. 비유한 입력·비율과 반환 float 범위를 벗어난 결과에는 .NET 부동소수점 규칙을 적용한다. 호출자는 필요하면 IsFinite로 입력과 결과를 검사한다. Geometry는 이 계산 위에서 끝점·길이·조회 범위의 유효성을 관리한다.
 
 ## 방향과 회전
 

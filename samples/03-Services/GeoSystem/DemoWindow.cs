@@ -95,6 +95,14 @@ namespace BlackThunder.UniEngine.Samples.GeoSystem
                 Foreground = _muted
             });
             root.Children.Add(heading);
+            var openTracer = new Button
+            {
+                Content = "Tracer와 Wheel 열기",
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+            openTracer.Click += (_, _) => new TracerWindow().Show(this);
+            root.Children.Add(openTracer);
 
             var body = new Grid { ColumnDefinitions = new ColumnDefinitions("*,20,304") };
             Grid.SetRow(body, 1);

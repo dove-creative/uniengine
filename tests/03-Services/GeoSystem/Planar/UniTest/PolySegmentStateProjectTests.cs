@@ -4,7 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using BlackThunder.GeoSystem.Geometry;
-using BlackThunder.GeoSystem.Geometry.Planar.Shapers;
+using BlackThunder.GeoSystem.Geometry.Planar;
 using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
 using BlackThunder.UniTest;
@@ -20,9 +20,10 @@ namespace BlackThunder.UniEngine.Tests
     {
         private static readonly string[] _path =
         {
-            "AddHandle", "Bezier2", "MoveHandle", "MoveFrom", "MoveTo", "Target", "AddHandle", "Bezier3",
-            "ReplaceHandle", "DisconnectTo", "ReconnectTo", "DisposeHandle", "RemoveHandle", "Bezier2",
-            "ClearHandles", "FreeHandle", "ResetTarget", "Dispose", "Recreate", "Observe",
+            "AddHandle", "QuadraticBezierShaper", "MoveHandle", "MoveFrom", "MoveTo", "Target",
+            "AddHandle", "CubicBezierShaper",
+            "ReplaceHandle", "DisconnectTo", "ReconnectTo", "DisposeHandle", "RemoveHandle", "QuadraticBezierShaper",
+            "ClearHandles", "PolylineShaper", "ResetTarget", "Dispose", "Recreate", "Observe",
         };
 
         private class Scene : IDisposable
@@ -32,7 +33,7 @@ namespace BlackThunder.UniEngine.Tests
             public Planar.PolySegment Segment { get; }
             public SegmentPin Pin { get; }
             public Route Route { get; } = new();
-            public List<Planar.SegmentHandle> OwnedHandles { get; } = new();
+            public List<Planar.ControlHandle> OwnedHandles { get; } = new();
 
 
             public Scene()
@@ -42,9 +43,9 @@ namespace BlackThunder.UniEngine.Tests
                 Route.Append(new SegmentView(Segment));
             }
 
-            public Planar.SegmentHandle CreateHandle(Vector2 position)
+            public Planar.ControlHandle CreateHandle(Vector2 position)
             {
-                var handle = new Planar.SegmentHandle(position);
+                var handle = new Planar.ControlHandle(position);
                 OwnedHandles.Add(handle);
                 return handle;
             }
@@ -174,9 +175,10 @@ namespace BlackThunder.UniEngine.Tests
                     state.Scene.Segment.Values.Clear();
                     state.Target = 1f;
                 });
-                yield return Checked("FreeHandle", state => SetShaper(state, new FreeHandle(), 0));
-                yield return Checked("Bezier2", state => SetShaper(state, new Bezier2(), 2));
-                yield return Checked("Bezier3", state => SetShaper(state, new Bezier3(), 3));
+                yield return Checked("PolylineShaper", state => SetShaper(state, new PolylineShaper(), 0));
+                yield return Checked("QuadraticBezierShaper",
+                    state => SetShaper(state, new QuadraticBezierShaper(), 2));
+                yield return Checked("CubicBezierShaper", state => SetShaper(state, new CubicBezierShaper(), 3));
                 yield return Checked("DisconnectTo", state =>
                 {
                     state.Scene.Segment.DisconnectNode(ConnectionSide.To);

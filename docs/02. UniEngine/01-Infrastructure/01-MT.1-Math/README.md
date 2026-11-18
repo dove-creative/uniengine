@@ -1,6 +1,6 @@
 # Math
 
-수치·벡터·회전의 비교와 보정을 제공하는 Infrastructure 수학 도구이다.
+수치·벡터·회전의 비교와 보정, 벡터 거리·보간·방향 계산을 제공하는 Infrastructure 수학 도구이다.
 
 ## 목차
 
@@ -17,7 +17,7 @@
 
 Configuration과 같은 레벨이며 설정 초기화나 Core 객체에 의존하지 않는다. [VectorFunctions](../01-MT.2-VectorFunctions/README.md)도 같은 레벨의 독립 모듈이다.
 
-[UniMath](UniMath.md)는 수치·벡터의 근사 비교, 스냅, 방향·회전 판정을 담당한다. 다음 레벨의 Transform2D·Transform3D는 UniMath를 사용해 위치와 회전의 근사 일치를 판정한다. [사용 예시](Usage.md)에서 호출 흐름을 확인한다.
+[UniMath](UniMath.md)는 수치·벡터의 근사 비교, 스냅, 방향·회전 판정과 벡터의 유한성 검사·거리·보간·방향 각도 계산을 담당한다. 다음 레벨의 Transform2D·Transform3D는 위치와 회전의 근사 일치를, GeoSystem은 평면 구간과 Shaper의 공통 수학 계산을 UniMath로 수행한다. [사용 예시](Usage.md)에서 호출 흐름을 확인한다.
 
 단위·허용 오차·예외 처리의 공통 원칙은 [수학](../../../01.%20Concepts/05.%20수학.md)을 따른다.
 

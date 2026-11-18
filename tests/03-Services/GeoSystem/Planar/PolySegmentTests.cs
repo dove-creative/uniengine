@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using BlackThunder.GeoSystem.Geometry;
-using BlackThunder.GeoSystem.Geometry.Planar.Shapers;
+using BlackThunder.GeoSystem.Geometry.Planar;
 using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
 using BlackThunder.UniEngine.Core;
@@ -21,7 +22,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             public Planar.Node From { get; } = new(Vector2.Zero);
             public Planar.Node To { get; } = new(new Vector2(3f, 4f));
-            public Planar.SegmentHandle Handle { get; } = new(new Vector2(3f, 0f));
+            public Planar.ControlHandle Handle { get; } = new(new Vector2(3f, 0f));
             public Planar.PolySegment Segment { get; }
 
 
@@ -57,7 +58,21 @@ namespace BlackThunder.UniEngine.Tests
 
 
         [Test]
-        public void FreeHandlePreservesCornersAndSubdividesEachLeg()
+        public void PublicContractsDoNotExposeHingeStorageOrConstruction()
+        {
+            Assert.That(typeof(Hinge<Vector2, float>).IsVisible, Is.False);
+            Assert.That(typeof(IPolySegment<Vector2, float>).GetProperty("Hinges"), Is.Null);
+            foreach (var type in new[] { typeof(PolySegment<Vector2, float>), typeof(Planar.PolySegment) })
+            {
+                Assert.That(type.GetProperty("Hinges"), Is.Null);
+                var builder = type.GetMethod("TryBuildHinges", BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.That(builder, Is.Not.Null);
+                Assert.That(builder.IsFamilyAndAssembly, Is.True);
+            }
+        }
+
+        [Test]
+        public void PolylineShaperPreservesCornersAndSubdividesEachLeg()
         {
             using var bend = new Bend(2f);
             var segment = bend.Segment;
@@ -120,7 +135,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.Throws<ObjectDisposedException>(() => segment.TryGetPosition(default, out _));
             Assert.Throws<ObjectDisposedException>(() => segment.Values["any"] = 1f);
             Assert.Throws<ObjectDisposedException>(() => segment.Handles.Clear());
-            Assert.Throws<ObjectDisposedException>(() => segment.Shaper = new FreeHandle());
+            Assert.Throws<ObjectDisposedException>(() => segment.Shaper = new PolylineShaper());
         }
 
         [TestCase(0f)]
@@ -211,7 +226,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(other.Length, Is.EqualTo(7f).Within(0.00001f));
             bend.Segment.Handles.RemoveAt(0);
             Assert.That(hub.ConnectionCount, Is.EqualTo(2));
-            using var replacement = new Planar.SegmentHandle(new Vector2(3f, 0f));
+            using var replacement = new Planar.ControlHandle(new Vector2(3f, 0f));
             bend.Segment.Handles[0] = replacement;
             Assert.That(hub.ConnectionCount, Is.EqualTo(1));
             bend.Handle.Position = new Vector2(0f, 3f);
@@ -244,7 +259,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var from = new Planar.Node();
             using var to = new Planar.Node();
-            using var handle = new Planar.SegmentHandle();
+            using var handle = new Planar.ControlHandle();
             using var segment = new Planar.PolySegment(from, to);
             segment.Handles.Add(handle);
             segment.Handles.Add(handle);
@@ -267,7 +282,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => bend.Handle.Position = new Vector2(float.NaN, 0f));
             Assert.That(bend.Handle.Position, Is.EqualTo(new Vector2(3f, 0f)));
-            using var generic = new SegmentHandle<Vector2>(Vector2.One);
+            using var generic = new ControlHandle<Vector2>(Vector2.One);
             bend.Segment.Handles[0] = generic;
             generic.Position = new Vector2(float.PositiveInfinity, 0f);
             Assert.That(bend.Segment.Hinges, Is.Empty);
@@ -281,10 +296,10 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var from = new Planar.Node();
             using var to = new Planar.Node(new Vector2(4f, 0f));
-            IShaper<Vector2> shaper = degree == 2 ? new Bezier2() : new Bezier3();
+            IShaper<Vector2> shaper = degree == 2 ? new QuadraticBezierShaper() : new CubicBezierShaper();
             using var segment = new Planar.PolySegment(from, to, shaper);
-            using var first = new Planar.SegmentHandle(degree == 2 ? new Vector2(2f, 4f) : new Vector2(0f, 4f));
-            using var second = new Planar.SegmentHandle(new Vector2(4f, 4f));
+            using var first = new Planar.ControlHandle(degree == 2 ? new Vector2(2f, 4f) : new Vector2(0f, 4f));
+            using var second = new Planar.ControlHandle(new Vector2(4f, 4f));
             segment.Values[ShaperValues.TargetSegmentLength] = 0.125f;
             Assert.That(segment.Hinges, Is.Empty);
             segment.Handles.Add(first);
@@ -332,11 +347,11 @@ namespace BlackThunder.UniEngine.Tests
             using var bend = new Bend(0.5f);
             var values = bend.Segment.Values;
             var handles = bend.Segment.Handles;
-            bend.Segment.Shaper = new Bezier3();
+            bend.Segment.Shaper = new CubicBezierShaper();
             Assert.That(bend.Segment.Hinges, Is.Empty);
-            bend.Segment.Shaper = new Bezier2();
+            bend.Segment.Shaper = new QuadraticBezierShaper();
             Assert.That(bend.Segment.Hinges, Is.Not.Empty);
-            bend.Segment.Shaper = new FreeHandle();
+            bend.Segment.Shaper = new PolylineShaper();
             Assert.That(bend.Segment.Length, Is.EqualTo(7f).Within(0.00001f));
             Assert.That(bend.Segment.Values, Is.SameAs(values));
             Assert.That(bend.Segment.Handles, Is.SameAs(handles));
@@ -349,7 +364,8 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(3)]
         public void UnrepresentableSubdivisionFailsWithoutPublishingPartialPositions(int degree)
         {
-            IShaper<Vector2> shaper = degree == 0 ? new FreeHandle() : degree == 2 ? new Bezier2() : new Bezier3();
+            IShaper<Vector2> shaper = degree == 0 ? new PolylineShaper()
+                : degree == 2 ? new QuadraticBezierShaper() : new CubicBezierShaper();
             var values = new Dictionary<string, float> { [ShaperValues.TargetSegmentLength] = float.Epsilon };
             var handles = degree == 3 ? new[] { new Vector2(0f, 4f), new Vector2(4f, 4f) }
                 : new[] { new Vector2(2f, 4f) };
@@ -455,7 +471,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(bend.Segment.Length, Is.Zero);
             Assert.That(pin.IsValid, Is.False);
             Assert.That(updates, Is.EqualTo(1));
-            bend.Segment.Shaper = new FreeHandle();
+            bend.Segment.Shaper = new PolylineShaper();
             Assert.That(pin.IsValid, Is.True);
             Assert.That(bend.Segment.Length, Is.EqualTo(7f));
             Assert.That(updates, Is.EqualTo(2));

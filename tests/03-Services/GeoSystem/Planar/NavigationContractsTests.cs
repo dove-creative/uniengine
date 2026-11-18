@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using BlackThunder.GeoSystem.Geometry;
-using BlackThunder.GeoSystem.Geometry.Pathfinders;
 using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.GeoSystem.RouteSystem;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
@@ -152,7 +151,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(position, Is.EqualTo(new Vector2(9f, 0f)));
             Assert.That(hold.Position, Is.EqualTo(first.Position));
 
-            var search = new AStar<Vector2>(Vector2.Distance);
+            var search = new AStarPathfinder<Vector2>(Vector2.Distance);
             Assert.That(search.TryPathfind(first, new[] { last }, out var path), Is.True);
             Assert.That(path.Arrows.Single().Segment, Is.SameAs(clip));
             clip.TraversalOptions = TraversalOptions.None;
@@ -182,7 +181,7 @@ namespace BlackThunder.UniEngine.Tests
             using var b = new Planar.LinearSegment(far, goal);
             using var c = new Planar.LinearSegment(from, near);
             using var d = new Planar.LinearSegment(near, goal);
-            IPathfinder<Vector2> typed = new AStar<Vector2>(Vector2.Distance);
+            IPathfinder<Vector2> typed = new AStarPathfinder<Vector2>(Vector2.Distance);
             Assert.That(typed.TryPathfind(from, new[] { goal, far }, out var path), Is.True);
             Assert.That(path.Arrows.Select(arrow => arrow.Segment), Is.EqualTo(new[] { c, d }));
             IPathfinder raw = typed;

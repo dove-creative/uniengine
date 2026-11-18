@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using BlackThunder.GeoSystem.Geometry;
 using BlackThunder.GeoSystem.Navigation;
-using BlackThunder.GeoSystem.Navigation.Pathfinders;
 using BlackThunder.GeoSystem.RouteSystem;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
 using BlackThunder.UniEngine.Objects;
@@ -33,7 +32,7 @@ namespace BlackThunder.UniEngine.Tests
             using var cd = new WeightedSegment(c, d, 2f);
             using var common = new Route();
             using var planar = new PlanarRoute();
-            using var explicitDijkstra = new PlanarRoute(new Dijkstra());
+            using var explicitDijkstra = new PlanarRoute(new DijkstraPathfinder());
             foreach (var route in new Route[] { common, planar, explicitDijkstra })
             {
                 route.ConnectNode(ConnectionSide.From, a);
@@ -215,7 +214,7 @@ namespace BlackThunder.UniEngine.Tests
             using var route = new PlanarRoute(finder);
             route.ConnectNode(ConnectionSide.From, graph.Nodes[0]);
             route.ConnectNode(ConnectionSide.To, graph.Nodes[1]);
-            new Dijkstra().TryPathfind(graph.Nodes[0], new[] { graph.Nodes[3] }, out var candidate);
+            new DijkstraPathfinder().TryPathfind(graph.Nodes[0], new[] { graph.Nodes[3] }, out var candidate);
             switch (scenario)
             {
                 case 0: candidate = null; break;
@@ -429,7 +428,7 @@ namespace BlackThunder.UniEngine.Tests
                 Calls++;
                 LastFrom = from;
                 LastTo = targets.Single();
-                if (Handler == null) return new Dijkstra().TryPathfind(from, new[] { LastTo }, out path);
+                if (Handler == null) return new DijkstraPathfinder().TryPathfind(from, new[] { LastTo }, out path);
                 var result = Handler(from, LastTo);
                 path = result.Path;
                 return result.Success;

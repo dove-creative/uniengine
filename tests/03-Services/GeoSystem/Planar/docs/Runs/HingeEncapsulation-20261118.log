@@ -1,0 +1,177 @@
+Hinge encapsulation regression: 2026-11-18
+Release; GeoSystem 160 passed; 0 failed; 0 skipped
+Start: 2026-11-18T11:51:41.0478844+09:00
+Finish: 2026-11-18T11:51:59.0437022+09:00
+
+Passed AlgorithmsChooseTheirDocumentedPath(0,1,30) 00:00:00.0024220
+Passed AlgorithmsChooseTheirDocumentedPath(1,2,18) 00:00:00.0010860
+Passed AlgorithmsChooseTheirDocumentedPath(2,2,2) 00:00:00.0003240
+Passed AlgorithmsChooseTheirDocumentedPath(3,2,2) 00:00:00.0010770
+Passed AnchorRebindingDetachesOldSubscriptionsAndHoldOwnsOnlyItsPin 00:00:00.0040690
+Passed AStarReopensNodesForAnAdmissibleInconsistentHeuristic 00:00:00.0008810
+Passed AStarValidatesHeuristicsAndTheUntypedAdapter 00:00:00.0007150
+Passed BezierDegreeControlsInputCountAndKnownCurveSamples(2) 00:00:00.0163320
+Passed BezierDegreeControlsInputCountAndKnownCurveSamples(3) 00:00:00.0004840
+Passed BoundsDegeneracyAndNonFiniteInputsHaveExplicitFailureBehavior 00:00:00.0012560
+Passed CallbackFailureDoesNotLeaveDisposedNodeConnected 00:00:00.0012900
+Passed ClearAndDisposeReleaseReciprocalReferences(False) 00:00:00.0003030
+Passed ClearAndDisposeReleaseReciprocalReferences(True) 00:00:00.0002060
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,False) 00:00:00.0000330
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(False,True) 00:00:00.0000390
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,False) 00:00:00.0002750
+Passed ClipDirectionUsesPhysicalPinOrderAndComposesWithQuery(True,True) 00:00:00.0004690
+Passed ClipSourceIsDerivedAndInvalidStatesRecover 00:00:00.0004450
+Passed CoincidentEndpointsClearAndLifetimePreserveMetadata 00:00:00.0008330
+Passed CommonAndPlanarContractsRetainConnectionsAndRejectCycles 00:00:00.0010830
+Passed CommonRouteSupportsNonPlanarGeometryAndReferenceDistinctNodes 00:00:00.0005689
+Passed ConnectionNotificationsSeeBothSidesCommitted(False) 00:00:00.0007040
+Passed ConnectionNotificationsSeeBothSidesCommitted(True) 00:00:00.0001789
+Passed ConsecutiveDuplicatesAndZeroLengthRecoverWithoutRemovingHandles 00:00:00.0009640
+Passed CustomShaperFailureInvalidatesDependentsAndReplacementRecovers 00:00:00.0004929
+Passed CyclicPathAndCyclesThroughStandaloneEndpointsAreRejected 00:00:00.0009930
+Passed DefaultAndEqualityPreserveTheForwardOrigin 00:00:00.0011140
+Passed DefaultProvidersAndExplicitOverrideChooseExpectedEqualCostPaths 00:00:00.0009380
+Passed DepthFirstSearchHandlesADeepChainWithoutRecursion 00:00:00.0491920
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(False,Length,2.0f,8.0f) 00:00:00.0002770
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(False,Rate,0.2f,8.0f) 00:00:00.0000050
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(True,Length,2.0f,2.0f) 00:00:00.0002360
+Passed DirectionIsMeasuredFromTheSelectedEndpoint(True,Rate,0.2f,2.0f) 00:00:00.0000130
+Passed DisconnectKeepsTheOtherEndpointAndReconnects(From) 00:00:00.0006730
+Passed DisconnectKeepsTheOtherEndpointAndReconnects(To) 00:00:00.0002090
+Passed DisposedHandleInvalidatesOnlyItsUsersAndRemovalRecovers 00:00:00.0004460
+Passed DistanceHeuristicReturnsTypedPlanarReferencesThroughBothInterfaces 00:00:00.0055070
+Passed EmptySuccessAndUnreachableGoalsAreDifferent(0) 00:00:00.0003610
+Passed EmptySuccessAndUnreachableGoalsAreDifferent(1) 00:00:00.0001979
+Passed EmptySuccessAndUnreachableGoalsAreDifferent(2) 00:00:00.0000180
+Passed EmptySuccessAndUnreachableGoalsAreDifferent(3) 00:00:00.0000310
+Passed EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(0) 00:00:00.0010820
+Passed EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(1) 00:00:00.0001740
+Passed EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(2) 00:00:00.0000730
+Passed EqualPathsKeepFirstParallelSegmentAndZeroCostCyclesTerminate(3) 00:00:00.0000290
+Passed EveryDictionaryMutationUpdatesShapeAndNoOpsStaySilent 00:00:00.0017970
+Passed FailedSearchAndProviderExceptionPreserveAllOldState 00:00:00.0006410
+Passed FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(False,From) 00:00:00.0057330
+Passed FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(False,To) 00:00:00.0003030
+Passed FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(True,From) 00:00:00.0002140
+Passed FirstEndpointIsRetainedAndSecondEndpointBuildsOrientedViews(True,To) 00:00:00.0002470
+Passed FixedNavigationTransitions 00:00:00.0278350
+Passed FixedPlanarTransitions 00:00:00.0091600
+Passed FixedPolySegmentTransitions 00:00:00.0316930
+Passed FixedRouteEditingTransitions 00:00:00.0262360
+Passed FromReplacementSearchesForwardAndTraversalDoesNotAutomaticallyRepath 00:00:00.0003900
+Passed GenericConnectionsExposeTheSameObjectsAcrossAllContracts 00:00:00.0230970
+Passed GenericConsumersObservePlanarPinsClipsAndRoutesAfterSourceUpdates 00:00:00.0109810
+Passed GenericQueriesPreserveFailureOutputsToleranceAndLifetime 00:00:00.0028850
+Passed GeometricCyclesAreRejectedBeforeChangingAnchorsOrConnections 00:00:00.0008220
+Passed HandleEditsPublishCompletedStateAndKeepAbsoluteCoordinates 00:00:00.0005060
+Passed HandleValidationRejectsNonFinitePlanarPositionsAndInvalidatesGenericInput 00:00:00.0004200
+Passed IncompatiblePositionTypesAreRejectedBeforeEitherConnectionChanges 00:00:00.0007950
+Passed InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(0) 00:00:00.0004850
+Passed InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(1) 00:00:00.0001730
+Passed InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(2) 00:00:00.0000370
+Passed InputErrorsAreDistinctFromMissingPathsAndPartialEdgesAreSkipped(3) 00:00:00.0000340
+Passed InvalidArgumentsAndDisposedEditsDoNotChangeEndpoints 00:00:00.0005999
+Passed InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(0) 00:00:00.0013770
+Passed InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(1) 00:00:00.0002390
+Passed InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(2) 00:00:00.0000580
+Passed InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(3) 00:00:00.0000360
+Passed InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(4) 00:00:00.0000250
+Passed InvalidOrStaleProviderResultsAreRejectedBeforeAnyCommit(5) 00:00:00.0000230
+Passed InvalidTargetLengthIsRejectedBeforeMutation(-1.0f) 00:00:00.0002360
+Passed InvalidTargetLengthIsRejectedBeforeMutation(0.0f) 00:00:00.0004830
+Passed InvalidTargetLengthIsRejectedBeforeMutation(float.NaN) 00:00:00.0000220
+Passed InvalidTargetLengthIsRejectedBeforeMutation(float.NegativeInfinity) 00:00:00.0000120
+Passed InvalidTargetLengthIsRejectedBeforeMutation(float.PositiveInfinity) 00:00:00.0000140
+Passed LayeredInterfacesExposeTheSameReferencesWithoutRecursiveGetters 00:00:00.0008810
+Passed LinearClipAndRouteExposeImmutableEmptyEditingInputs 00:00:00.0012810
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(False,Length,2.0f,8.0f,180.0f) 00:00:00.0003040
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(False,Rate,0.2f,8.0f,180.0f) 00:00:00.0000120
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(True,Length,2.0f,2.0f,0.0f) 00:00:00.0001930
+Passed LinearQueriesRespectDistanceDirectionAndDegrees(True,Rate,0.2f,2.0f,0.0f) 00:00:00.0000180
+Passed MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(0,1) 00:00:00.0004690
+Passed MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(1,1) 00:00:00.0001880
+Passed MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(2,3) 00:00:00.0000450
+Passed MultipleGoalsAreEnumeratedOnceAndChooseOneDestination(3,3) 00:00:00.0000200
+Passed ObserverExceptionLeavesCompletedGeometryInPlace 00:00:00.0004840
+Passed ObserverExceptionLeavesTheCompletedRouteAndSubscriptionsIntact 00:00:00.0004150
+Passed PathAndArrowConstructorsRejectBrokenChains 00:00:00.0006460
+Passed PathCopiesItsArrowsAndRetainsReferencesAfterSourceChanges 00:00:00.0006630
+Passed PinClipRouteAndPathfindingConsumeUpdatedPolyGeometry 00:00:00.0012150
+Passed PolylineShaperPreservesCornersAndSubdividesEachLeg 00:00:00.0015299
+Passed PositionOnlyImplementationDoesNotRequireRotationOrSegmentBaseClass 00:00:00.0006010
+Passed PropertiesAreIndependentAcrossInterfacesAndSurviveOwnerDisposal 00:00:00.0036500
+Passed PropertyStorageIsLazyEvenWhenFirstAccessFollowsDisposal(BlackThunder.GeoSystem.Navigation.NavNode) 00:00:00.0016490
+Passed PropertyStorageIsLazyEvenWhenFirstAccessFollowsDisposal(BlackThunder.GeoSystem.Navigation.NavSegment) 00:00:00.0001360
+Passed PropertyStorageIsLazyEvenWhenFirstAccessFollowsDisposal(BlackThunder.GeoSystem.RouteSystem.Planar.Route) 00:00:00.0000290
+Passed PublicContractsDoNotExposeHingeStorageOrConstruction 00:00:00.0002880
+Passed PublicContractsHideInternalConnectionMethods 00:00:00.0003430
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(False,0.0f,3.0f,4.0f,270.0f) 00:00:00.0000130
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(False,2.0f,3.0f,2.0f,270.0f) 00:00:00.0000130
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(False,4.0f,3.0f,0.0f,180.0f) 00:00:00.0000130
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(False,5.0f,2.0f,0.0f,180.0f) 00:00:00.0000130
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(False,7.0f,0.0f,0.0f,180.0f) 00:00:00.0000120
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(True,0.0f,0.0f,0.0f,0.0f) 00:00:00.0002450
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(True,2.0f,2.0f,0.0f,0.0f) 00:00:00.0003250
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(True,3.0f,3.0f,0.0f,90.0f) 00:00:00.0000260
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(True,5.0f,3.0f,2.0f,90.0f) 00:00:00.0000140
+Passed QueriesChooseTheOutgoingLegInEachTravelDirection(True,7.0f,3.0f,4.0f,90.0f) 00:00:00.0000130
+Passed QueriesKeepBoundsToleranceFailureOutputsAndLifetimeContracts 00:00:00.0008290
+Passed RandomNavigationTransitions(0) 00:00:01.9275670
+UniTest continuous seed=0 depth=100/100 elapsedMs=1922.504 outcome=Passed
+Passed RandomNavigationTransitions(1) 00:00:01.4555340
+UniTest continuous seed=1 depth=100/100 elapsedMs=1453.282 outcome=Passed
+Passed RandomNavigationTransitions(2) 00:00:01.3467110
+UniTest continuous seed=2 depth=100/100 elapsedMs=1344.022 outcome=Passed
+Passed RandomPlanarTransitions(0) 00:00:00.7004020
+UniTest continuous seed=0 depth=100/100 elapsedMs=699.865 outcome=Passed
+Passed RandomPlanarTransitions(1) 00:00:00.6484660
+UniTest continuous seed=1 depth=100/100 elapsedMs=647.839 outcome=Passed
+Passed RandomPlanarTransitions(2) 00:00:00.5713680
+UniTest continuous seed=2 depth=100/100 elapsedMs=571.014 outcome=Passed
+Passed RandomPolySegmentTransitions(0) 00:00:01.1779110
+UniTest continuous seed=0 depth=100/100 elapsedMs=1177.263 outcome=Passed
+Passed RandomPolySegmentTransitions(1) 00:00:01.0876980
+UniTest continuous seed=1 depth=100/100 elapsedMs=1087.042 outcome=Passed
+Passed RandomPolySegmentTransitions(2) 00:00:01.3308930
+UniTest continuous seed=2 depth=100/100 elapsedMs=1330.140 outcome=Passed
+Passed RandomRouteEditingTransitions(0) 00:00:01.8380280
+UniTest continuous seed=0 depth=100/100 elapsedMs=1828.976 outcome=Passed
+Passed RandomRouteEditingTransitions(1) 00:00:01.9329840
+UniTest continuous seed=1 depth=100/100 elapsedMs=1932.199 outcome=Passed
+Passed RandomRouteEditingTransitions(2) 00:00:02.0018020
+UniTest continuous seed=2 depth=100/100 elapsedMs=2001.175 outcome=Passed
+Passed ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(0) 00:00:00.0006080
+Passed ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(1) 00:00:00.0001480
+Passed ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(2) 00:00:00.0000760
+Passed ReadOnlyGraphsSkipDisposedIncompleteAndUnrelatedEdges(3) 00:00:00.0000550
+Passed RejectedConnectionsPreserveTheGraph 00:00:00.0005170
+Passed ReplacementRebuildsTheWholePathAndPublishesCompletedStateOnce 00:00:00.0014420
+Passed RouteCountsRepeatedSourcesAndClearReleasesOnlyItsReferences 00:00:00.0005980
+Passed RouteQueriesComposeViewsAndLocationDirection(False) 00:00:00.0002250
+Passed RouteQueriesComposeViewsAndLocationDirection(True) 00:00:00.0005580
+Passed SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(0) 00:00:00.0008040
+Passed SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(1) 00:00:00.0002040
+Passed SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(2) 00:00:00.0000520
+Passed SearchUsesReferenceIdentityAndDoesNotMutateGraphOrPayloads(3) 00:00:00.0000510
+Passed SeededDirectedGraphsMatchIndependentShortestDistances(0) 00:00:00.0049170
+Passed SeededDirectedGraphsMatchIndependentShortestDistances(1) 00:00:00.0121920
+Passed SeededDirectedGraphsMatchIndependentShortestDistances(2) 00:00:00.0023830
+Passed SegmentPinCanBecomeInvalidAndRecoverAfterSourceChanges 00:00:00.0002670
+Passed ShapeEventsPropagateWhenLengthIsUnchanged 00:00:00.0005440
+Passed ShaperReplacementPreservesInputsAndCanRecoverAfterIncompleteControls 00:00:00.0004480
+Passed SharedAndRepeatedHandlesUseOneSubscriptionPerSegment 00:00:00.0005370
+Passed SourceDisposalPropagatesThroughPinsClipHoldAndRoute 00:00:00.0002950
+Passed SourceTraversalDoesNotPropagateShapeOrOverrideIndependentOptions 00:00:00.0019770
+Passed SubscriptionFailureRollsBackOnlyNewSubscriptions 00:00:00.0003830
+Passed TraversalChangesNotifyOnceAfterStateUpdateAndRejectInvalidEdits(False) 00:00:00.0016640
+Passed TraversalChangesNotifyOnceAfterStateUpdateAndRejectInvalidEdits(True) 00:00:00.0002470
+Passed TraversalOptionsControlBothDirectionsWithoutDisconnecting(0) 00:00:00.0004870
+Passed TraversalOptionsControlBothDirectionsWithoutDisconnecting(1) 00:00:00.0121110
+Passed TraversalOptionsControlBothDirectionsWithoutDisconnecting(2) 00:00:00.0000470
+Passed TraversalOptionsControlBothDirectionsWithoutDisconnecting(3) 00:00:00.0000400
+Passed UnrepresentableSubdivisionFailsWithoutPublishingPartialPositions(0) 00:00:00.0004650
+Passed UnrepresentableSubdivisionFailsWithoutPublishingPartialPositions(2) 00:00:00.0004290
+Passed UnrepresentableSubdivisionFailsWithoutPublishingPartialPositions(3) 00:00:00.0000480
+Passed ViewEditingDropsStandaloneAnchorsAndReferenceCountsRepeatedSources 00:00:00.0004900
+Passed WeightedSearchRejectsInvalidLengthsAndAccumulatesBeyondFloatRange(2) 00:00:00.0006160
+Passed WeightedSearchRejectsInvalidLengthsAndAccumulatesBeyondFloatRange(3) 00:00:00.0002320
