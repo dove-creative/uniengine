@@ -1,0 +1,21 @@
+[package]
+name = "uniengine-rapier3d-f64-probe"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "uniengine_rapier3d_f64_probe"
+path = "../src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["dim3", "f64"]
+dim3 = []
+f64 = []
+
+[dependencies]
+rapier = { package = "rapier3d-f64", version = "=0.36.1" }
+parry = { package = "parry3d-f64", version = "=0.31.1" }
+

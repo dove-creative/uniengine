@@ -1,0 +1,110 @@
+{
+  "revision": "0.36.1-r1",
+  "date": "2026-11-23",
+  "patch": "collision-update.patch",
+  "patchSha256": "4DE71FDA95CD826A5B7DD5233C0F54D2BB874DF14947CF6819616F4BC0004474",
+  "lockSha256": "148494B9C0E69E694293771F2E7BAF94548251164052B9F91B2538D6B50D5C01",
+  "originalLockSha256": "3BBE34905093B9FFDDF862E033B2A88B36C1CB7FF2BE4398CB838B4E82096992",
+  "packages": [
+    {
+      "package": "rapier2d",
+      "version": "0.36.1",
+      "archive": "rapier2d-0.36.1.crate",
+      "archiveSha256": "B73D84C8E78F4FBD46FB5C800BBDB15CAD6EF2BD517DE6A4D31FE60EDD838F8D",
+      "publisher": {
+        "git": {
+          "sha1": "475caa3ff4646fd9a796b67d14116256f4962bc7",
+          "dirty": true
+        },
+        "path_in_vcs": "crates/rapier2d"
+      },
+      "files": [
+        {
+          "path": "src/pipeline/physics_world.rs",
+          "originalSha256": "6CF5F8BA115E355EBBF615B20E392A0A8220ED6AF38DFC5A2DDFC878C5D431DE",
+          "modifiedSha256": "22219C4A48C7F22F905405F43CDEF8FAE03BE26C7155CA7CD9440597AE900D9B"
+        },
+        {
+          "path": "src/pipeline/physics_pipeline/substep.rs",
+          "originalSha256": "C8AFC37889439DCB59FFAAAE0F0CD040C652B76B32AF1452EF5E156B805E7447",
+          "modifiedSha256": "00DC41530B09534ADEDD2CF953D747D15F7BB26DB0AFB043D643CBCD52BA0894"
+        }
+      ]
+    },
+    {
+      "package": "rapier2d-f64",
+      "version": "0.36.1",
+      "archive": "rapier2d-f64-0.36.1.crate",
+      "archiveSha256": "A44772074D1310F0639EC43400559EE5C675C443D0EA9967FE988292DED0136C",
+      "publisher": {
+        "git": {
+          "sha1": "475caa3ff4646fd9a796b67d14116256f4962bc7",
+          "dirty": true
+        },
+        "path_in_vcs": "crates/rapier2d-f64"
+      },
+      "files": [
+        {
+          "path": "src/pipeline/physics_world.rs",
+          "originalSha256": "6CF5F8BA115E355EBBF615B20E392A0A8220ED6AF38DFC5A2DDFC878C5D431DE",
+          "modifiedSha256": "22219C4A48C7F22F905405F43CDEF8FAE03BE26C7155CA7CD9440597AE900D9B"
+        },
+        {
+          "path": "src/pipeline/physics_pipeline/substep.rs",
+          "originalSha256": "C8AFC37889439DCB59FFAAAE0F0CD040C652B76B32AF1452EF5E156B805E7447",
+          "modifiedSha256": "00DC41530B09534ADEDD2CF953D747D15F7BB26DB0AFB043D643CBCD52BA0894"
+        }
+      ]
+    },
+    {
+      "package": "rapier3d",
+      "version": "0.36.1",
+      "archive": "rapier3d-0.36.1.crate",
+      "archiveSha256": "033E2EDC815D61AB97BD74ED5D1CBEA5EBE575218774A7CFEDBD3551F0033317",
+      "publisher": {
+        "git": {
+          "sha1": "475caa3ff4646fd9a796b67d14116256f4962bc7",
+          "dirty": true
+        },
+        "path_in_vcs": "crates/rapier3d"
+      },
+      "files": [
+        {
+          "path": "src/pipeline/physics_world.rs",
+          "originalSha256": "6CF5F8BA115E355EBBF615B20E392A0A8220ED6AF38DFC5A2DDFC878C5D431DE",
+          "modifiedSha256": "22219C4A48C7F22F905405F43CDEF8FAE03BE26C7155CA7CD9440597AE900D9B"
+        },
+        {
+          "path": "src/pipeline/physics_pipeline/substep.rs",
+          "originalSha256": "C8AFC37889439DCB59FFAAAE0F0CD040C652B76B32AF1452EF5E156B805E7447",
+          "modifiedSha256": "00DC41530B09534ADEDD2CF953D747D15F7BB26DB0AFB043D643CBCD52BA0894"
+        }
+      ]
+    },
+    {
+      "package": "rapier3d-f64",
+      "version": "0.36.1",
+      "archive": "rapier3d-f64-0.36.1.crate",
+      "archiveSha256": "F4588855E9C5451702147B5C6DDFF4D93887F1E59C9504B6AC3571818F6EC3D2",
+      "publisher": {
+        "git": {
+          "sha1": "475caa3ff4646fd9a796b67d14116256f4962bc7",
+          "dirty": true
+        },
+        "path_in_vcs": "crates/rapier3d-f64"
+      },
+      "files": [
+        {
+          "path": "src/pipeline/physics_world.rs",
+          "originalSha256": "6CF5F8BA115E355EBBF615B20E392A0A8220ED6AF38DFC5A2DDFC878C5D431DE",
+          "modifiedSha256": "22219C4A48C7F22F905405F43CDEF8FAE03BE26C7155CA7CD9440597AE900D9B"
+        },
+        {
+          "path": "src/pipeline/physics_pipeline/substep.rs",
+          "originalSha256": "C8AFC37889439DCB59FFAAAE0F0CD040C652B76B32AF1452EF5E156B805E7447",
+          "modifiedSha256": "00DC41530B09534ADEDD2CF953D747D15F7BB26DB0AFB043D643CBCD52BA0894"
+        }
+      ]
+    }
+  ]
+}

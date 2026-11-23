@@ -1,6 +1,25 @@
-# 안정 패키지
+# 패키지와 연결 모듈
 
-UniEngine이 소비하는 검증된 자사 NuGet 배포본을 보관한다. 프레임워크 개발은 각각 독립 저장소에서 진행하며, UniEngine은 외부 개발 소스 경로를 참조하지 않는다.
+UniEngine이 소비하는 패키지와 외부 네이티브 의존성의 연결 프로젝트를 관리한다. 검증된 배포본, 연결 코드, 빌드 절차와 출처 기록을 패키지별로 함께 보관한다.
+
+자사 NuGet 프레임워크 개발은 각각 독립 저장소에서 진행하며 이 폴더에는 검증된 `.nupkg`를 보관한다. Rapier처럼 UniEngine 전용 연결 코드가 필요한 경우에는 해당 패키지 폴더에서 연결 프로젝트를 관리한다. UniEngine 본체는 컴파일된 배포본을 소비하며 외부 개발 소스 경로나 Rust 빌드에 의존하지 않는다.
+
+## 구성과 관리 기준
+
+| 경로 | 역할 |
+| --- | --- |
+| 루트의 `.nupkg` | 검증된 자사 NuGet 배포본. 기존 로컬 NuGet 피드 경로를 유지함 |
+| [rapier](rapier/docs/README.md) | Rapier·Parry를 사용하는 별도 Rust 연결 프로젝트, 원본·로컬 패치와 검증 문서 |
+| Rapier 연결 제품 DLL | 현재 미채택. 이주 후 PhysicalSpace 모듈의 `Native/dist/<연결 버전>/win-x64`에서 관리할 계획 |
+| `rapier/obj` | 도구·Cargo 캐시·로그·실험 빌드 산출물. Git 추적과 제품 배포에서 제외함 |
+
+연결 소스와 빌드·검증 스크립트는 버전 관리한다. 네이티브 제품 DLL은 검증 후 `dist`에 명시적으로 채택하며, 일반 `dotnet build`·`dotnet test`는 채택 DLL을 사용하고 Cargo를 실행하지 않는다. Rust 의존성은 정확한 버전과 Cargo.lock으로 고정한다.
+
+[DLL 이주 계획](rapier/docs/investigation/DLL%20Migration%20Plan.md)은 Rapier·Parry의 원본·패치·출처·라이선스·조사 문서를 packages에 남기고, UniEngine 전용 연결 소스·빌드와 네이티브 DLL 관리를 PhysicalSpace 모듈로 옮기는 방향이다. C# 객체 API는 UniEngine.dll에 포함하며 네이티브 DLL은 함께 배포한다. 현재는 계획 상태이고 연결 프로젝트는 아직 이 패키지 폴더에 있다.
+
+외부 컴포넌트의 라이선스는 UniEngine 자체 코드의 MIT 라이선스와 구분한다. [Rapier·Parry 고지](rapier/docs/Third%20Party%20Notices.md)와 라이선스 원문을 보관하며, 배포본에는 해당 바이너리에 필요한 라이선스 사본과 고지를 포함한다.
+
+Rapier 0.36.1의 충돌 검사 이후 운동 갱신 문제에 로컬 수정본 `0.36.1-r1`을 적용하고 0단계 회귀·연결 검증을 통과했다. [수정 기록](rapier/docs/revisions/Revisions.md), [개조·검증 계획](rapier/docs/revisions/0.36.1-r1/Plan.md), [비교 결과](rapier/docs/investigation/03.%20Results.md)에 원본·무수정 대안·수정본을 구분한다. 아래 최초 원본 실험의 버전·해시·실패 결과는 역사적 기록으로 유지하며 수정본 DLL과 혼동하지 않는다.
 
 ## 현재 버전
 
@@ -34,7 +53,36 @@ C# 구현의 `netstandard2.1` DLL만 포함하며, TypeScript 구현과 런타�
 
 `netstandard2.1`의 `BlackThunder.UniTest.dll`을 제공하며 런타임 패키지 의존성은 없다. `tests/UniEngine.Tests.csproj`가 이 로컬 패키지를 정확한 버전 `[0.4.2]`으로 참조한다. 실행 방법은 [테스트 안내](../tests/README.md)를 따른다.
 
-각 패키지는 현재 채택한 버전만 보관한다. 새 버전으로 참조를 갱신하고 검증을 마치면, 더 이상 참조하지 않는 이전 버전의 `.nupkg`를 삭제한다.
+각 자사 NuGet 패키지는 현재 채택한 버전만 보관한다. 새 버전으로 참조를 갱신하고 검증을 마치면, 더 이상 참조하지 않는 이전 버전의 `.nupkg`를 삭제한다.
+
+## 네이티브 연결 DLL — 0단계 실험
+
+PhysicalSpace는 Rapier·Parry를 의존하는 UniEngine 전용 Rust 연결 DLL 구조이다. 현재는 실험 버전 `0.0.1`이며 본체에 채택한 네이티브 패키지는 없다. 아래 DLL은 최초 원본 검증의 `packages/rapier/obj/stage0/target/x86_64-pc-windows-msvc/release` 산출물이다. 로컬 수정본의 DLL·해시는 별도 [manifest](rapier/obj/collision-update/verified-r1-lf/binaries.json)에 있으며, 어느 쪽도 제품 배포용 `dist`나 C# 호출 대상으로 등록하지 않았다.
+
+| 항목 | 값 |
+| --- | --- |
+| 원본 패키지 | Rapier `=0.36.1`, Parry `=0.31.1`; 2D/3D × f32/f64 네 조합 |
+| 원본 고정 | 별도 Cargo 프로젝트의 정확한 의존성과 Cargo.lock의 배포 파일 체크섬 |
+| Rapier 출판 커밋 | `475caa3ff4646fd9a796b67d14116256f4962bc7`, 출판 메타데이터 `dirty: true` |
+| Parry 출판 커밋 | `3383f51cbbe9af70565427e7a66c605e1557c1fc`, 출판 메타데이터 `dirty: true` |
+| Cargo.lock SHA-256 | `3BBE34905093B9FFDDF862E033B2A88B36C1CB7FF2BE4398CB838B4E82096992` |
+| 빌드 | Rust/Cargo 1.99.1, 기존 MSVC, Windows x64, Release, `panic=unwind`, `--locked --offline` |
+| feature | 원본 기본 구성. 2D의 기본 block-solver 포함. parallel·FEM·simd8·강화 결정론 등은 별도 활성화하지 않음 |
+| 원본 무수정 검증 | 8개 .crate의 SHA-256이 lock과 일치하고, 압축된 원본 파일 2,631개가 빌드 입력과 일치함 |
+| DLL·ABI 검증 | 네 DLL 빌드·6개 심볼 내보내기 대조 통과. C 소비 검증은 구성별 51개 assertion 통과 |
+| 원본 동작 검증 | Rust 사례 총 24개 통과·4개 실패. 모두 `DetectCollisions` 후 `Step`의 운동 갱신 문제이며 보정 미채택 |
+| 실행·출처 근거 | [0단계 결과](rapier/docs/investigation/03.%20Results.md), [패키지 검증 manifest](rapier/obj/stage0/dependencies.json), [DLL manifest](rapier/obj/stage0/binaries.json) |
+
+| 실험 DLL | SHA-256 |
+| --- | --- |
+| `uniengine_rapier2d_f32_probe.dll` | `F788D290C0A7C833794C7257871C43334DE4D3B4DC52079F7A8C92E270058432` |
+| `uniengine_rapier2d_f64_probe.dll` | `93A7FBC6FFEDA9CAA88F3C87B2C0B09EBC304F84B9A539BD2A87DF88D1E1361F` |
+| `uniengine_rapier3d_f32_probe.dll` | `6AE9A7E32F0C8869895F1D667E66076F5A273F32EFDCC4A6E5393C6A724F94BC` |
+| `uniengine_rapier3d_f64_probe.dll` | `B8C87DC6561B412136D59C5AF415FA6D6E181B12EC273E9438BE5D392099C71B` |
+
+출판 메타데이터의 dirty 표시는 배포자가 기록한 상태이며 UniEngine이 패키지를 수정했다는 뜻이 아니다. Rapier의 비교 기준 태그 `v0.36.1` 커밋 `3406750a38286a0d3c7d0f4be2f9d53153e81d90`과 배포 crate의 출판 커밋을 동일하게 기록하지 않는다. 재현 기준은 실제 .crate의 체크섬이다.
+
+1단계에서 검증된 제품 DLL을 채택할 때 연결 계층 버전을 별도로 부여하고, DLL 이주 계획에 따라 PhysicalSpace 모듈의 `Native/dist/<연결 버전>/win-x64`에 헤더·출처·빌드 옵션·해시·검증 기록·라이선스를 함께 보관한다. MSBuild는 채택한 DLL을 빌드·테스트·게시 출력으로 복사하며 Rust 빌드를 실행하지 않는다. 아래 NuGet 갱신 절차는 기존 자사 NuGet 패키지에 대한 절차이다.
 
 ## UniTest 작업 지침
 
@@ -98,7 +146,7 @@ dotnet build tests/UniEngine.Tests.csproj --configuration Release --no-restore -
 
 원본은 [테스트 TRX](../tests/obj/UniTestUpdate-3df16ae/UniTest-0.4.1.trx), [테스트 로그](../tests/obj/UniTestUpdate-3df16ae/test.log), [최종 복원 로그](../tests/obj/UniTestUpdate-3df16ae/restore-after-cleanup.log), [최종 빌드 로그](../tests/obj/UniTestUpdate-3df16ae/build-after-cleanup.log)이며 비추적 산출물이다. 이번 갱신에서는 UniEngine 본체와 테스트의 C# 소스를 변경하지 않았다.
 
-## 갱신 절차
+## 자사 NuGet 갱신 절차
 
 1. 해당 프레임워크의 독립 저장소에서 변경과 버전·문서를 갱신하고 솔루션 빌드 및 기존 테스트 전체를 검증한다.
 2. 통과한 변경을 커밋하고 해당 커밋에서 Release 패키지를 만든다. `dotnet pack`에 `-p:RepositoryCommit=<원본-SHA>`를 명시한다.
@@ -109,4 +157,4 @@ dotnet build tests/UniEngine.Tests.csproj --configuration Release --no-restore -
 7. 모든 프로젝트가 새 버전을 참조하는지 확인하고, 같은 패키지의 이전 버전 `.nupkg`를 삭제한다. 삭제 후에도 로컬 피드 복원·빌드가 통과하는지 확인한다.
 8. 새 패키지·이전 패키지 삭제·참조·출처 문서를 함께 커밋한다.
 
-루트 `NuGet.config`가 자사 패키지를 이 로컬 피드에 연결하므로 프레임워크 개발 저장소가 없어도 복원할 수 있다. 검증된 자사 배포본만 버전 관리하며, 일반 NuGet 복원 캐시와 빌드 산출물은 추가하지 않는다. 패키지는 공개 NuGet 피드에 게시하지 않는다.
+루트 `NuGet.config`가 자사 NuGet 패키지를 이 로컬 피드에 연결하므로 프레임워크 개발 저장소가 없어도 복원할 수 있다. NuGet 배포본은 검증된 자사 패키지만 버전 관리하며, 일반 NuGet 복원 캐시와 임시 빌드 산출물은 추가하지 않는다. 자사 NuGet 패키지는 공개 피드에 게시하지 않는다.

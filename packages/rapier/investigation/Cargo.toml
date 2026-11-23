@@ -1,0 +1,13 @@
+[workspace]
+members = ["2d-f32", "3d-f32", "2d-f64", "3d-f64"]
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+
+[profile.release]
+panic = "unwind"
+
