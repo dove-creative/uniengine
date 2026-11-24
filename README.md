@@ -6,7 +6,7 @@ UniEngine은 객체의 상태·수명·이벤트 흐름을 조합하여 시뮬�
 
 ## 개발 상태
 
-현재 개발 중이며 공개 API와 구조가 변경될 수 있다. 객체·이벤트 기반 기능과 USM 상태 머신을 구현하고 있으며, Scp 클립 재생기는 초안 단계이다. MEP·GeoSystem은 설계 문서로 다루는 후속 구현 범위이다.
+현재 개발 중이며 공개 API와 구조가 변경될 수 있다. 객체·이벤트 기반 기능과 USM 상태 머신을 구현하고 있으며, Scp 클립 재생기는 초안 단계이다. GeoSystem은 노드와 구간의 연결, 평면 지오메트리, 경로 탐색·편집·추적을 제공한다. MEP는 설계 문서로 다루는 후속 구현 범위이다.
 
 Unity 연동을 고려하여 C# 9와 .NET Standard 2.1을 사용한다. 현재 저장소의 실행 예제와 테스트는 .NET 환경을 대상으로 하며, Unity·Mono·IL2CPP에서의 실행 검증을 대신하지 않는다.
 
@@ -60,8 +60,6 @@ dotnet run --project samples/UniEngine.Samples.csproj -c Release
 
 - [개요와 개발 원칙](docs/01.%20Concepts/01.%20Overview.md): 목적과 설계 원칙
 - [구현 문서](docs/02.%20UniEngine/README.md): Infrastructure·Core·Services의 구성과 상세 문서
-- [EventStream 사용법](docs/02.%20UniEngine/02-Core/02-E.3-EventStream/Usage.md): 구독·필터·순서·기본 틱
-- [USM 사용법](docs/02.%20UniEngine/03-Services/StateMachines/Usm/Usage.md): FSM·행동 트리·병렬 노드 구성
 - [실행 예제](samples/README.md): 모듈별 실행 명령과 코드 스니펫
 - [작업 지침](AGENTS.md): 기여 시 확인할 문서와 검증 기준
 

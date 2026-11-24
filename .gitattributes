@@ -8,19 +8,11 @@
 *.targets text eol=lf
 *.sln text eol=lf
 *.slnx text eol=lf
-*.patch text eol=lf
-*.lock text eol=lf
 *.json text eol=lf
-*.rs text eol=lf
-*.toml text eol=lf
 *.ps1 text eol=lf
-*.c text eol=lf
-*.h text eol=lf
-packages/rapier/licenses/** text eol=lf
 
 *.png binary
 *.jpg binary
 *.jpeg binary
 *.gif binary
-*.crate binary
 *.dll binary
