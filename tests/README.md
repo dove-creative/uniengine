@@ -200,6 +200,7 @@ dotnet test tests/UniEngine.Tests.csproj -c Release
 
 ## 범위
 
+- Spatial System의 CollisionSpace 대리자·질의·알림·수명과 Unity 연결 테스트 소스를 제공한다. PhysicalSpace는 미구현이며 현재 검증 대상에서 제외한다. `TestCategory=SpatialSystem`과 Unity의 `SpatialSystemUnity`를 구분하며, 공통 .NET 사례는 통과하였고 Unity 실행은 미검증이다. [계획](01-Infrastructure/04-T-SpatialSystem/docs/02.%20Plans.md)·[결과](01-Infrastructure/04-T-SpatialSystem/docs/03.%20Results.md)를 따른다.
 - GeoSystem의 Navigation 양방향 연결·Location과 Planar 직선·Pin·Clip·Route의 계산·알림·수명 전파를 검증한다. `--filter 'TestCategory=GeoSystem'`으로 실행하며 [공통 계획](03-Services/GeoSystem/Common/docs/02.%20Plans.md)·[결과](03-Services/GeoSystem/Common/docs/03.%20Results.md)와 [Planar 계획](03-Services/GeoSystem/Planar/docs/02.%20Plans.md)·[결과](03-Services/GeoSystem/Planar/docs/03.%20Results.md)를 따른다.
 - StateMachines.Usm의 직접 생성·소유권·수명·종료·예외, FSM·Direct 전이·Payload·순환 제한, BT 선택·순서·선점·LoopType, Reframe·Parallel과 혼합 계층 검증. `--filter 'TestCategory=Usm'`으로 실행하며 [계획](03-Services/StateMachines/Usm/docs/02.%20Plans.md)과 [결과](03-Services/StateMachines/Usm/docs/03.%20Results.md)는 해당 모듈에서 관리한다.
 - StateMachines.Scp 초안의 기존 NUnit 사례 5개를 이관하였다. `--filter 'TestCategory=Scp'`으로 실행하며 [계획](03-Services/StateMachines/Scp/docs/02.%20Plans.md)과 [결과](03-Services/StateMachines/Scp/docs/03.%20Results.md)는 해당 모듈에서 관리한다.

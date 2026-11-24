@@ -14,6 +14,7 @@ Infrastructure의 공개 API 계약은 NUnit으로, 상태가 이어지는 흐�
 | JSON 변환·등록 | [계획](03-M.1-Utilities/Json/docs/02.%20Plans.md) | [결과](03-M.1-Utilities/Json/docs/03.%20Results.md) |
 | ExceptionHandler | [계획](03-M.2-ExceptionHandler/docs/02.%20Plans.md) | [결과](03-M.2-ExceptionHandler/docs/03.%20Results.md) |
 | Log | [계획](03-M.3-LogSystem/docs/02.%20Plans.md) | [결과](03-M.3-LogSystem/docs/03.%20Results.md) |
+| Spatial System | [계획](04-T-SpatialSystem/docs/02.%20Plans.md) | [결과](04-T-SpatialSystem/docs/03.%20Results.md) |
 
 ## 공통 검증
 
