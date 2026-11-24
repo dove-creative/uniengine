@@ -11,7 +11,7 @@ namespace BlackThunder.UniEngine.Core
         /// Counts connections created through Connect or direct event subscriptions.
         /// </summary>
         public int ConnectionCount => _connections.Count;
-        public bool IsAwake => !_isSleeping;
+        public bool IsAwake => _sleep == null;
         public bool IsDisposed { get; private set; }
 
         // Control
@@ -56,14 +56,20 @@ namespace BlackThunder.UniEngine.Core
         private readonly AdaptiveDictionary<object, Connection> _connections = new();
         // All listeners and direct subscriptions share one graph.
         private readonly EventStream<TEventArgs> _updates = new();
-        private Func<Action> _onSleep;
-        private Action _onAwake;
-        private Action _awakeHandler;
-        private Token _sleepToken;
-        private bool _isSleeping;
+        private Action _onSleep;
+        private SleepSession _sleep;
         private bool _isUpdating;
         private bool _isDisposing;
         private bool _pendingDispose;
+
+        // Keeps the token and callback of one sleep together,
+        // so a sleep that has already ended cannot change a later one.
+        private class SleepSession
+        {
+            public Token Token;
+            public Action OnAwake;
+            public Action Handler;
+        }
 
 
         // Content --------------------
@@ -72,7 +78,7 @@ namespace BlackThunder.UniEngine.Core
             object owner,
             Action onDisposing = null,
             Action onDisposed = null,
-            Func<Action> onSleep = null)
+            Action onSleep = null)
         {
             Owner = owner;
 
@@ -122,7 +128,7 @@ namespace BlackThunder.UniEngine.Core
         {
             ThrowIfDisposed();
 
-            if (_isSleeping || _isUpdating) return;
+            if (_sleep != null || _isUpdating) return;
             _isUpdating = true;
 
             var completed = false;
@@ -180,7 +186,7 @@ namespace BlackThunder.UniEngine.Core
         {
             ThrowIfDisposed();
 
-            if (_isSleeping)
+            if (_sleep != null)
             {
                 token = default;
                 return false;
@@ -192,24 +198,23 @@ namespace BlackThunder.UniEngine.Core
         public IDisposable TrySleep(Action onAwake = null)
         {
             ThrowIfDisposed();
-            return _isSleeping ? new Handle(onAwake) : Sleep(new Token(), onAwake);
+            return _sleep != null ? new Handle(onAwake) : Sleep(new Token(), onAwake);
         }
         public IDisposable Sleep(Action onAwake = null) => Sleep(new Token(), onAwake);
         public IDisposable Sleep(Token token, Action onAwake = null)
         {
             ThrowIfDisposed();
 
-            if (_isSleeping)
+            if (_sleep != null)
                 throw new InvalidOperationException(Ctx("Nested Sleep is not allowed."));
 
             if (token == null || token.IsDisposed)
                 throw new ArgumentException(Ctx("Invalid Token could not be connected"), nameof(token));
 
-            _onAwake = onAwake;
-            _isSleeping = true;
-            _sleepToken = token;
-            _awakeHandler ??= Awake;
-            token.Action += _awakeHandler;
+            var sleep = new SleepSession { Token = token, OnAwake = onAwake };
+            sleep.Handler = Awake;
+            _sleep = sleep;
+            token.Action += sleep.Handler;
 
             try
             {
@@ -217,27 +222,24 @@ namespace BlackThunder.UniEngine.Core
             }
             catch
             {
-                token.Action -= _awakeHandler;
-                _sleepToken = null;
-                _onAwake = null;
-                _isSleeping = false;
+                token.Action -= sleep.Handler;
+
+                // onSleep may have ended this sleep and started another one before it failed.
+                if (_sleep == sleep) _sleep = null;
+
                 throw;
             }
 
             return token;
-        }
 
-        private void Awake()
-        {
-            if (IsDisposed || _pendingDispose || !_isSleeping)
-                return;
+            void Awake()
+            {
+                if (IsDisposed || _pendingDispose || _sleep != sleep)
+                    return;
 
-            _isSleeping = false;
-            _sleepToken = null;
-
-            var onAwake = _onAwake;
-            _onAwake = null;
-            onAwake?.Invoke();
+                _sleep = null;
+                sleep.OnAwake?.Invoke();
+            }
         }
 
         // Disposal
@@ -307,14 +309,11 @@ namespace BlackThunder.UniEngine.Core
             IsDisposed = true;
             _pendingDispose = true;
             _isDisposing = false;
-            _isSleeping = false;
 
-            if (_sleepToken != null)
-                _sleepToken.Action -= _awakeHandler;
+            if (_sleep != null)
+                _sleep.Token.Action -= _sleep.Handler;
 
-            _sleepToken = null;
-            _awakeHandler = null;
-            _onAwake = null;
+            _sleep = null;
             _onSleep = null;
 
             foreach (var item in _connections)

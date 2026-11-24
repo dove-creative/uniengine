@@ -57,9 +57,7 @@ private void Compact()
 
 ## 표의 스택 순회
 
-출처는 d818fe7924bea7f17c15286cc80522ed621a3e05의 src/02-Core/02-E.3-EventStream/EventGraph/Traversal.cs이다.
-
-방문할 작업은 종류와 ID를 가진 Frame으로 Frame 배열에 넣는다. 같은 파일의 Run은 `while (_stackTop > bottom)`에서 `_stack[--_stackTop]`을 꺼내 처리한다. 재귀 호출이 맡던 다음 작업과 종료 처리를 그래프가 명시적으로 관리한다.
+방문할 작업은 종류와 ID를 가진 Frame으로 Frame 배열에 넣는다. Run은 `while (_stackTop > bottom)`에서 `_stack[--_stackTop]`을 꺼내 처리한다. 재귀 호출이 맡던 다음 작업과 종료 처리를 그래프가 명시적으로 관리한다.
 
 ```csharp
 private void EnsureStackCapacity(int required)

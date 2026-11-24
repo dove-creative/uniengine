@@ -1200,7 +1200,8 @@ namespace BlackThunder.UniEngine.Tests
         [TestCase(true)]
         public void SleepRejectsAnInvalidTokenAndStaysAwake(bool disposedToken)
         {
-            using var hub = new EventHub<int>(new object());
+            var sleeps = 0;
+            using var hub = new EventHub<int>(new object(), onSleep: () => sleeps++);
             var values = new List<int>();
             var awakenings = 0;
             hub.Connect(new object()).OnUpdated(values.Add);
@@ -1212,8 +1213,169 @@ namespace BlackThunder.UniEngine.Tests
 
             Assert.That(exception.ParamName, Is.EqualTo("token"));
             Assert.That(hub.IsAwake, Is.True);
+            Assert.That(sleeps, Is.Zero);
             Assert.That(awakenings, Is.Zero);
             Assert.That(values, Is.EqualTo(new[] { 1 }));
+        }
+
+        [TestCase(SleepEntry.Sleep)]
+        [TestCase(SleepEntry.SleepWithToken)]
+        [TestCase(SleepEntry.TrySleep)]
+        [TestCase(SleepEntry.TrySleepWithResult)]
+        public void OnSleepRunsOnceEachTimeAnAwakeHubFallsAsleep(SleepEntry entry)
+        {
+            var calls = new List<string>();
+            var values = new List<int>();
+            Action onSleep = null;
+            using var hub = new EventHub<int>(new object(), onSleep: () => onSleep());
+            hub.Connect(new object()).OnUpdated(values.Add);
+
+            onSleep = () =>
+            {
+                calls.Add($"sleep:{hub.IsAwake}");
+                hub.Update(1);
+            };
+
+            using (StartSleep(hub, entry, () => calls.Add($"awake:{hub.IsAwake}")))
+            {
+                Assert.Throws<InvalidOperationException>(() => hub.Sleep());
+                Assert.Throws<InvalidOperationException>(() => hub.Sleep(new Token()));
+                Assert.That(hub.TrySleep(out _), Is.False);
+                hub.TrySleep().Dispose();
+                Assert.That(calls, Is.EqualTo(new[] { "sleep:False" }));
+            }
+
+            Assert.That(calls, Is.EqualTo(new[] { "sleep:False", "awake:True" }));
+
+            StartSleep(hub, entry, null).Dispose();
+            Assert.That(calls, Is.EqualTo(new[] { "sleep:False", "awake:True", "sleep:False" }));
+            Assert.That(values, Is.Empty);
+        }
+
+        [Test]
+        public void OnSleepFailureCancelsTheSleepAndReleasesItsToken()
+        {
+            var failure = new ApplicationException("onSleep");
+            var fails = true;
+            var sleeps = 0;
+            var awakenings = 0;
+            var values = new List<int>();
+
+            using var hub = new EventHub<int>(new object(), onSleep: () =>
+            {
+                sleeps++;
+                if (fails) throw failure;
+            });
+
+            hub.Connect(new object()).OnUpdated(values.Add);
+            var token = new Token();
+
+            var exception = Assert.Throws<ApplicationException>(() => hub.Sleep(token, () => awakenings++));
+            hub.Update(1);
+            Assert.That(exception, Is.SameAs(failure));
+            Assert.That(hub.IsAwake, Is.True);
+            Assert.That(token.IsDisposed, Is.False);
+            Assert.That(values, Is.EqualTo(new[] { 1 }));
+
+            // The cancelled token is no longer connected, so it must not end a later sleep.
+            fails = false;
+            var next = hub.Sleep();
+            token.Dispose();
+            Assert.That(hub.IsAwake, Is.False);
+            Assert.That(awakenings, Is.Zero);
+
+            next.Dispose();
+            Assert.That(hub.IsAwake, Is.True);
+            Assert.That(sleeps, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void DisposingTheTokenInOnSleepAwakensTheHubImmediately()
+        {
+            var calls = new List<string>();
+            var token = new Token();
+
+            using var hub = new EventHub<int>(new object(), onSleep: () =>
+            {
+                calls.Add("sleep started");
+                token.Dispose();
+                calls.Add("sleep finished");
+            });
+
+            var result = hub.Sleep(token, () => calls.Add("awake"));
+
+            Assert.That(result, Is.SameAs(token));
+            Assert.That(token.IsDisposed, Is.True);
+            Assert.That(hub.IsAwake, Is.True);
+            Assert.That(calls, Is.EqualTo(new[] { "sleep started", "awake", "sleep finished" }));
+        }
+
+        [Test]
+        public void FailedOnSleepKeepsASleepStartedAfterItsTokenEnded()
+        {
+            var failure = new ApplicationException("first onSleep");
+            var calls = new List<string>();
+            var first = new Token();
+            var second = new Token();
+            var sleeps = 0;
+
+            using var hub = new EventHub<int>(new object(), onSleep: () =>
+            {
+                if (++sleeps > 1) return;
+
+                first.Dispose();
+                throw failure;
+            });
+
+            var exception = Assert.Throws<ApplicationException>(() => hub.Sleep(first, () =>
+            {
+                calls.Add("first awake");
+                hub.Sleep(second, () => calls.Add("second awake"));
+            }));
+
+            Assert.That(exception, Is.SameAs(failure));
+            Assert.That(sleeps, Is.EqualTo(2));
+            Assert.That(hub.IsAwake, Is.False);
+            Assert.Throws<InvalidOperationException>(() => hub.Sleep());
+            Assert.That(calls, Is.EqualTo(new[] { "first awake" }));
+
+            second.Dispose();
+            Assert.That(hub.IsAwake, Is.True);
+            Assert.That(calls, Is.EqualTo(new[] { "first awake", "second awake" }));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void NestedOnSleepFailureIsReportedThroughTheEndedToken(bool handled)
+        {
+            var reports = new List<Exception>();
+            if (handled) ExceptionHandler.SetHandler(reports.Add);
+
+            var failure = new ApplicationException("second onSleep");
+            var first = new Token();
+            var second = new Token();
+            var sleeps = 0;
+            var awakenings = 0;
+
+            using var hub = new EventHub<int>(new object(), onSleep: () =>
+            {
+                if (++sleeps > 1) throw failure;
+
+                first.Dispose();
+            });
+
+            TestDelegate sleep = () => hub.Sleep(first, () => hub.Sleep(second, () => awakenings++));
+
+            if (handled) Assert.DoesNotThrow(sleep);
+            else Assert.That(Assert.Throws<ApplicationException>(sleep), Is.SameAs(failure));
+
+            Assert.That(reports, Is.EqualTo(handled ? new[] { failure } : new Exception[0]));
+            Assert.That(sleeps, Is.EqualTo(2));
+            Assert.That(hub.IsAwake, Is.True);
+            Assert.That(second.IsDisposed, Is.False);
+
+            second.Dispose();
+            Assert.That(awakenings, Is.Zero);
         }
 
         // Disposal

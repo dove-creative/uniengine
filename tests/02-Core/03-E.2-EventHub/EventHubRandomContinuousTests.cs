@@ -48,7 +48,9 @@ namespace BlackThunder.UniEngine.Tests
             var random = new Random(seed);
             var received = new List<string>();
             var listeners = new Listener[4];
-            var hub = new EventHub<ulong>(new object());
+            var sleeps = 0;
+            var expectedSleeps = 0;
+            var hub = new EventHub<ulong>(new object(), onSleep: () => sleeps++);
             var disposing = 0;
             var disposed = 0;
             var reachedDepth = 0;
@@ -108,7 +110,9 @@ namespace BlackThunder.UniEngine.Tests
                             break;
                         case 5:
                             using (hub.Sleep()) Publish(value, true);
+                            expectedSleeps++;
                             Assert.That(hub.IsAwake, Is.True);
+                            Assert.That(sleeps, Is.EqualTo(expectedSleeps));
                             break;
                         case 6:
                             ConnectIfNeeded(listener);
@@ -286,7 +290,7 @@ namespace BlackThunder.UniEngine.Tests
                     Array.Clear(listener.Registered, 0, listener.Registered.Length);
                 }
 
-                hub = new EventHub<ulong>(new object());
+                hub = new EventHub<ulong>(new object(), onSleep: () => sleeps++);
             }
         }
     }

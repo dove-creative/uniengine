@@ -47,7 +47,6 @@ OnUpdated는 모든 갱신을, OnUpdatedWhere는 조건 함수가 참인 갱신�
 | [IEventHubBuilder](IEventHubBuilder.md) | 연결된 수신자의 조건별 갱신과 생애주기 알림을 등록하는 계약 묶음이다. |
 | [AdaptiveCollection](../02-E.2-AdaptiveCollections/AdaptiveCollection.md) | 순회 중 해제를 지원하는 생애주기 등록 컬렉션이다. |
 | [사용 예제](Usage.md) | 객체 연결과 폐기 알림, 비트 조건, 직접 구독, 수면과 깨우기, 여러 허브의 일괄 수면 예제이다. |
-| [이슈 기록](ISSUES.md) | null 필터 문제의 해결과 미결정인 onSleep 반환값의 계약을 기록한다. |
 | [테스트 상태·동작 표](../../../../tests/02-Core/03-E.2-EventHub/docs/01.%20Tables.md) | 연결·공유 경로·직접 구독·실패·수면·폐기·할당의 검증 기준이다. |
 | [테스트 계획](../../../../tests/02-Core/03-E.2-EventHub/docs/02.%20Plans.md) | 상태·동작 범위와 테스트 파일·검증 방법을 연결한다. |
 | [공통 검증 결과](../../../../tests/02-Core/docs/Hub%20Results.md) | 두 Hub와 전체 Release 실행 결과를 기록한다. |

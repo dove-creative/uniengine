@@ -6,12 +6,14 @@
 
 - 역할과 구성
 - 동작 흐름
+    - 일반
+    - 수면
 - 설계 기준과 고려사항
 
 ## 역할과 구성
 
 - 책임: 도메인 객체별 연결·활동 상태·폐기 알림을 관리하면서 갱신 전달을 스트림에 위임한다.
-- 보유 정보: Owner, 직접 구독과 리스너가 공유하는, 연결마다 하나인 Connection, 모든 갱신 경로가 공유하는 EventStream, Sleep 토큰과 갱신·폐기 상태를 보관한다. ConnectionCount와 HasListener는 직접 구독의 연결도 포함한다.
+- 보유 정보: Owner, 직접 구독과 리스너가 공유하는, 연결마다 하나인 Connection, 모든 갱신 경로가 공유하는 EventStream, 현재 수면의 Token·onAwake·깨우기 연결과 갱신·폐기 상태를 보관한다. ConnectionCount와 HasListener는 직접 구독의 연결도 포함한다.
 
 Connection은 연결 하나의 갱신 등록과 폐기 전·후 콜백을 보관한다. 직접 이벤트는 원본 대리자를 연결 키로 사용하며, 같은 키에 여러 이벤트를 등록하면 하나의 Connection을 공유한다. 생성자 콜백도 같은 규칙을 따른다. 갱신 등록은 원본 대리자·조건·콜백 형식과 구독 핸들을 보관하며, 전파 경계에서의 해제를 지원한다. Connection은 구독 핸들의 해제 알림을 받아 해당 등록을 제거한다. 생애주기 등록은 순회 중 해제를 지원하는 AdaptiveCollection으로 관리한다.
 
@@ -28,6 +30,8 @@ Connection은 내부 연결 계약 IEventHubConnection으로 Builder에 수명 �
 
 ## 동작 흐름
 
+### 일반
+
 Connect는 새 연결을 만들고 그 연결의 Builder를 반환한다. 기존 키로 다시 Connect하면 InvalidOperationException이다. 직접 +=는 같은 키의 Connection이 있으면 해당 이벤트 등록을 추가한다. OnUpdated와 직접 Updated 구독은 루트에 둔다. 조건 함수는 OnUpdatedWhere, 값 비교는 OnUpdatedWhen, 비트 조건은 OnUpdatedForFlags로 등록하며 각각 루트 아래 한 단계의 조건 경로를 사용한다. 모든 등록은 같은 Builder를 반환한다. 리스너별 Branch와 별도 순서 그룹은 없으며, 같은 위치의 같은 조건 대리자는 리스너가 달라도 WhereNode의 행 하나를 공유한다.
 
 OnUpdatedWhen(target, callback)은 내부 스트림의 When 경로를 사용한다. 같은 부모 아래 동등한 target은 리스너가 달라도 WhenNode의 행 하나를 공유한다. EqualityComparer&lt;TEventArgs&gt;.Default로 비교하며 참조 형식과 Nullable&lt;T&gt;의 null도 유효한 target이다. 같은 위치의 target들은 WhenNode 하나에 모이고 발행 값과 일치하는 항목 하나만 방문한다. 다른 경로와의 순서는 보장하지 않는다.
@@ -42,7 +46,24 @@ Update는 내부 EventStream의 루트 단위로 전파한다. 같은 위치의 
 
 실패한 구독의 삭제가 반영되기 전에는 같은 등록을 다시 추가하면 중복으로 거부한다. 루트 종료 후 생애주기나 다른 등록이 남은 연결은 같은 콜백을 다시 등록할 수 있다. 비어서 제거된 연결의 Builder는 재사용할 수 없으며, 직접 +=는 대리자 키로 새 연결을 만들 수 있다.
 
-Sleep에서 반환하거나 연결한 Token을 폐기하면 Awake가 호출된다. 수면 중 Update와 재진입 Update는 실행을 생략한다. 폐기 요청은 이 상태들보다 먼저 검사한다.
+재진입 Update는 실행을 생략한다. 폐기 요청은 수면과 재진입 상태보다 먼저 검사한다.
+
+### 수면
+
+수면은 Token 하나에 묶고, 그 수면의 onAwake와 깨우기 연결도 Token과 함께 보관한다. 깨우는 권한을 그 Token을 가진 작업으로 한정하여, 여러 작업이 활성 상태를 동시에 바꾸며 서로의 깨우기 시점을 덮어쓰지 않게 한다. 외부에서 만든 Token으로 재우면 그 Token 하나를 폐기하여 여러 허브를 함께 깨울 수 있다.
+
+1. Sleep이나 TrySleep이 깨어 있는 허브를 수면 상태로 바꾼 뒤 생성자에서 받은 onSleep을 호출한다. 깨어 있던 허브가 실제로 잠들 때마다 한 번 호출하며, 거부된 Sleep과 이미 수면 중인 허브의 TrySleep에서는 호출하지 않는다.
+2. 수면 중 Update는 보류하지 않고 생략한다. onSleep은 이미 수면 상태에서 호출되므로 콜백 안의 Update도 생략된다.
+3. Sleep에서 반환하거나 연결한 Token을 폐기하면 허브가 깨어난 뒤 onAwake를 실행한다. 깨어난 뒤 필요한 갱신은 onAwake에서 발행한다.
+
+onSleep은 수면 진입만 알린다. 깨울 때의 동작은 Sleep·TrySleep에 전달하는 onAwake가 맡으므로 두 콜백 사이의 실행 순서를 따로 정하지 않는다.
+
+- 이미 수면 중인 허브의 Sleep은 거부한다. 수면 여부를 알 수 없는 호출자는 TrySleep을 사용한다. 이미 수면 중이면 TrySleep은 수면 상태를 바꾸지 않으며, 핸들을 반환하는 형태는 그 핸들을 폐기할 때 onAwake만 실행한다.
+- onSleep이 실패하면 그 Token의 수면만 취소하고 예외를 해당 Sleep의 호출자에게 전달한다. Token은 폐기하지 않고 연결만 해제하므로 이후 폐기해도 onAwake를 실행하지 않는다.
+- onAwake 안의 예외는 폐기 중인 Token의 콜백 실패이며 [Token](../02-E.1-HandleToken/Token.md)의 예외 보고를 따른다. onAwake에서 다시 잠들다가 onSleep이 실패한 경우도 같다.
+- onSleep 안에서 Token을 폐기하면 그 시점에 깨어나 onAwake를 실행한다. onAwake에서는 다른 Token으로 다시 잠들 수 있다.
+- 이미 끝난 수면은 뒤에 시작한 수면을 바꾸지 않는다. onSleep 안에서 깨어나 다시 잠든 뒤 처음 onSleep이 실패해도 새 수면과 그 onAwake는 유지된다. 이전 Token은 새 수면을 깨우지 않는다.
+- 폐기는 수면보다 우선한다. 수면 중 폐기된 허브는 이후 Token이 폐기되어도 onAwake를 실행하지 않는다.
 
 ## 설계 기준과 고려사항
 
@@ -64,12 +85,6 @@ Sleep에서 반환하거나 연결한 Token을 폐기하면 Awake가 호출된�
 - 예외로 종료하면 뒤의 알림은 생략될 수 있으나 참조 정리는 수행한다.
 - 명시적 해제나 마지막 등록 제거로 해제된 연결의 Builder는 재연결 후에도 재사용할 수 없다. 등록은 InvalidOperationException이며, 허브 폐기 이후에는 ObjectDisposedException이 우선한다.
 - Update·Dispose는 소유자가 호출하는 설계이며 런타임에서 호출자 신원을 검사하지는 않는다.
-
-수면은 Token 하나에 묶는다. 깨우는 권한을 그 Token을 가진 작업으로 한정하여, 여러 작업이 활성 상태를 동시에 바꾸며 서로의 깨우기 시점을 덮어쓰지 않게 한다. 외부에서 만든 Token으로 재우면 그 Token 하나를 폐기하여 여러 허브를 함께 깨울 수 있다.
-
-- 이미 수면 중인 허브의 Sleep은 거부한다. 수면 여부를 알 수 없는 호출자는 TrySleep을 사용한다. 이미 수면 중이면 TrySleep은 수면 상태를 바꾸지 않으며, 핸들을 반환하는 형태는 그 핸들을 폐기할 때 onAwake만 실행한다.
-- 수면 중 Update는 보류하지 않고 생략한다. 깨어난 뒤 필요한 갱신은 onAwake에서 발행한다.
-- 폐기는 수면보다 우선한다. 수면 중 폐기된 허브는 이후 Token이 폐기되어도 onAwake를 실행하지 않는다.
 
 [사용 예제](Usage.md)의 직접 구독 절은 연결 수신자와 직접 구독자의 호출 순서를 보여준다. 수면과 깨우기 절은 TrySleep으로 중첩된 수면 범위를 처리하고, 여러 허브 함께 재우기 절은 외부 Token 하나로 두 허브를 함께 깨운다.
 
