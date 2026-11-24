@@ -12,6 +12,9 @@ namespace BlackThunder.GeoSystem.Geometry
         public new INode<TPosition> From => (INode<TPosition>)base.From;
         public new INode<TPosition> To => (INode<TPosition>)base.To;
         public new IEnumerable<INode<TPosition>> Nodes => base.Nodes.Cast<INode<TPosition>>();
+        IReadOnlyNode<TPosition> IReadOnlySegment<TPosition>.From => From;
+        IReadOnlyNode<TPosition> IReadOnlySegment<TPosition>.To => To;
+        IEnumerable<IReadOnlyNode<TPosition>> IReadOnlySegment<TPosition>.Nodes => Nodes;
         public virtual IDictionary<string, float> Values => EmptySegmentInputs<TPosition>.Values;
         public virtual IList<ControlHandle<TPosition>> Handles => EmptySegmentInputs<TPosition>.Handles;
 

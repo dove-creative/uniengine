@@ -202,6 +202,9 @@ namespace BlackThunder.UniEngine.Tests
             public new INode<string> From => (INode<string>)base.From;
             public new INode<string> To => (INode<string>)base.To;
             public new IEnumerable<INode<string>> Nodes => base.Nodes.Cast<INode<string>>();
+            IReadOnlyNode<string> IReadOnlySegment<string>.From => From;
+            IReadOnlyNode<string> IReadOnlySegment<string>.To => To;
+            IEnumerable<IReadOnlyNode<string>> IReadOnlySegment<string>.Nodes => Nodes;
 
 
             public NamedSegment() : base(1f) { }

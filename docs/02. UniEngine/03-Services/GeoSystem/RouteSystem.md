@@ -48,7 +48,8 @@ IRoute는 `bool TryConnectNode(ConnectionSide side, INavNode node)`를 제공한
 | --- | --- |
 | RouteSystem.Route() | DijkstraPathfinder |
 | RouteSystem.Planar.Route() | AStarPathfinder&lt;Vector2&gt;(Vector2.Distance) |
-| 각 Route(IPathfinder) | 전달한 탐색기를 그대로 사용, null 거부 |
+| RouteSystem.Route(IPathfinder) | Navigation 탐색기 |
+| RouteSystem.Planar.Route(IPathfinder&lt;Vector2&gt;) | 위치 타입이 지정된 탐색기 또는 PathfinderAdapter&lt;Vector2&gt; |
 
 기본 제공자는 생성자에서 선택하며 노드 타입을 보고 실행 중 탐색기를 바꾸지 않는다. Planar 기본 A*의 최단 경로 보장에는 거리 휴리스틱이 실제 남은 비용을 과대평가하지 않아야 한다는 조건이 있다. 거리보다 작은 비용의 사용자 구간을 사용하면 조건에 맞는 탐색기나 DijkstraPathfinder를 명시적으로 전달한다.
 

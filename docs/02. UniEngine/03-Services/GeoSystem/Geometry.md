@@ -86,6 +86,10 @@ TraversalOptions는 탐색만 제한하며 공간 조회와 연결 편집에 영
 
 ## 위치 기반 탐색
 
-`IPathfinder<TPosition>`·`Path<TPosition>`·`Arrow<TPosition>`는 Navigation의 대응 타입을 확장하며 위치 타입이 지정된 입력·결과를 제공한다. 탐색에는 회전 타입 TRotation이 필요하지 않다. `Geometry.AStarPathfinder<TPosition>`는 생성자로 `Func<TPosition, TPosition, float>`을 받고 여러 목표 중 최소 추정값을 사용한다. 최소 비용을 보장하려면 휴리스틱이 실제 남은 비용을 과대평가하지 않아야 한다. 알고리즘·결과·예외 계약은 [경로 탐색](Pathfinding.md)을 따른다.
+`IPathfinder<TPosition>`은 위치 타입을 받는 독립 탐색 계약이다. `Path<TPosition>`과 `Arrow<TPosition>`은 Navigation 결과 타입을 확장한다. 탐색에는 회전 타입 TRotation이 필요하지 않다. `Geometry.AStarPathfinder<TPosition>`는 생성자로 `Func<TPosition, TPosition, float>`을 받고 여러 목표 중 최소 추정값을 사용한다. 최소 비용을 보장하려면 휴리스틱이 실제 남은 비용을 과대평가하지 않아야 한다. 알고리즘·결과·예외 계약은 [경로 탐색](Pathfinding.md)을 따른다.
+
+## Unity에서 사용자 정의 노드와 구간 구현
+
+각 인터페이스는 바로 상위의 읽기 전용 또는 변경 가능한 뷰에 접근자를 전달한다. 위치 타입이 있는 노드·구간을 직접 구현할 때는 해당 위치 타입의 읽기 전용 `Segments` 또는 `From`·`To`·`Nodes`도 같은 연결 정보로 구현한다. 기본 클래스 `Node<TPosition>`과 `Segment<TPosition, TRotation>`은 이 전달을 제공한다. Navigation 인터페이스만 직접 구현하는 경우에도 읽기 전용 뷰를 제공한다. 이렇게 하면 Unity Mono가 같은 getter에 대해 여러 기본 인터페이스 구현을 선택해야 하는 상황을 피할 수 있다.
 
 [상위 구성](README.md)

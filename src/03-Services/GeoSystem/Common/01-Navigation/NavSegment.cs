@@ -18,6 +18,9 @@ namespace BlackThunder.GeoSystem.Navigation
             }
         }
         public bool IsIsolated => _from == null && _to == null;
+        IReadOnlyNavNode IReadOnlyNavSegment.From => From;
+        IReadOnlyNavNode IReadOnlyNavSegment.To => To;
+        IEnumerable<IReadOnlyNavNode> IReadOnlyNavSegment.Nodes => Nodes;
         public float Length { get; protected set; }
 
         // Property

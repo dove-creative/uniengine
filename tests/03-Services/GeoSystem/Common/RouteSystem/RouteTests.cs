@@ -32,7 +32,7 @@ namespace BlackThunder.UniEngine.Tests
             using var cd = new WeightedSegment(c, d, 2f);
             using var common = new Route();
             using var planar = new PlanarRoute();
-            using var explicitDijkstra = new PlanarRoute(new DijkstraPathfinder());
+            using var explicitDijkstra = new PlanarRoute(new PathfinderAdapter<Vector2>(new DijkstraPathfinder()));
             foreach (var route in new Route[] { common, planar, explicitDijkstra })
             {
                 route.ConnectNode(ConnectionSide.From, a);
@@ -54,7 +54,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph();
             var finder = new Finder();
-            using Route route = planar ? new PlanarRoute(finder) : new Route(finder);
+            using Route route = planar ? new PlanarRoute(new PathfinderAdapter<Vector2>(finder)) : new Route(finder);
             IRoute contract = route;
             var first = firstSide == ConnectionSide.From ? graph.Nodes[0] : graph.Nodes[2];
             Assert.That(contract.TryConnectNode(firstSide, first), Is.True);
@@ -89,7 +89,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph();
             var finder = new Finder();
-            using var route = new PlanarRoute(finder);
+            using var route = new PlanarRoute(new PathfinderAdapter<Vector2>(finder));
             var events = new List<int>();
             route.EventHub.Connect(events).OnUpdated(flags =>
             {
@@ -153,7 +153,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var node = new Planar.Node();
             var finder = new Finder { Handler = (_, _) => throw new Exception("No search is needed.") };
-            using var route = new PlanarRoute(finder);
+            using var route = new PlanarRoute(new PathfinderAdapter<Vector2>(finder));
             route.ConnectNode(ConnectionSide.From, node);
             route.ConnectNode(ConnectionSide.To, node);
             Assert.That(route.From, Is.SameAs(node));
@@ -183,7 +183,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph();
             var finder = new Finder();
-            using var route = new PlanarRoute(finder);
+            using var route = new PlanarRoute(new PathfinderAdapter<Vector2>(finder));
             route.ConnectNode(ConnectionSide.From, graph.Nodes[0]);
             route.ConnectNode(ConnectionSide.To, graph.Nodes[2]);
             var views = route.Views.ToArray();
@@ -211,7 +211,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph();
             var finder = new Finder();
-            using var route = new PlanarRoute(finder);
+            using var route = new PlanarRoute(new PathfinderAdapter<Vector2>(finder));
             route.ConnectNode(ConnectionSide.From, graph.Nodes[0]);
             route.ConnectNode(ConnectionSide.To, graph.Nodes[1]);
             new DijkstraPathfinder().TryPathfind(graph.Nodes[0], new[] { graph.Nodes[3] }, out var candidate);
@@ -328,7 +328,7 @@ namespace BlackThunder.UniEngine.Tests
         {
             using var graph = new Graph();
             var finder = new Finder();
-            using var route = new PlanarRoute(finder);
+            using var route = new PlanarRoute(new PathfinderAdapter<Vector2>(finder));
             route.ConnectNode(ConnectionSide.From, graph.Nodes[0]);
             route.ConnectNode(ConnectionSide.To, graph.Nodes[1]);
             var cyclic = new Path(graph.Nodes[0], new[]

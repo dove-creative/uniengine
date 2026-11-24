@@ -24,7 +24,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(search.TryPathfind(from, new[] { from }, out var path), Is.True);
             Assert.That(path.From, Is.SameAs(from));
             Assert.That(path.Arrows, Is.Empty);
-            Assert.That(search.TryPathfind(from, Array.Empty<IReadOnlyNavNode>(), out path), Is.False);
+            Assert.That(search.TryPathfind(from, Array.Empty<IReadOnlyNode<int>>(), out path), Is.False);
             Assert.That(path, Is.Null);
             Assert.That(search.TryPathfind(from, new[] { graph.Nodes[1] }, out path), Is.False);
             Assert.That(path, Is.Null);
@@ -101,7 +101,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(enumerations, Is.EqualTo(1));
             Assert.That(path.Arrows.Last().To, Is.SameAs(graph.Nodes[destination]));
 
-            IEnumerable<IReadOnlyNavNode> Targets()
+            IEnumerable<IReadOnlyNode<int>> Targets()
             {
                 enumerations++;
                 if (enumerations != 1) throw new InvalidOperationException("Targets were enumerated twice.");
@@ -142,7 +142,7 @@ namespace BlackThunder.UniEngine.Tests
             var goal = graph.Nodes[2];
             Assert.Throws<ArgumentNullException>(() => search.TryPathfind(null, new[] { goal }, out _));
             Assert.Throws<ArgumentNullException>(() => search.TryPathfind(from, null, out _));
-            Assert.Throws<ArgumentException>(() => search.TryPathfind(from, new IReadOnlyNavNode[] { null }, out _));
+            Assert.Throws<ArgumentException>(() => search.TryPathfind(from, new IReadOnlyNode<int>[] { null }, out _));
             var partial = graph.Connect(0, 1);
             partial.DisconnectNode(ConnectionSide.To);
             Assert.That(search.TryPathfind(from, new[] { goal }, out var path), Is.False);
@@ -151,7 +151,7 @@ namespace BlackThunder.UniEngine.Tests
             Assert.Throws<ArgumentException>(() => search.TryPathfind(from, new[] { goal }, out _));
             from.Dispose();
             Assert.Throws<ObjectDisposedException>(() =>
-                search.TryPathfind(from, Array.Empty<IReadOnlyNavNode>(), out _));
+                search.TryPathfind(from, Array.Empty<IReadOnlyNode<int>>(), out _));
         }
 
         [TestCase(0)]
@@ -231,7 +231,7 @@ namespace BlackThunder.UniEngine.Tests
         }
 
         [Test]
-        public void AStarValidatesHeuristicsAndTheUntypedAdapter()
+        public void AStarValidatesHeuristicsAndRemainsPositionTyped()
         {
             using var graph = new Graph(2);
             graph.Connect(0, 1);
@@ -244,10 +244,8 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(search.TryPathfind(graph.Nodes[0], new[] { graph.Nodes[0] }, out var path), Is.True);
                 Assert.That(path.Arrows, Is.Empty);
             }
-            IPathfinder untyped = new AStarPathfinder<int>((_, _) => 0);
-            using var foreign = new NavNode();
-            Assert.Throws<ArgumentException>(() => untyped.TryPathfind(foreign, new[] { graph.Nodes[1] }, out _));
-            Assert.Throws<ArgumentException>(() => untyped.TryPathfind(graph.Nodes[0], new[] { foreign }, out _));
+            Assert.That(typeof(IPathfinder).IsAssignableFrom(typeof(IPathfinder<int>)), Is.False);
+            Assert.Throws<ArgumentNullException>(() => new PathfinderAdapter<int>(null));
         }
 
         [Test]
@@ -323,9 +321,9 @@ namespace BlackThunder.UniEngine.Tests
                             distances[i, j] = Math.Min(distances[i, j], distances[i, k] + distances[k, j]);
 
                 var scale = Enumerable.Range(0, 6).Select(_ => random.NextDouble()).ToArray();
-                IPathfinder[] searches =
+                IPathfinder<int>[] searches =
                 {
-                    new DijkstraPathfinder(),
+                    new PathfinderAdapter<int>(new DijkstraPathfinder()),
                     new AStarPathfinder<int>((_, _) => 0f),
                     new AStarPathfinder<int>((a, b) => double.IsInfinity(distances[a, b])
                         ? 0f : (float)(distances[a, b] * scale[a] * 0.5)),
@@ -427,11 +425,11 @@ namespace BlackThunder.UniEngine.Tests
             }
         }
 
-        private static IPathfinder CreateSearch(int algorithm) => algorithm switch
+        private static IPathfinder<int> CreateSearch(int algorithm) => algorithm switch
         {
-            0 => new BfsPathfinder(),
-            1 => new DfsPathfinder(),
-            2 => new DijkstraPathfinder(),
+            0 => new PathfinderAdapter<int>(new BfsPathfinder()),
+            1 => new PathfinderAdapter<int>(new DfsPathfinder()),
+            2 => new PathfinderAdapter<int>(new DijkstraPathfinder()),
             3 => new AStarPathfinder<int>((_, _) => 0f),
             _ => throw new ArgumentOutOfRangeException(nameof(algorithm)),
         };

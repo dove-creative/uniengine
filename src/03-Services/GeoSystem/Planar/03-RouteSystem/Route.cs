@@ -38,8 +38,19 @@ namespace BlackThunder.GeoSystem.RouteSystem.Planar
 
 
         // Content
-        public Route() : base(new AStarPathfinder<Vector2>(Vector2.Distance)) { }
-        public Route(IPathfinder pathfinder) : base(pathfinder) { }
+        public Route() : this(new AStarPathfinder<Vector2>(Vector2.Distance)) { }
+        public Route(IPathfinder<Vector2> pathfinder) : base(Bind(pathfinder)) { }
+
+        private static FindPath Bind(IPathfinder<Vector2> pathfinder)
+        {
+            if (pathfinder == null) throw new ArgumentNullException(nameof(pathfinder));
+            return (Geometry.INode from, Geometry.INode to, out Navigation.Path path) =>
+            {
+                var success = pathfinder.TryPathfind((INode)from, new[] { (INode)to }, out var typed);
+                path = typed;
+                return success;
+            };
+        }
 
         protected override void ValidateNode(Geometry.INode node)
         {

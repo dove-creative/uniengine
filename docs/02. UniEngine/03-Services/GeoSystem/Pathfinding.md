@@ -48,7 +48,7 @@ Length는 가중 탐색에서 음수·NaN·무한대가 아니어야 하며 길�
 
 ## Geometry와 휴리스틱
 
-Geometry.IPathfinder&lt;TPosition&gt;는 Navigation.IPathfinder를 확장한다. 타입이 지정된 TryPathfind는 IReadOnlyNode&lt;TPosition&gt; 입력과 Path&lt;TPosition&gt; 출력을 사용한다. Navigation 인터페이스를 통한 호출도 위치 타입 검사 후 같은 탐색에 전달된다. 호환되지 않는 출발점·목표 위치 타입은 ArgumentException이다. Path&lt;TPosition&gt;와 Arrow&lt;TPosition&gt;는 대응하는 Navigation 클래스를 상속하며 기반 타입으로 조회해도 같은 참조를 제공한다.
+`Geometry.IPathfinder<TPosition>`은 `IReadOnlyNode<TPosition>` 입력과 `Path<TPosition>` 출력을 사용하는 독립 계약이다. A*는 이 계약을 직접 구현한다. BFS·DFS·Dijkstra나 사용자 정의 Navigation 탐색기는 `new PathfinderAdapter<TPosition>(finder)`로 전달한다. 어댑터는 내부 탐색기를 한 번 호출하고 원본 구간·도착 노드의 참조와 순서를 유지한다. 경로가 없으면 false와 null을 반환한다. 성공 결과의 출발점이 다르거나 경로에 위치 타입이 맞지 않는 구간·노드가 있으면 InvalidOperationException이 발생한다.
 
 AStarPathfinder&lt;TPosition&gt;의 생성자에는 `Func<TPosition, TPosition, float>` 휴리스틱이 필수이다. 여러 목표에 대한 추정값 중 최솟값을 사용하며, 목표 노드의 추정값은 콜백을 호출하지 않고 0으로 처리한다. 휴리스틱은 순수한 비용 추정 함수로 사용하며 음수·NaN·무한대를 반환해서는 안 된다.
 

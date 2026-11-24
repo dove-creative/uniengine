@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Numerics;
-using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.UniEngine.Objects;
 
 namespace BlackThunder.GeoSystem.Geometry.Planar
@@ -13,9 +12,6 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
         Geometry.IReadOnlyNode<Vector2> Geometry.IReadOnlySegment<Vector2>.From => From;
         Geometry.IReadOnlyNode<Vector2> Geometry.IReadOnlySegment<Vector2>.To => To;
         IEnumerable<Geometry.IReadOnlyNode<Vector2>> Geometry.IReadOnlySegment<Vector2>.Nodes => Nodes;
-        Geometry.IReadOnlyNode Geometry.IReadOnlySegment.From => From;
-        Geometry.IReadOnlyNode Geometry.IReadOnlySegment.To => To;
-        IEnumerable<Geometry.IReadOnlyNode> Geometry.IReadOnlySegment.Nodes => Nodes;
 
         bool TryGetTransform(Location location, out Transform2D transform, float? epsilon = null);
 
@@ -43,20 +39,5 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
         Geometry.INode<Vector2> Geometry.ISegment<Vector2>.From => From;
         Geometry.INode<Vector2> Geometry.ISegment<Vector2>.To => To;
         IEnumerable<Geometry.INode<Vector2>> Geometry.ISegment<Vector2>.Nodes => Nodes;
-        Geometry.IReadOnlyNode<Vector2> Geometry.IReadOnlySegment<Vector2>.From => From;
-        Geometry.IReadOnlyNode<Vector2> Geometry.IReadOnlySegment<Vector2>.To => To;
-        IEnumerable<Geometry.IReadOnlyNode<Vector2>> Geometry.IReadOnlySegment<Vector2>.Nodes => Nodes;
-        Geometry.INode Geometry.ISegment.From => From;
-        Geometry.INode Geometry.ISegment.To => To;
-        IEnumerable<Geometry.INode> Geometry.ISegment.Nodes => Nodes;
-        Geometry.IReadOnlyNode Geometry.IReadOnlySegment.From => From;
-        Geometry.IReadOnlyNode Geometry.IReadOnlySegment.To => To;
-        IEnumerable<Geometry.IReadOnlyNode> Geometry.IReadOnlySegment.Nodes => Nodes;
-        INavNode INavSegment.From => From;
-        INavNode INavSegment.To => To;
-        IEnumerable<INavNode> INavSegment.Nodes => Nodes;
-        IReadOnlyNavNode IReadOnlyNavSegment.From => From;
-        IReadOnlyNavNode IReadOnlyNavSegment.To => To;
-        IEnumerable<IReadOnlyNavNode> IReadOnlyNavSegment.Nodes => Nodes;
     }
 }
