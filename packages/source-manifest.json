@@ -1,0 +1,20 @@
+{
+  "packages": [
+    {
+      "repository": "https://github.com/dove-creative/blackbox-system",
+      "commit": "05eeecbd57c7884b86bcf97e073003a9c94e6fb1",
+      "id": "BlackThunder.BlackboxSystem",
+      "version": "0.2.1",
+      "file": "BlackThunder.BlackboxSystem.0.2.1.nupkg",
+      "sha256": "0C630206C104C7EA729406A342A16DCB812DB3CD8DEC4034F2A16217DEB43C42"
+    },
+    {
+      "repository": "https://github.com/dove-creative/unitest",
+      "commit": "9abfb0e1dbe455a22304355a56d5be870a430714",
+      "id": "BlackThunder.UniTest",
+      "version": "0.4.3",
+      "file": "BlackThunder.UniTest.0.4.3.nupkg",
+      "sha256": "133EEF305C41763F7CF17AC8B8951F50D215254DFE9CEB79BA28EE45DEC5A4CD"
+    }
+  ]
+}

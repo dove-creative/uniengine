@@ -1,6 +1,6 @@
 # 자사 NuGet 패키지
 
-UniEngine이 사용하는 자사 NuGet 패키지의 검증된 배포본과 버전·출처·갱신 절차를 관리한다. 프레임워크 개발은 각각 독립 저장소에서 진행하며 이 폴더에는 현재 채택한 `.nupkg`를 보관한다.
+UniEngine은 저장소에 포함된 자사 패키지를 로컬 피드에서 복원한다. 같은 버전의 패키지는 덮어쓰지 않으며 원본 커밋과 SHA-256을 함께 고정한다.
 
 ## 현재 버전
 
@@ -9,32 +9,30 @@ UniEngine이 사용하는 자사 NuGet 패키지의 검증된 배포본과 버�
 | 항목 | 값 |
 | --- | --- |
 | 패키지 | `BlackThunder.BlackboxSystem` |
-| 버전 | `0.2.0` |
-| 파일 | [BlackThunder.BlackboxSystem.0.2.0.nupkg](BlackThunder.BlackboxSystem.0.2.0.nupkg) |
-| 원본 저장소 | [dove-creative/blackbox-system](https://github.com/dove-creative/blackbox-system) |
-| 원본 커밋 | [635c20e2ece4ce0c504ea03dda2c40679eac00e1](https://github.com/dove-creative/blackbox-system/commit/635c20e2ece4ce0c504ea03dda2c40679eac00e1) |
-| SHA-256 | `9CF8315FAC441A5B52B167C2B02CC0B1DFB973779C34FD4712F348BD69010F0C` |
-| 검증 | C# 기본 테스트 308개 및 C# 10 테스트 47개 통과 |
-| 소비 검증 | 빈 패키지 캐시에서 로컬 피드 복원, UniEngine Release 빌드, 기록·TXT 내보내기 실행 통과 |
-
-C# 구현의 `netstandard2.1` DLL만 포함하며, TypeScript 구현과 런타임 패키지 의존성은 없다. UniEngine 본체가 이 패키지를 참조한다.
+| 버전 | `0.2.1` |
+| 파일 | [BlackThunder.BlackboxSystem.0.2.1.nupkg](BlackThunder.BlackboxSystem.0.2.1.nupkg) |
+| 원본 커밋 | [05eeecbd57c7884b86bcf97e073003a9c94e6fb1](https://github.com/dove-creative/blackbox-system/commit/05eeecbd57c7884b86bcf97e073003a9c94e6fb1) |
+| SHA-256 | `0C630206C104C7EA729406A342A16DCB812DB3CD8DEC4034F2A16217DEB43C42` |
+| 대상 | `netstandard2.1` |
+| 원본 검증 | 2026-11-25 Release 본체·테스트 프로젝트 빌드 성공, 경고·오류 0개 |
 
 ### UniTest
 
 | 항목 | 값 |
 | --- | --- |
 | 패키지 | `BlackThunder.UniTest` |
-| 버전 | `0.4.2` |
-| 파일 | [BlackThunder.UniTest.0.4.2.nupkg](BlackThunder.UniTest.0.4.2.nupkg) |
-| 원본 저장소 | [dove-creative/unitest](https://github.com/dove-creative/unitest) |
-| 원본 커밋 | [e53ef8b012f58dc2e851f44498985cb8df772ecd](https://github.com/dove-creative/unitest/commit/e53ef8b012f58dc2e851f44498985cb8df772ecd) |
-| SHA-256 | `C9B57885397F4FFADF96010776C600A3E41E9052C8E763C4F22ECA51C0A4AAE4` |
-| 원본 검증 | C# 전체 테스트 660개와 샘플 CLI 검증 통과 |
-| 소비 검증 | 빈 캐시 복원 및 UniEngine 커밋 e002925의 별도 사본에 새 패키지를 적용한 Release 빌드 통과. 소비 테스트와 이후 추가 검증은 사용자 요청으로 실행하지 않음 |
+| 버전 | `0.4.3` |
+| 파일 | [BlackThunder.UniTest.0.4.3.nupkg](BlackThunder.UniTest.0.4.3.nupkg) |
+| 원본 커밋 | [9abfb0e1dbe455a22304355a56d5be870a430714](https://github.com/dove-creative/unitest/commit/9abfb0e1dbe455a22304355a56d5be870a430714) |
+| SHA-256 | `133EEF305C41763F7CF17AC8B8951F50D215254DFE9CEB79BA28EE45DEC5A4CD` |
+| 대상 | `netstandard2.1` |
+| 원본 검증 | 2026-11-25 Release 본체·테스트 프로젝트 빌드 성공, 경고·오류 0개 |
 
-`netstandard2.1`의 `BlackThunder.UniTest.dll`을 제공하며 런타임 패키지 의존성은 없다. `tests/UniEngine.Tests.csproj`가 이 로컬 패키지를 정확한 버전 `[0.4.2]`으로 참조한다. 실행 방법은 [테스트 안내](../tests/README.md)를 따른다.
+Blackbox System은 본체에서, UniTest는 테스트 프로젝트에서 사용한다. 두 라이브러리는 런타임 패키지 의존성이 없다. 이번 갱신은 사용자 요청에 따라 빌드와 정적 검사만 수행하며 테스트와 공개 피드 배포는 실행하지 않는다.
 
-각 자사 NuGet 패키지는 현재 채택한 버전만 보관한다. 새 버전으로 참조를 갱신하고 검증을 마치면, 더 이상 참조하지 않는 이전 버전의 `.nupkg`를 삭제한다.
+## 2026-11-25 갱신 검증
+
+UniTest 0.4.3과 Blackbox System 0.2.1을 빈 캐시에 복원하고 현재 UniEngine 본체·테스트 프로젝트의 Release 빌드를 확인했다. 이전 패키지 제거 후 별도의 빈 캐시에서 다시 복원·빌드했으며, 일반 샘플과 GeoSystem 샘플도 Release 빌드에 성공했다. 경고·오류는 0개이다. 이전 배포본과 이번 결과를 구분하며, 아래 과거 테스트 수치는 이번 갱신의 테스트 실행 결과가 아니다.
 
 ## UniTest 작업 지침
 
