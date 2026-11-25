@@ -1,6 +1,6 @@
 # EventHub 이전 성능 측정 코드
 
-[테스트 계획](02.%20Plans.md)의 구독 해제 알림 전환 비교에 사용한 실제 측정 코드이다. 원본은 임시 폴더 uniengine-eventhub-disposal-benchmark-2a66c2d의 driver/Program.cs이며, 아래 코드 블록은 해당 파일 전체를 줄 끝만 LF로 맞춰 보존한 것이다.
+[테스트 계획](02.%20Plans.md)의 구독 해제 알림 전환 비교에 사용한 실제 측정 코드이다. 아래 코드 블록은 해당 파일 전체를 줄 끝만 LF로 맞춰 보존한 것이다.
 
 비교 기준은 2a66c2d06ed03d44e5566a06c1b84d74821aa497이고, 변경 후 라이브러리는 당시 작업 트리의 사본이다. 원본 프로젝트는 net10.0·C# 9·nullable/implicit usings 비활성화로 빌드했다. 코드의 Where 기반 Builder 호출은 당시 API이며 현재 API용으로 수정하지 않는다. 이 문서는 독립 실행 프로젝트나 재측정 요청이 아니다.
 

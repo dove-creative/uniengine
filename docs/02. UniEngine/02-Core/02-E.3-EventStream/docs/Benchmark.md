@@ -107,15 +107,10 @@ stream.Where(condition).Subscribe(Handle);
 ### 3-3. 집계와 판정
 
 - 시간은 회차별 중앙값의 평균이다. 회차 편차는 '가장 큰 회차 값 / 가장 작은 회차 값 - 1'이다.
-- default는 2·3회차, pgo-off와 tiered-off는 세 회차를 쓴다. 측정 시작 후 약 7분 30초 동안 모든 시나리오가 약 1.55배 느렸고, 이 구간이 default 1회차의 자식 OOP 앞부분에 걸렸다. 구조 코드 차이가 작은 Individual도 같은 배율로 느렸으므로 측정 환경의 상태로 보며 원인은 확인하지 않았다. 공정한 비교를 위해 default는 세 구조 모두 2·3회차만 쓴다. 검사 결과는 [시간순 블록 검사](../../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/results/jit-conditions-20261112/startup-window-blocks.md)에 있다.
+- default는 2·3회차, pgo-off와 tiered-off는 세 회차를 쓴다. 측정 시작 후 약 7분 30초 동안 모든 시나리오가 약 1.55배 느렸고, 이 구간이 default 1회차의 자식 OOP 앞부분에 걸렸다. 구조 코드 차이가 작은 Individual도 같은 배율로 느렸으므로 측정 환경의 상태로 보며 원인은 확인하지 않았다. 공정한 비교를 위해 default는 세 구조 모두 2·3회차만 쓴다. 검사 결과는 [시간순 블록 검사](../../../../../tests/02-Core/02-E.3-EventStream/docs/Runs/StartupWindow-20261112.md)에 있다.
 - 비교는 '비교 대상 / 기준 - 1'이다. 변화율의 절댓값이 10% 이상이고 양쪽 회차 편차보다 클 때만 빠름·느림으로 판정한다. 10% 미만은 '10% 미만', 그 밖은 '보류'로 둔다. 이 판정은 측정의 해석 기준이며 통계적 유의성 검정이 아니다.
-- 원본은 [결과 폴더](../../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/results/jit-conditions-20261112)에 있으며 버전 관리에서 제외한다. 원본에는 이 문서에서 다루지 않는 두 구현의 기록도 함께 있다.
 
-표는 채택하지 않은 구조라 코드와 빌드를 지웠으며 다시 측정하지 않는다. 핵심 구현은 [순회 구현 발췌](Traversal%20Samples.md)에 있다. 이 문서의 표는 보존한 측정 원본에서 다음 명령으로 다시 생성한다. 스크립트는 버전 관리에서 제외되는 tests/bin에 있다.
-
-```powershell
-python tests/bin/BenchmarkDoc/build-tables.py --results tests/02-Core/02-E.3-EventStream/Benchmarks/results/jit-conditions-20261112 --template tests/bin/BenchmarkDoc/Benchmark.template.md --output "docs/02. UniEngine/02-Core/02-E.3-EventStream/docs/Benchmark.md"
-```
+표는 채택하지 않은 구조라 코드와 빌드를 지웠으며 다시 측정하지 않는다. 핵심 구현은 [순회 구현 발췌](Traversal%20Samples.md)에 있다. 이 문서의 표는 측정 원본을 집계한 결과이다.
 
 ## 4. 결과 비교
 
@@ -490,4 +485,4 @@ Pipeline은 PGO를 끈 조건의 일부 규모에서 논리=물리 OOP가 10~15%
 
 발행 시나리오 5개는 모두 0B를 유지했다. 구독·해제 시나리오는 616B에서 648B로 증가했다. 단위와 핸들 소유 정보를 추가하여 준비 단계 메모리도 증가한다. 병렬 구간 자체의 Task·큐 할당은 이 동기 경로 측정과 별개이다.
 
-원본 [비교 JSON](../../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/results/20261114-boundaries/comparison.json)과 [실행별 기록](../../../../../tests/02-Core/02-E.3-EventStream/Benchmarks/results/20261114-boundaries/runs.log)은 로컬 무시 경로에 보관한다. 기능·수명·무할당 검증은 [최종 테스트 기록](../../../../../tests/02-Core/02-E.3-EventStream/docs/03.%20Results.md)을 따른다.
+기능·수명·무할당 검증은 [최종 테스트 기록](../../../../../tests/02-Core/02-E.3-EventStream/docs/03.%20Results.md)을 따른다.

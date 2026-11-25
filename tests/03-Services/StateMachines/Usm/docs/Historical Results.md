@@ -19,7 +19,7 @@
 | 변경 공백 검사 | git diff --check 통과 |
 | 의존 범위 | USM 소스에 EventStream·Injection·Reframe 참조 없음 |
 
-USM 사례별 결과·소요시간은 [개별 실행 기록](Runs/UsmResults.log), 전체 회귀 집계는 [전체 실행 기록](Runs/FullSuite.log)에 보관한다. 로컬 TRX 원본은 `tests/bin/UsmResults/usm.trx`와 `tests/bin/UsmResults/all.trx`이며 빌드 산출물이므로 버전 관리에 포함하지 않는다.
+USM 사례별 결과·소요시간은 [개별 실행 기록](Runs/UsmResults.log), 전체 회귀 집계는 [전체 실행 기록](Runs/FullSuite.log)에 보관한다.
 
 ## 랜덤 연속 실행
 

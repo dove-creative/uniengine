@@ -22,7 +22,7 @@
 
 최초 샌드박스 실행은 VSTest가 testhost에 90초 동안 연결하지 못해 테스트 본문 시작 전에 중단됐다. 동일한 빌드로 샌드박스 밖에서 실행하자 20개 중 12개 통과·8개 실패였다. 실패는 모두 Dictionary가 순회 중 삭제한 키의 TryGetValue 실패 결과에 이전 out 값을 남기는 결함을 드러냈다.
 
-실패 시 out 값을 기본값으로 확정하고 직접 회귀 사례 4개를 추가한 뒤 Release 빌드, 선택 실행 24개, 전체 일반 실행 1,302개가 통과했다. 최초 중단·실패 기록은 최종 통과 기록과 별도로 보존했다.
+실패 시 out 값을 기본값으로 확정하고 직접 회귀 사례 4개를 추가한 뒤 Release 빌드, 선택 실행 24개, 전체 일반 실행 1,302개가 통과했다. 최초 중단·실패는 최종 통과 수에 포함하지 않았다.
 
 ## 실행 근거
 
@@ -32,16 +32,6 @@ dotnet test tests/UniEngine.Tests.csproj -c Release --no-build --no-restore --fi
 dotnet test tests/UniEngine.Tests.csproj -c Release --no-build --no-restore
 ```
 
-각 테스트 실행에는 별도 TRX 파일명과 결과 경로를 지정했다. 전체 실행의 콘솔 로그는 normal 상세도를 사용했다.
-
-- [Release 빌드 로그](../../obj/StateModels/20261115/build-final.log)
-- [샌드박스 중단 TRX](../../obj/StateModels/20261115/focused.trx) · [로그](../../obj/StateModels/20261115/focused.log)
-- [최초 본문 실행 TRX](../../obj/StateModels/20261115/focused-verified.trx) · [로그](../../obj/StateModels/20261115/focused-verified.log)
-- [최종 선택 실행 TRX](../../obj/StateModels/20261115/focused-final.trx) · [로그](../../obj/StateModels/20261115/focused-final.log)
-- [전체 일반 실행 TRX](../../obj/StateModels/20261115/all.trx) · [로그](../../obj/StateModels/20261115/all.log)
-- [선택 실행 집계](../../obj/StateModels/20261115/focused-summary.json) · [전체 UniTest 연속 실행 집계](../../obj/StateModels/20261115/all-continuous-summary.json)
-- [정적 검사](../../obj/StateModels/20261115/static-checks.log)
-
-TRX의 각 사례 StdOut에는 후보별 노드 ID·부모 ID·깊이·상태·Lab ID가 있다. Unity 실행과 별도 벤치마크·Extended 검증은 포함하지 않았다. 원본 로그와 TRX는 로컬 빌드 산출물 경로이며 정리 시 제거될 수 있다.
+Unity 실행과 별도 벤치마크·Extended 검증은 포함하지 않았다.
 
 변경한 C# 파일 5개의 LF·후행 공백과 새 상태 모델의 줄 길이를 확인했다. 관련 문서 10개의 로컬 링크 99개가 유효했다. 기존 수정 파일 19개는 작업 전후 SHA-256이 일치했으며 수학 문서와 사람이 관리하는 다이어그램도 포함된다. 테스트 안내는 기존 내용을 유지하면서 새 테스트 항목을 추가했다.
