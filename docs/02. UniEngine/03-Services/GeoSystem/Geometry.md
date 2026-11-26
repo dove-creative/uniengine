@@ -20,7 +20,7 @@ Geometry는 Navigation 연결을 공간 구간으로 확장하고, Location을 �
 | `IPositioned<TPosition>` | TPosition 형식의 Position 조회 |
 | `IReadOnlyNode<TPosition>` | 위치와 연결된 읽기 전용 구간 조회 |
 | `INode<TPosition>` | 읽기 전용 노드 계약과 Navigation의 연결 편집 계약 결합 |
-| `IReadOnlySegment<TPosition>` | 같은 TPosition를 사용하는 끝점·노드 조회와 TryGetPosition |
+| `IReadOnlySegment<TPosition>` | 같은 TPosition를 사용하는 끝점·노드 조회와 TryGetPosition·TryGetLocation |
 | `ISegment<TPosition>` | 위치 조회와 Navigation의 연결 편집 계약 결합 |
 | `IReadOnlySegment<TPosition, TRotation>` | 위치 조회 계약에 TryGetTransform 추가 |
 | `ISegment<TPosition, TRotation>` | 위치·변환·연결 편집 계약과 Values·Handles |
@@ -36,7 +36,7 @@ Planar.IPositioned는 `IPositioned<Vector2>`를, Planar의 노드·구간 인터
 
 Planar 객체는 기존과 같이 Planar 노드·구간끼리 연결한다. 공통 제네릭 계약으로 조회할 수 있다는 사실이 서로 다른 공간 구현 사이의 연결 호환성을 보장하지는 않는다.
 
-Planar.LinearSegment와 Planar.PolySegment는 각각 공통 제네릭 추상 클래스를 상속한다. Planar.LinearSegment는 더 이상 Planar.Segment의 파생형이 아니므로 두 구간을 함께 받는 소비자는 Planar.ISegment를 사용한다. Planar.Segment는 Clip과 사용자 파생형을 위한 기반 클래스로 유지한다. 기존 `ISegment<TPosition, TRotation>` 직접 구현자는 Values·Handles를 추가해야 한다. Linear·Clip·Route와 공통 Segment 기본 구현은 읽기 전용 빈 컬렉션을 제공하며 편집 시 NotSupportedException이다.
+Planar.LinearSegment와 Planar.PolySegment는 각각 공통 제네릭 추상 클래스를 상속한다. Planar.LinearSegment는 더 이상 Planar.Segment의 파생형이 아니므로 두 구간을 함께 받는 소비자는 Planar.ISegment를 사용한다. Planar.Segment는 사용자 파생형을 위한 기반 클래스로 유지한다. Planar.Clip은 공통 `RouteSystem.Clip<Vector2, float>`를 상속하며 Planar.ISegment로 함께 조회한다. 기존 `ISegment<TPosition, TRotation>` 직접 구현자는 Values·Handles를 추가해야 한다. Linear·Clip·Route와 공통 Segment 기본 구현은 읽기 전용 빈 컬렉션을 제공하며 편집 시 NotSupportedException이다.
 
 ## 편집 데이터와 Shaper
 
@@ -76,11 +76,21 @@ Location은 IsForward·DistanceType·Distance를 갖는 불변 값이다. IsForw
 
 길이 10인 구간에서 Length 2·정방향은 From으로부터 2, 역방향은 From으로부터 8인 위치이다. Rate 0.2도 같은 의미이다. 역방향 조회는 위치뿐 아니라 반환되는 회전도 180도 반전한다. ToDistance·ToRate는 From 기준 좌표로 환산하며, 범위 검사는 구간의 Try 조회에서 수행한다.
 
+TryGetLocation은 실제 위치에서 구간 내 Location을 구한다. isForward의 기본값은 true, distanceType의 기본값은 Length이다. 두 인자는 결과의 방향과 거리 표현만 지정하며 후보 선택 순서를 바꾸지 않는다. 입력 위치와 구간 형상의 공간 거리가 Epsilon 이내인 후보 중 가장 가까운 위치를 선택하고, 오차가 같으면 From 기준 누적 거리가 작은 위치를 선택한다. 위치만으로 원래 진행 방향이나 Length·Rate 표현을 복원하지는 않는다.
+
+범위 조회 오버로드는 startDistance·endDistance와 errorSquared 출력을 추가한다. 검색 경계는 결과 형식과 무관하게 From 기준 실제 거리이며 양 끝을 포함한다. 각각 유한한 0 이상 Length 이하의 값이어야 한다. 역순 범위는 허용하며, 오차가 같은 후보는 startDistance에서 endDistance로 검색할 때 먼저 만나는 위치를 선택한다. 두 경계가 같으면 해당 한 점만 검사한다. errorSquared는 입력 위치와 선택한 위치 사이 공간 거리의 제곱이며 double로 반환한다. Epsilon은 동률 판정 폭으로 사용하지 않는다.
+
+LinearSegment는 검색 범위 안의 선분에서 가장 가까운 점을 구한다. PolySegment는 현재 Hinge 점열의 직선 조각을 대상으로 하므로 TryGetPosition과 같은 근사 형상을 사용한다. 무제한 최근접 투영 기능은 제공하지 않으며 공간 오차가 허용 범위를 넘으면 실패한다. 조회는 상태를 변경하거나 갱신 이벤트를 발생시키지 않는다.
+
+공통 Segment와 Planar.Segment의 파생형은 범위 TryGetLocation을 구현한다. 기본 클래스가 전체 구간 조회를 이 구현으로 전달한다. 인터페이스를 직접 구현하는 타입은 두 오버로드를 모두 제공해야 하며, 지원하지 않는 조회를 기본 false 구현으로 숨기지 않는다. 사용자 정의 위치 타입의 공간 오차 계산은 구현체의 책임이다. 같은 공간의 구간들을 Clip·Route로 조합하려면 동일한 거리 단위와 오차 척도를 사용해야 한다.
+
 ## 형상과 조회 실패
 
 노드 이동은 길이가 같더라도 Shape 변경이다. 계산 구간은 위치·길이·회전을 먼저 갱신한 뒤 알린다. Pin 같은 파생 위치의 간접 자기 참조는 변경 전에 거부한다.
 
 끝점 누락, 영길이·허용 오차 이하 길이, 구간 밖 거리, NaN·무한대 조회 값은 Try 조회가 false와 기본 출력값을 반환한다. 경계에서 Epsilon 이내의 오차는 끝점으로 제한한다. Epsilon은 UniMath.Epsilon을 기본값으로 하며 객체별 또는 호출별로 지정할 수 있다. 음수·비유한 Epsilon은 ArgumentOutOfRangeException이다. Node의 비유한 위치 설정도 거부한다. 폐기 객체의 조회는 ObjectDisposedException이다.
+
+TryGetLocation도 같은 형상·수명·허용 오차 규칙을 따른다. 실패 시 Location과 errorSquared는 기본값이다. 잘못된 DistanceType이나 비유한·음수·Length 초과 검색 경계는 ArgumentOutOfRangeException이다. Planar의 비유한 입력 위치는 false를 반환한다. 반환값은 float 거리·비율로 표현하므로 왕복 위치 비교에도 부동소수점 허용 오차를 적용한다.
 
 TraversalOptions는 탐색만 제한하며 공간 조회와 연결 편집에 영향을 주지 않는다. Geometry 계약도 Navigation에서 IPropertySubject를 이어받고, 기반 클래스가 제공하는 객체별 Property를 사용한다. 저장소 수명과 직접 구현자의 추가 계약은 [Navigation](Navigation.md)을 따른다.
 
@@ -91,5 +101,7 @@ TraversalOptions는 탐색만 제한하며 공간 조회와 연결 편집에 영
 ## Unity에서 사용자 정의 노드와 구간 구현
 
 각 인터페이스는 바로 상위의 읽기 전용 또는 변경 가능한 뷰에 접근자를 전달한다. 위치 타입이 있는 노드·구간을 직접 구현할 때는 해당 위치 타입의 읽기 전용 `Segments` 또는 `From`·`To`·`Nodes`도 같은 연결 정보로 구현한다. 기본 클래스 `Node<TPosition>`과 `Segment<TPosition, TRotation>`은 이 전달을 제공한다. Navigation 인터페이스만 직접 구현하는 경우에도 읽기 전용 뷰를 제공한다. 이렇게 하면 Unity Mono가 같은 getter에 대해 여러 기본 인터페이스 구현을 선택해야 하는 상황을 피할 수 있다.
+
+[Network Creator](NetworkCreators.md)는 이 노드·구간 계약을 사용하여 외부 감지와 Factory 기반의 생성 흐름을 제공한다.
 
 [상위 구성](README.md)

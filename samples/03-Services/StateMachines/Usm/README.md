@@ -7,13 +7,13 @@ Node·Work·Transitioner를 직접 조립하여 FSM·BT·재실행·병렬 진�
 저장소 최상위에서 한 번 실행한다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- usm
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- usm
 ```
 
 대화형 프롬프트에서도 같은 명령을 사용할 수 있다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config
 ```
 
 ```text

@@ -44,7 +44,28 @@ if (linear.TryGetTransform(new Location(1f), out var point, out var rotation))
 }
 ```
 
-`Node<TPosition>`와 `Segment<TPosition, TRotation>`는 공통 기본 구현이다. 자체 공간 계산을 추가할 때는 Segment의 TryGetTransform을 구현하거나 구간 인터페이스를 직접 구현한다. `ILinearSegment<TPosition, TRotation>`와 `IPolySegment<TPosition, TRotation>`는 기본 구현 클래스 상속을 요구하지 않는다.
+`Node<TPosition>`와 `Segment<TPosition, TRotation>`는 공통 기본 구현이다. 자체 공간 계산을 추가할 때는 Segment의 TryGetTransform과 범위 TryGetLocation을 구현하거나 구간 인터페이스를 직접 구현한다. 직접 구현자는 TryGetLocation의 두 오버로드를 모두 제공한다. `ILinearSegment<TPosition, TRotation>`와 `IPolySegment<TPosition, TRotation>`는 기본 구현 클래스 상속을 요구하지 않는다.
+
+실제 좌표에서 구간 내 거리를 찾을 때는 TryGetLocation을 사용한다. 다음 예시는 길이가 10인 직선에서 From으로부터 2만큼 떨어진 좌표를 조회한다.
+
+```csharp
+using var origin = new Node(Vector2.Zero);
+using var destination = new Node(new Vector2(10f, 0f));
+using var segment = new LinearSegment(origin, destination);
+var target = new Vector2(2f, 0f);
+
+segment.TryGetLocation(target, out var forward);
+// forward = Length 2, IsForward true.
+segment.TryGetLocation(target, out var backwardRate,
+    isForward: false, distanceType: DistanceType.Rate);
+// backwardRate = Rate 0.8, IsForward false; both results identify the same position.
+
+segment.TryGetLocation(new Vector2(1.875f, 0f), 2f, 8f,
+    out var bounded, out var errorSquared, epsilon: 0.125f);
+// bounded = Length 2; errorSquared = 0.015625.
+```
+
+검색 범위는 항상 구간 From 기준 실제 거리이다. 시작·끝을 뒤집으면 같은 오차의 후보를 선택하는 검색 순서가 바뀐다. 결과의 isForward만 바꾸는 것은 후보 선택에 영향을 주지 않는다. Clip·Route에서도 해당 객체 자체의 범위와 Location을 사용한다.
 
 PolySegment의 형상을 편집할 때는 수치 설정과 절대 위치 Handle을 사용한다. 다음 예시는 이차 베지어를 만든 뒤 제어점을 이동하고 꺾은선으로 바꾼다.
 
@@ -181,3 +202,93 @@ if (tracer.PlaceOnRoute(journey, new Location(0f), type))
 ```
 
 [상위 구성](README.md)
+
+## 제네릭 Route와 그룹
+
+평면 Geometry도 공통 제네릭 Route·Hold와 그룹에 그대로 등록할 수 있다. 원소는 호출자가 소유하고 그룹은 등록만 관리한다.
+
+```csharp
+using System.Numerics;
+using BlackThunder.GeoSystem.Geometry;
+using BlackThunder.GeoSystem.RouteSystem;
+using Planar = BlackThunder.GeoSystem.Geometry.Planar;
+
+using var from = new Planar.Node(Vector2.Zero);
+using var to = new Planar.Node(new Vector2(10f, 0f));
+using var line = new Planar.LinearSegment(from, to);
+using var hold = new Hold<Vector2, float>();
+using var route = new Route<Vector2, float>();
+hold.MoveTo(line, new Location(3f));
+route.Append(new SegmentView(line));
+
+using var geometry = new GeoGroup<Vector2, float>();
+using var services = new RouteGroup<Vector2, float>();
+geometry.AddNode(from);
+geometry.AddNode(to);
+geometry.AddSegment(line);
+services.AddHold(hold);
+services.AddRoute(route);
+geometry.AddGroup(services);
+
+// Direct geometry membership contains two nodes; recursive enumeration includes the hold.
+foreach (var node in geometry.EnumerateNodes())
+{
+    Vector2 position = node.Position;
+}
+
+IReadOnlyGeoGroup<Vector2, float> routeView = services;
+// routeView.Nodes and routeView.Segments expose the registered hold and route.
+route.Dispose();
+// services.Routes is now empty; line and its endpoints remain alive.
+```
+
+조회·편집 인터페이스와 공유·중첩·수명 규칙은 [그룹 컨테이너](Groups.md)를 따른다.
+
+## Linear Network Creator
+
+외부 입력에서 현재 감지 결과를 갱신하고, Begin으로 생성을 시작한다. Update는 상태만 갱신하고 TryConfirm이 노드·구간을 확정한다. 다음 예시는 Geometry 네임스페이스를 사용하며 평면 타입에 별칭을 지정한 경우이다.
+
+```csharp
+using System.Linq;
+using System.Numerics;
+using BlackThunder.GeoSystem.Geometry;
+using PlanarNode = BlackThunder.GeoSystem.Geometry.Planar.Node;
+using PlanarSegment = BlackThunder.GeoSystem.Geometry.Planar.LinearSegment;
+
+var detection = new Detection<Vector2>(Vector2.Zero);
+using var group = new GeoGroup<Vector2, float>();
+using var creator = new LinearGeometricNetworkCreator<Vector2>(
+    () => detection,
+    (Detection<Vector2> hit, out INode<Vector2> node) =>
+    {
+        node = new PlanarNode(hit.Position);
+        return true;
+    },
+    (INode<Vector2> from, INode<Vector2> to, out ISegment<Vector2> segment) =>
+    {
+        segment = new PlanarSegment(
+            (BlackThunder.GeoSystem.Geometry.Planar.INode)from,
+            (BlackThunder.GeoSystem.Geometry.Planar.INode)to);
+        return true;
+    });
+
+creator.Begin();
+Confirm();
+detection = new Detection<Vector2>(new Vector2(5, 0));
+creator.Update();
+Confirm();
+creator.Finish();
+
+void Confirm()
+{
+    if (!creator.TryConfirm(out var result)) return;
+    if (result.IsNewNode) group.AddNode(result.Node);
+    if (result.Segment != null) group.AddSegment((ISegment<Vector2, float>)result.Segment);
+}
+
+// The caller owns confirmed objects; the creator and group do not dispose them.
+foreach (var segment in group.Segments.ToArray()) segment.Dispose();
+foreach (var node in group.Nodes.ToArray()) node.Dispose();
+```
+
+기존 노드를 선택하려면 Detection의 node 인자에 전달한다. 구간 위의 Pin·Hold를 만드는 Factory는 Detection.Segment.TryGetLocation으로 위치를 해석한다. 구간 감지 자체가 원본 구간을 분할하지는 않는다. 취소와 실패·소유권 규칙은 [Network Creator](NetworkCreators.md)를 따른다.

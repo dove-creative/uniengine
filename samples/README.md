@@ -16,22 +16,24 @@ UniEngine의 Infrastructure·Core·Services 모듈 사용 흐름을 콘솔 예�
 
 명령은 저장소 최상위에서 실행한다.
 
+.NET 10 SDK를 설치한 환경에서 실행한다. 외부 NuGet 패키지는 [packages](packages/README.md), 자사 패키지는 저장소 루트의 [packages](../packages/README.md)에 보관한다. 아래 명령의 RestoreConfigFile은 [NuGet.config](NuGet.config)를 참조하는 본체까지 적용한다. 두 로컬 피드만 사용하므로 첫 실행에도 패키지를 인터넷에서 다운로드하지 않는다.
+
 대화형 프롬프트를 실행한다. 빈 입력은 무시하고, help는 명령 목록을, exit는 프롬프트 종료를 뜻한다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config
 ```
 
 대표 시나리오를 한 번 실행하고 종료한다. 알 수 없는 명령이나 예외가 발생하면 0이 아닌 종료 코드를 반환한다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- event-stream
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- event-stream
 ```
 
 모든 실행 예시를 순서대로 실행한다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- all
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- all
 ```
 
 ## 구성
@@ -97,7 +99,7 @@ Core의 Interfaces 모듈은 별도 폴더를 두지 않고, Core Objects 스니
 [GeoSystem Lab](03-Services/GeoSystem/README.md)은 노드를 드래그해 Pin·Clip·Route·Hold의 변화를 확인한다. Tracer 비교 창에서는 RouteBased와 Absolute의 위치, Route 해제 후의 상태와 Wheel 분기 선택을 살펴본다.
 
 ```powershell
-dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -c Release
+dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -p:RestoreConfigFile=samples/NuGet.config -c Release
 ```
 
 이 프로젝트는 콘솔 `all`에 포함되지 않는다. 창 없는 시나리오 검증은 같은 명령에 `-- verify`를 붙여 실행한다.

@@ -5,7 +5,7 @@
 ## 실행
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- adaptive-collections
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- adaptive-collections
 ```
 
 ## 내용

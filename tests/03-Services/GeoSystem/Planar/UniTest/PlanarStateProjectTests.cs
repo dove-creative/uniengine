@@ -149,12 +149,21 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(scene.Clip.Length, Is.EqualTo(state.Length * 0.6f).Within(0.0001f));
                 Assert.That(scene.Route.Views.Count, Is.EqualTo(state.Views.Count));
                 Assert.That(scene.Route.Length, Is.EqualTo(state.Length * 0.6f * state.Views.Count).Within(0.001f));
+                Assert.That(scene.Source.TryGetLocation(expected, out var sourceLocation), Is.True);
+                Assert.That(sourceLocation.Distance, Is.EqualTo(state.Length * state.Rate).Within(0.0001f));
+                var probe = new Vector2(state.Start + state.Length * 0.35f, 0f);
+                Assert.That(scene.Clip.TryGetLocation(probe, out var clipLocation), Is.True);
+                Assert.That(clipLocation.Distance, Is.EqualTo(state.Length * 0.15f).Within(0.0001f));
                 if (state.Views.Count == 0)
                 {
                     Assert.That(scene.Route.TryGetPosition(default, out _), Is.False);
+                    Assert.That(scene.Route.TryGetLocation(probe, out _), Is.False);
                     return;
                 }
                 var forward = state.Views[0];
+                Assert.That(scene.Route.TryGetLocation(probe, out var routeLocation), Is.True);
+                Assert.That(routeLocation.Distance,
+                    Is.EqualTo(state.Length * (forward ? 0.15f : 0.45f)).Within(0.0001f));
                 PlanarGeoSystemTests.AssertPose(scene.Route, default,
                     new Vector2(state.Start + state.Length * (forward ? 0.2f : 0.8f), 0f), forward ? 0f : 180f);
             }

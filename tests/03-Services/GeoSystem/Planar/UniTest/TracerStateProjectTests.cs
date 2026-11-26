@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BlackThunder.GeoSystem.Geometry;
 using BlackThunder.GeoSystem.RouteSystem;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
+using SegmentView = BlackThunder.GeoSystem.RouteSystem.Planar.SegmentView;
 using BlackThunder.UniTest;
 using NUnit.Framework;
 using Planar = BlackThunder.GeoSystem.Geometry.Planar;

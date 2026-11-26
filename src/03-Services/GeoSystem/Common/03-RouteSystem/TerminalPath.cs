@@ -5,6 +5,11 @@ using BlackThunder.UniEngine.Mathematics;
 
 namespace BlackThunder.GeoSystem.RouteSystem
 {
+    internal interface ITerminalTolerance
+    {
+        float Epsilon { get; }
+    }
+
     internal class TerminalSpan
     {
         public IReadOnlySegment Segment { get; }
@@ -69,7 +74,7 @@ namespace BlackThunder.GeoSystem.RouteSystem
         public float Epsilon => _source switch
         {
             Route route => route.TerminalEpsilon,
-            Planar.Clip clip => clip.Epsilon,
+            ITerminalTolerance source => source.Epsilon,
             _ => UniMath.Epsilon
         };
 
@@ -135,7 +140,52 @@ namespace BlackThunder.GeoSystem.RouteSystem
                 return;
             }
 
-            _spans.Add(new TerminalSpan(segment, start, end, forward ? low : high, forward ? high : low, forward, views));
+            _spans.Add(new TerminalSpan(
+                segment, start, end, forward ? low : high, forward ? high : low, forward, views));
+        }
+
+        public bool TryGetLocation<TPosition>(
+            TPosition position,
+            float startDistance,
+            float endDistance,
+            out Location location,
+            out double errorSquared,
+            bool isForward,
+            DistanceType distanceType,
+            float? epsilon)
+        {
+            if (_source.IsDisposed) throw new ObjectDisposedException(nameof(_source));
+            var tolerance = epsilon ?? Epsilon;
+            var query = new LocationQuery(_source.Length, startDistance, endDistance,
+                isForward, distanceType, tolerance);
+            if (query.HasValidLength)
+            {
+                foreach (var span in _spans)
+                {
+                    var low = Math.Max(query.MinDistance, span.Start);
+                    var high = Math.Min(query.MaxDistance, span.End);
+                    if (low > high) continue;
+
+                    double Map(double distance) => distance <= span.Start ? span.SegmentStart
+                        : distance >= span.End ? span.SegmentEnd
+                        : Math.Clamp(span.SegmentStart
+                            + (span.IsForward ? distance - span.Start : span.Start - distance),
+                            Math.Min(span.SegmentStart, span.SegmentEnd), Math.Max(span.SegmentStart, span.SegmentEnd));
+                    var start = (float)Map(query.SearchForward ? low : high);
+                    var end = (float)Map(query.SearchForward ? high : low);
+                    var segment = (IReadOnlySegment<TPosition>)span.Segment;
+                    if (!segment.TryGetLocation(position, start, end, out var local, out var error,
+                        epsilon: tolerance)) continue;
+
+                    var absolute = local.ToDistance(segment.Length);
+                    var distance = absolute == span.SegmentStart ? span.Start
+                        : absolute == span.SegmentEnd ? span.End
+                        : span.Start + (span.IsForward ? absolute - span.SegmentStart : span.SegmentStart - absolute);
+                    // Float child coordinates can round slightly beyond their double parent interval.
+                    query.Consider(Math.Clamp(distance, low, high), error);
+                }
+            }
+            return query.TryGetResult(out location, out errorSquared);
         }
 
         public int FindOccurrence(TerminalSpan occurrence, int hint)

@@ -57,6 +57,16 @@ Handle·Token의 일반 직접 사례 23개, EventStream·EventHub 소비 사례
 
 Release 빌드의 경고·오류와 테스트 실패·건너뜀은 0개이다. 본체 변경 없이 테스트를 보강했으며 전체 일반 테스트를 다시 실행한 결과는 아니다. 상태·동작 범위와 실행 명령은 [Handle·Token 검증 결과](../02-Core/02-E.1-HandleToken/docs/03.%20Results.md)에 있다.
 
+### 2026-11-26 GeoSystem 그룹·제네릭 Route 검증
+
+제네릭 Route System 직접 사례 7개, 그룹 직접 사례 10개, GroupProject 고정 경로 1개와 seed 0·1·2의 깊이 100 연속 경로 3개를 검증했다. 집중 실행의 세 seed는 각각 3,093.018·2,852.487·2,734.611 ms로 모두 통과했다. 기존 사례를 포함한 GeoSystem 204개와 샘플의 기본 장면 17개·Tracer/Wheel 9개 조건이 통과했다.
+
+본체·테스트·샘플 Release 빌드는 경고·오류 없이 성공했다. 사용자의 장시간 실행 승인 후 수행한 전체 회귀는 1,837개 통과, 실패·건너뜀 0개이며 239.881초가 걸렸다. 전체 회귀에서도 GroupProject의 세 seed가 모두 깊이 100에 도달했다. 최초 testhost 연결 중단과 NUnit 검증식 수정 후 재실행, 명령·사례별 집계·한계는 [GeoSystem 공통 결과](../03-Services/GeoSystem/Common/docs/03.%20Results.md)에 기록했다.
+
+### 2026-11-26 GeoSystem 위치 역조회 검증
+
+SceneProject와 PolyProject의 고정 경로·연속 상태 검증에 TryGetLocation을 추가했다. 각 프로젝트의 seed 0·1·2가 모두 깊이 100/100에 도달했으며 세 seed 합계는 각각 3,345.758 ms와 5,480.380 ms이다. 새 직접 사례 23개를 포함한 GeoSystem 227개와 샘플 verify 26개 조건이 통과했고 본체·테스트·샘플 Release 빌드에 경고·오류가 없었다. 전체 회귀는 사용자 요청으로 생략했다. [집중 검증 결과와 실행 이력](../03-Services/GeoSystem/Planar/docs/03.%20Results.md)에 실제 검증 범위와 중간 실패를 기록했다.
+
 ### 모듈 문서
 
 각 결과 문서에 seed, 실제 도달 깊이, 실행시간, 결과를 기록했다.
@@ -69,3 +79,13 @@ Release 빌드의 경고·오류와 테스트 실패·건너뜀은 0개이다. �
 - [LifecycleHub](../02-Core/03-E.1-LifecycleHub/docs/03.%20Results.md)
 - [Property](../02-Core/02-O.1-Property/docs/03.%20Results.md)
 - [EventStream](../02-Core/02-E.3-EventStream/docs/03.%20Results.md)
+
+- [GeoSystem 공통·그룹](../03-Services/GeoSystem/Common/docs/03.%20Results.md)
+
+## 2026-11-26 Network Creator 검증
+
+Linear Creator의 직접 사례 17개·고정 경로 1개·seed 0·1·2 연속 경로 3개, 총 21개가 통과했다. 각 seed는 독립 초기 상태에서 깊이 100/100을 완료했다. 집중 실행시간은 각각 428.331 ms·348.563 ms·301.240 ms이다.
+
+최종 Release 전체 회귀 1,881개가 통과했고 실패·건너뜀은 0개이다. TRX 실행 구간은 227.930초이다. 전체 실행에서 Creator seed 0·1·2는 각각 466.584 ms·391.521 ms·372.630 ms였으며 모두 깊이 100/100에 도달했다. 상태 전이·연결·임시 객체 정리와 확정 결과의 비소유 수명을 검증했다.
+
+[모듈 결과](../03-Services/GeoSystem/Common/docs/03.%20Results.md) · [전체 회귀 기록](../03-Services/GeoSystem/Common/docs/Runs/NetworkCreators-FullSuite-20261126.log)

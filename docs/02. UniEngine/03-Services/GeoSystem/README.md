@@ -6,6 +6,7 @@ GeoSystem은 노드와 구간의 연결을 모델링하고, 그 위에서 위치
 
 - 소개
 - 구성
+- 그룹 컨테이너
 - 협력 흐름
 - 구현 범위
 
@@ -42,7 +43,13 @@ GeoSystem은 노드와 구간의 연결을 모델링하고, 그 위에서 위치
 
 네임스페이스는 기능을 기준으로 묶고 폴더는 공통 코드와 공간별 구현을 기준으로 묶는다. 본체 어셈블리와 Core의 EventHub·Infrastructure의 Transform2D 의존성은 유지한다.
 
+## 그룹 컨테이너
+
+NavGroup, `GeoGroup<P, R>`, `RouteGroup<P, R>`는 원소와 하위 그룹을 관리한다. 조회 계약은 Navigation → 위치 전용 Geometry → 위치·회전 Geometry → RouteSystem 순서로 확장하며 편집 계약은 각 계층의 원소 타입을 제한한다. 원소 폐기는 등록을 자동 제거하지만 그룹은 원소를 소유하지 않는다. 상세 규칙은 [그룹 컨테이너](Groups.md)를 따른다.
+
 ## 협력 흐름
+
+Geometry의 Network Creator는 외부 감지 결과와 Factory를 받아 노드·구간 생성을 진행한다. Linear 구현은 새 노드 배치와 기존 노드 선택을 이어서 직선 구간을 만들며, Bezier·Route는 공통 계약을 확장하는 인터페이스를 제공한다. 입력 감지와 그룹 등록은 외부에서 담당한다. 상세 규칙은 [Network Creator](NetworkCreators.md)를 따른다.
 
 객체는 자신이 의존하는 원본을 참조하고 원본의 EventHub를 구독한다. Node의 위치가 바뀌면 LinearSegment·PolySegment가 형상을 갱신하고, SegmentPin·Clip·Route가 그 변화를 전달받는다. PolySegment의 Values·Handles·Shaper 편집도 같은 Shape 갱신 흐름을 따른다. 연결 요청은 직접 메서드로 수행하고, 알림은 변경된 상태를 관찰하는 용도로 사용한다.
 
@@ -52,6 +59,6 @@ GeoSystem은 노드와 구간의 연결을 모델링하고, 그 위에서 위치
 
 Project-Index의 연결·앵커·경로 모델을 기준으로 Navigation, 평면 직선·PolySegment, NodePin·SegmentPin·Hold·Clip·SegmentView·Route를 제공한다. Tracer와 PolyTracer는 Route 추적과 연결 구간 주행을 지원하고, Wheel은 분기 예약과 이동 실패 기준을 관리한다. PolySegment의 PolylineShaper·QuadraticBezierShaper·CubicBezierShaper Shaper는 입력을 Hinge 점열로 바꾸며, 조회는 점열의 직선 조각을 사용한다. Unity에 의존하지 않으며 System.Numerics.Vector2와 Infrastructure의 Transform2D를 사용한다.
 
-ILinearSegment와 IPolySegment는 제네릭과 Planar 계약을 제공한다. 공통 추상 클래스는 연결·편집·갱신을 관리하고 Planar는 거리·각도·보간을 계산한다. 경로 탐색은 Navigation의 BFS·DFS·DijkstraPathfinder와 Geometry의 AStarPathfinder&lt;TPosition&gt;를 제공한다. 공통 Route는 DijkstraPathfinder를 기본으로 끝점 사이의 경로를 구성하고, Planar.Route는 이를 상속하면서 기본 탐색기를 A*로 지정한다. 노드·구간은 외부 속성 저장소 IPropertySubject를 지원한다. Circular·Offset Shaper, 3차원 계산과 원본 변경에 따른 자동 재탐색은 후속 범위이다.
+ILinearSegment와 IPolySegment는 제네릭과 Planar 계약을 제공한다. 공통 추상 클래스는 연결·편집·갱신을 관리하고 Planar는 거리·각도·보간을 계산한다. 경로 탐색은 Navigation의 BFS·DFS·DijkstraPathfinder와 Geometry의 AStarPathfinder&lt;TPosition&gt;를 제공한다. 공통 Route와 `Route<P, R>`는 DijkstraPathfinder를 기본으로 끝점 사이의 경로를 구성하고, Planar.Route는 제네릭 구현을 상속하면서 기본 탐색기를 A*로 지정한다. Pin·Hold·Clip·Route의 공통 제네릭 구현이 원본 Geometry 계약에 공간 조회를 위임하며 Planar 타입은 평면 입력 제한과 편의 API를 제공한다. 노드·구간은 외부 속성 저장소 IPropertySubject를 지원한다. Circular·Offset Shaper, 3차원 계산과 원본 변경에 따른 자동 재탐색은 후속 범위이다.
 
-[사용 예시](Usage.md) · [TTC](Geo%20System%20-%20TTC.drawio) · [Services](../README.md)
+[사용 예시](Usage.md) · [도메인 객체 TTC](Geo%20System%20-%20Domain%20Objects%20TTC.drawio) · [확장 TTC](Geo%20System%20-%20Extras%20TTC.drawio) · [Services](../README.md)

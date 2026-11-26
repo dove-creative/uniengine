@@ -7,17 +7,17 @@
 .NET 10 SDK가 필요하다. 명령은 저장소 최상위에서 실행한다.
 
 ```powershell
-dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -c Release
+dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -p:RestoreConfigFile=samples/NuGet.config -c Release
 ```
 
-인자 없이 실행하면 Avalonia 창을 연다. 첫 실행은 NuGet 패키지를 복원하므로 네트워크 연결이 필요하다. 브라우저나 별도 서버는 사용하지 않는다.
+인자 없이 실행하면 Avalonia 창을 연다. 첫 실행에 필요한 NuGet 패키지는 [샘플 로컬 피드](../../packages/README.md)와 저장소 루트의 packages에서 복원하므로 인터넷 다운로드가 필요하지 않다. 브라우저나 별도 서버는 사용하지 않는다.
 
 다시 빌드할 때는 실행 중인 예제 창을 먼저 닫아 실행 파일의 잠금을 해제한다.
 
 창을 열지 않고 시나리오를 검증한다.
 
 ```powershell
-dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -c Release -- verify
+dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -p:RestoreConfigFile=samples/NuGet.config -c Release -- verify
 ```
 
 | 명령 | 동작 |
@@ -50,7 +50,7 @@ dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.cs
 ## Tracer와 Wheel
 
 ```powershell
-dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -c Release -- tracer
+dotnet run --project samples/03-Services/GeoSystem/UniEngine.GeoSystem.Sample.csproj -p:RestoreConfigFile=samples/NuGet.config -c Release -- tracer
 ```
 
 초록색 원은 RouteBased Tracer, 주황색 화살표는 Absolute PolyTracer이다. 둘 다 B–C의 중간에서 출발한다. A를 왼쪽으로 드래그하면 초록색 원이 Route 기준 거리를 유지하며 옮겨가고 주황색 화살표는 B–C 위의 위치를 유지한다.

@@ -80,6 +80,32 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
         }
 
         // Queries
+        public override bool TryGetLocation(
+            Vector2 position,
+            float startDistance,
+            float endDistance,
+            out Location location,
+            out double errorSquared,
+            bool isForward = true,
+            DistanceType distanceType = DistanceType.Length,
+            float? epsilon = null)
+        {
+            ThrowIfDisposed();
+            var query = new LocationQuery(Length, startDistance, endDistance,
+                isForward, distanceType, epsilon ?? Epsilon);
+            if (query.HasValidLength && UniMath.IsFinite(position))
+            {
+                for (int i = 0; i < Hinges.Count - 1; i++)
+                {
+                    var from = Hinges[i];
+                    var to = Hinges[i + 1];
+                    LocationProjection.AddLine(ref query, position,
+                        from.Position, to.Position, from.Distance, to.Distance);
+                }
+            }
+            return query.TryGetResult(out location, out errorSquared);
+        }
+
         public override bool TryGetTransform(
             Location location,
             out Vector2 position,

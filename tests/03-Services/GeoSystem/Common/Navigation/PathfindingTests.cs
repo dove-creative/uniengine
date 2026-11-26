@@ -417,6 +417,30 @@ namespace BlackThunder.UniEngine.Tests
             }
 
             public bool IsFromNode(IReadOnlyNavNode node) => ReferenceEquals(node, From);
+
+            public bool TryGetLocation(
+                int position,
+                out Location location,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null) =>
+                TryGetLocation(position, 0f, Length, out location, out _, isForward, distanceType, epsilon);
+
+            public bool TryGetLocation(
+                int position,
+                float startDistance,
+                float endDistance,
+                out Location location,
+                out double errorSquared,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null)
+            {
+                location = default;
+                errorSquared = default;
+                return false;
+            }
+
             public IReadOnlyNavNode GetCounterNode(IReadOnlyNavNode node) => IsFromNode(node) ? To : From;
             public bool TryGetPosition(Location location, out int position, float? epsilon = null)
             {
@@ -478,6 +502,21 @@ namespace BlackThunder.UniEngine.Tests
         {
             public TestSegment(float length) => Length = length;
             public void SetLength(float length) => Length = length;
+
+            public override bool TryGetLocation(
+                int position,
+                float startDistance,
+                float endDistance,
+                out Location location,
+                out double errorSquared,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null)
+            {
+                location = default;
+                errorSquared = default;
+                return false;
+            }
 
             public override bool TryGetTransform(
                 Location location,

@@ -105,4 +105,4 @@ dotnet build tests/UniEngine.Tests.csproj --configuration Release --no-restore -
 7. 모든 프로젝트가 새 버전을 참조하는지 확인하고, 같은 패키지의 이전 버전 `.nupkg`를 삭제한다. 삭제 후에도 로컬 피드 복원·빌드가 통과하는지 확인한다.
 8. 새 패키지·이전 패키지 삭제·참조·출처 문서를 함께 커밋한다.
 
-루트 `NuGet.config`가 자사 NuGet 패키지를 이 로컬 피드에 연결하므로 프레임워크 개발 저장소가 없어도 복원할 수 있다. NuGet 배포본은 검증된 자사 패키지만 버전 관리하며, 일반 NuGet 복원 캐시와 임시 빌드 산출물은 추가하지 않는다. 자사 NuGet 패키지는 공개 피드에 게시하지 않는다.
+루트 `NuGet.config`가 자사 NuGet 패키지를 이 로컬 피드에 연결하므로 프레임워크 개발 저장소가 없어도 복원할 수 있다. 이 폴더에서는 검증된 자사 패키지만 버전 관리한다. 샘플의 외부 패키지와 하위 의존성은 [samples/packages](../samples/packages/README.md)에서 별도로 보관한다. 일반 NuGet 복원 캐시와 임시 빌드 산출물은 추가하지 않는다. 자사 NuGet 패키지는 공개 피드에 게시하지 않는다.

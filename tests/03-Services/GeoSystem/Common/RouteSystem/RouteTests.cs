@@ -6,6 +6,7 @@ using BlackThunder.GeoSystem.Geometry;
 using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.GeoSystem.RouteSystem;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
+using SegmentView = BlackThunder.GeoSystem.RouteSystem.Planar.SegmentView;
 using BlackThunder.UniEngine.Objects;
 using BlackThunder.UniEngine.Core;
 using NUnit.Framework;
@@ -444,6 +445,22 @@ namespace BlackThunder.UniEngine.Tests
                 ConnectNode(ConnectionSide.To, to);
             }
 
+
+            public override bool TryGetLocation(
+                Vector2 position,
+                float startDistance,
+                float endDistance,
+                out Location location,
+                out double errorSquared,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null)
+            {
+                location = default;
+                errorSquared = default;
+                return false;
+            }
+
             public override bool TryGetTransform(Location location, out Transform2D transform, float? epsilon = null)
             {
                 transform = default;
@@ -454,6 +471,21 @@ namespace BlackThunder.UniEngine.Tests
         private class ScalarSegment : Segment<int, int>
         {
             public ScalarSegment() => Length = 1f;
+
+            public override bool TryGetLocation(
+                int position,
+                float startDistance,
+                float endDistance,
+                out Location location,
+                out double errorSquared,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null)
+            {
+                location = default;
+                errorSquared = default;
+                return false;
+            }
             public override bool TryGetTransform(
                 Location location,
                 out int position,

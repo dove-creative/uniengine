@@ -7,6 +7,7 @@ using BlackThunder.GeoSystem.Geometry.Planar;
 using BlackThunder.UniEngine.Objects;
 using BlackThunder.GeoSystem.RouteSystem;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
+using SegmentView = BlackThunder.GeoSystem.RouteSystem.Planar.SegmentView;
 using Route = BlackThunder.GeoSystem.RouteSystem.Planar.Route;
 
 namespace BlackThunder.UniEngine.Samples.GeoSystem

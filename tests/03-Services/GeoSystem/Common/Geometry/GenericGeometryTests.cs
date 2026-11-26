@@ -77,6 +77,15 @@ namespace BlackThunder.UniEngine.Tests
             Assert.That(position, Is.EqualTo("start"));
             Assert.That(query.TryGetPosition(new Location(1f), out position), Is.True);
             Assert.That(position, Is.EqualTo("end"));
+            Assert.That(query.TryGetLocation("start", out var location, false, DistanceType.Rate), Is.True);
+            Assert.That(location, Is.EqualTo(new Location(1f, DistanceType.Rate, false)));
+            Assert.That(query.TryGetLocation("end", 0.25f, 0.75f, out location, out var error), Is.True);
+            Assert.That(location.Distance, Is.EqualTo(0.25f));
+            Assert.That(error, Is.Zero);
+            Assert.That(query.TryGetLocation("end", 0.75f, 0.25f, out location, out error), Is.True);
+            Assert.That(location.Distance, Is.EqualTo(0.75f));
+            Assert.That(query.TryGetLocation("missing", out location), Is.False);
+            Assert.That(location, Is.EqualTo(default(Location)));
             Assert.That(((IReadOnlyNode<string>)from).Segments.Single(), Is.SameAs(segment));
         }
 
@@ -178,6 +187,31 @@ namespace BlackThunder.UniEngine.Tests
             private void UpdateLength() =>
                 Length = From == null || To == null ? 0f : Math.Abs(To.Position - From.Position);
 
+
+            public override bool TryGetLocation(
+                float position,
+                float startDistance,
+                float endDistance,
+                out Location location,
+                out double errorSquared,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null)
+            {
+                ThrowIfDisposed();
+                var query = new LocationQuery(Length, startDistance, endDistance,
+                    isForward, distanceType, epsilon ?? Epsilon);
+                if (query.HasValidLength && From != null && To != null && Location.IsFinite(position))
+                {
+                    var direction = To.Position >= From.Position ? 1 : -1;
+                    var distance = Math.Clamp(((double)position - From.Position) * direction,
+                        query.MinDistance, query.MaxDistance);
+                    var error = position - (From.Position + direction * distance);
+                    query.Consider(distance, error * error);
+                }
+                return query.TryGetResult(out location, out errorSquared);
+            }
+
             public override bool TryGetTransform(
                 Location location,
                 out float position,
@@ -208,6 +242,40 @@ namespace BlackThunder.UniEngine.Tests
 
 
             public NamedSegment() : base(1f) { }
+
+            public bool TryGetLocation(
+                string position,
+                out Location location,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null) =>
+                TryGetLocation(position, 0f, Length, out location, out _, isForward, distanceType, epsilon);
+
+            public bool TryGetLocation(
+                string position,
+                float startDistance,
+                float endDistance,
+                out Location location,
+                out double errorSquared,
+                bool isForward = true,
+                DistanceType distanceType = DistanceType.Length,
+                float? epsilon = null)
+            {
+                ThrowIfDisposed();
+                var query = new LocationQuery(Length, startDistance, endDistance,
+                    isForward, distanceType, epsilon ?? 0f);
+                if (From != null && To != null)
+                {
+                    if (position == From.Position) query.Consider(0, 0);
+                    if (position == To.Position)
+                    {
+                        var distance = query.SearchForward ? Math.Max(float.Epsilon, query.MinDistance)
+                            : query.MaxDistance;
+                        if (distance > 0) query.Consider(distance, 0);
+                    }
+                }
+                return query.TryGetResult(out location, out errorSquared);
+            }
 
             public bool TryGetPosition(Location location, out string position, float? epsilon = null)
             {

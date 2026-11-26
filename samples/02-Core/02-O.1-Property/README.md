@@ -5,7 +5,7 @@
 ## 실행
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- property
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- property
 ```
 
 ## 내용

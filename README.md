@@ -50,8 +50,8 @@ git submodule update --init guidelines/blackthunder-conventions
 대표 이벤트 흐름을 한 번 실행하거나 대화형 프롬프트를 열 수 있다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -c Release -- event-stream
-dotnet run --project samples/UniEngine.Samples.csproj -c Release
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -c Release -- event-stream
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -c Release
 ```
 
 결과는 콘솔에 출력된다. 대화형 프롬프트에서 help로 명령을 확인하고 exit로 종료한다. 예제 초기화 시 문서 폴더 아래에 BlackThunder/UniEngine/Projects/UniEngine.Samples 디렉터리가 생성된다.

@@ -58,6 +58,24 @@ namespace BlackThunder.GeoSystem.Geometry.Planar
             _rotation = UniMath.Rotation(_start, _end);
         }
 
+        public override bool TryGetLocation(
+            Vector2 position,
+            float startDistance,
+            float endDistance,
+            out Location location,
+            out double errorSquared,
+            bool isForward = true,
+            DistanceType distanceType = DistanceType.Length,
+            float? epsilon = null)
+        {
+            ThrowIfDisposed();
+            var query = new LocationQuery(Length, startDistance, endDistance,
+                isForward, distanceType, epsilon ?? Epsilon);
+            if (query.HasValidLength && From != null && To != null && UniMath.IsFinite(position))
+                LocationProjection.AddLine(ref query, position, _start, _end, 0, Length);
+            return query.TryGetResult(out location, out errorSquared);
+        }
+
         public override bool TryGetTransform(
             Location location,
             out Vector2 position,

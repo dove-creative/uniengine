@@ -4,6 +4,7 @@ using BlackThunder.GeoSystem.Geometry;
 using BlackThunder.GeoSystem.Navigation;
 using BlackThunder.GeoSystem.RouteSystem;
 using BlackThunder.GeoSystem.RouteSystem.Planar;
+using SegmentView = BlackThunder.GeoSystem.RouteSystem.Planar.SegmentView;
 using NUnit.Framework;
 using Planar = BlackThunder.GeoSystem.Geometry.Planar;
 using Route = BlackThunder.GeoSystem.RouteSystem.Planar.Route;

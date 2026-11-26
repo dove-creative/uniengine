@@ -220,7 +220,11 @@ namespace BlackThunder.UniEngine.Tests
                 {
                     Assert.That(segment.Hinges, Is.Empty);
                     Assert.That(segment.Length, Is.Zero);
-                    if (!state.Disposed) Assert.That(segment.TryGetPosition(default, out _), Is.False);
+                    if (!state.Disposed)
+                    {
+                        Assert.That(segment.TryGetPosition(default, out _), Is.False);
+                        Assert.That(segment.TryGetLocation(state.From, out _), Is.False);
+                    }
                     return;
                 }
 
@@ -257,6 +261,13 @@ namespace BlackThunder.UniEngine.Tests
                 Assert.That(scene.Pin.IsValid, Is.True);
                 Assert.That(segment.TryGetPosition(new Location(0.5f, DistanceType.Rate), out var position), Is.True);
                 Assert.That(scene.Pin.Position, Is.EqualTo(position));
+                Assert.That(segment.TryGetLocation(state.From, out var beginning), Is.True);
+                Assert.That(beginning.Distance, Is.Zero);
+                Assert.That(segment.TryGetLocation(position, out var recovered), Is.True);
+                Assert.That(segment.TryGetPosition(recovered, out var recoveredPosition), Is.True);
+                Assert.That(Vector2.Distance(position, recoveredPosition), Is.LessThanOrEqualTo(segment.Epsilon));
+                Assert.That(scene.Route.TryGetLocation(position, out var routeLocation), Is.True);
+                Assert.That(routeLocation.Distance, Is.EqualTo(recovered.Distance));
                 for (int i = 1; i < segment.Hinges.Count; i++)
                 {
                     Assert.That(segment.Hinges[i].Distance, Is.GreaterThan(segment.Hinges[i - 1].Distance));

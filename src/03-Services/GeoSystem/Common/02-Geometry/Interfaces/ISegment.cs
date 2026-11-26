@@ -33,6 +33,23 @@ namespace BlackThunder.GeoSystem.Geometry
         IEnumerable<IReadOnlyNode> IReadOnlySegment.Nodes => Nodes;
 
         bool TryGetPosition(Location location, out TPosition position, float? epsilon = null);
+
+        bool TryGetLocation(
+            TPosition position,
+            out Location location,
+            bool isForward = true,
+            DistanceType distanceType = DistanceType.Length,
+            float? epsilon = null);
+
+        bool TryGetLocation(
+            TPosition position,
+            float startDistance,
+            float endDistance,
+            out Location location,
+            out double errorSquared,
+            bool isForward = true,
+            DistanceType distanceType = DistanceType.Length,
+            float? epsilon = null);
     }
 
     public interface ISegment<TPosition> : IReadOnlySegment<TPosition>, ISegment

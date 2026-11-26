@@ -5,7 +5,7 @@ Handle과 Token이 폐기될 때 정리 동작을 한 번만 실행하는 예시
 ## 실행
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- handle-token
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- handle-token
 ```
 
 ## 내용

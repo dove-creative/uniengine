@@ -54,6 +54,25 @@ namespace BlackThunder.GeoSystem.Geometry
             return success;
         }
 
+        public bool TryGetLocation(
+            TPosition position,
+            out Location location,
+            bool isForward = true,
+            DistanceType distanceType = DistanceType.Length,
+            float? epsilon = null) =>
+            TryGetLocation(position, 0f, Location.IsFinite(Length) ? Length : 0f,
+                out location, out _, isForward, distanceType, epsilon);
+
+        public abstract bool TryGetLocation(
+            TPosition position,
+            float startDistance,
+            float endDistance,
+            out Location location,
+            out double errorSquared,
+            bool isForward = true,
+            DistanceType distanceType = DistanceType.Length,
+            float? epsilon = null);
+
         public abstract bool TryGetTransform(
             Location location,
             out TPosition position,

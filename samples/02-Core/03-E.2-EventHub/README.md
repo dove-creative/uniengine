@@ -5,7 +5,7 @@
 ## 실행
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- event-hub
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- event-hub
 ```
 
 ## 내용

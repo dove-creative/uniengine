@@ -174,7 +174,7 @@ if (result.TryGetResult<System.Collections.Generic.IReadOnlyList<OperationInfo>>
 같은 정책을 여러 갱신에 걸쳐 진행하며 콘솔 출력으로 비교하려면 저장소 루트에서 다음 명령을 실행한다.
 
 ```powershell
-dotnet run --project samples/UniEngine.Samples.csproj -- usm
+dotnet run --project samples/UniEngine.Samples.csproj -p:RestoreConfigFile=samples/NuGet.config -- usm
 ```
 
 [USM 콘솔 예시와 기대 출력](../../../../../samples/03-Services/StateMachines/Usm/README.md) · [USM 전이 정책](Transitions.md) · [USM](README.md)

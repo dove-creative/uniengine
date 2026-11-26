@@ -4,6 +4,7 @@ RouteSystem은 원본 그래프의 특정 위치와 부분 구간을 참조하�
 
 ## 목차
 
+- 공통 제네릭 구현
 - Pin과 Hold
 - Clip
 - SegmentView와 Route
@@ -11,6 +12,15 @@ RouteSystem은 원본 그래프의 특정 위치와 부분 구간을 참조하�
 - 말단 조회와 Tracer
 - Wheel과 분기 예약
 - 통신과 수명
+- 위치에서 구간 내 거리 조회
+
+## 공통 제네릭 구현
+
+`IPin<P>`는 위치 조회를 제공하며 `NodePin<P>`, `SegmentPin<P, R>`, `Hold<P, R>`는 같은 P의 Geometry 노드로 연결할 수 있다. `Clip<P, R>`와 `Route<P, R>`는 `ISegment<P, R>`를 구현한다. 원본의 위치·회전 조회에 위임하므로 공통 구현은 Vector2나 각도 표현에 의존하지 않는다. Hold의 Anchor는 `IPin<P>`이다.
+
+Planar의 NodePin·SegmentPin·Hold·Clip·Route는 이 공통 구현에 Vector2·float를 지정하여 상속한다. 평면 입력 검사, 평면 Pin 생성과 Transform2D 조회를 유지한다. Planar.Clip은 이제 공통 `Clip<Vector2, float>`를 상속하므로 Planar.Segment 기반 참조가 필요한 기존 소비자는 Planar.ISegment로 받는다.
+
+비제네릭 IHold·IRoute·INodePin·ISegmentPin·IClip은 공통 참조·의존성 검사·말단 조회와 기존 소비자를 위해 유지한다. 별도의 제네릭 IHold·IRoute는 추가하지 않는다. 그룹에서 구체 구현체를 받는 규칙은 [그룹 컨테이너](Groups.md)를 따른다.
 
 ## Pin과 Hold
 
@@ -28,9 +38,9 @@ Clip을 정방향으로 조회하면 자신의 From Pin에서 To Pin을 향하�
 
 ## SegmentView와 Route
 
-SegmentView는 Source와 IsForward를 보유하는 불변 값이다. IsForward는 Source의 방향을 따를지를 나타낸다. EventHub나 별도 수명이 없으며 경로 편집 기능도 없다.
+공통 SegmentView는 Geometry.ISegment 타입의 Source와 IsForward를 보유하는 불변 값이다. 기존 Planar.SegmentView도 유지하며 Source를 Planar.ISegment로 제한한다. 두 네임스페이스를 함께 가져오면 별칭이나 전체 이름으로 구분한다. IsForward는 Source의 방향을 따를지를 나타낸다. EventHub나 별도 수명이 없으며 경로 편집 기능도 없다.
 
-공통 RouteSystem.Route는 Geometry의 Segment 계약을 구현하고 Views를 읽기 전용 목록으로 제공한다. View 관리·끝점 편집·구독·수명·Property·TraversalOptions를 담당하며 Planar.Route가 이를 상속하여 평면 타입 검사와 공간 조회를 추가한다. 공통 Route는 Geometry 노드·구간을, Planar.Route는 Planar 노드·구간을 받는다.
+비제네릭 RouteSystem.Route는 Geometry의 Segment 계약과 View 관리·끝점 편집·구독·수명·Property·TraversalOptions를 제공한다. `Route<P, R>`는 이를 상속하여 P·R 타입 검사와 위치·회전 조회를 추가한다. Planar.Route는 제네릭 구현을 상속하며 평면 타입 검사와 기본 A* 탐색기를 제공한다. Views는 IReadOnlyList<ISegmentView>이며 입력 View의 Source·IsForward를 스냅샷으로 저장한다.
 
 Append는 앞이나 뒤에 View를 추가하고 입력의 Source·IsForward를 불변 스냅샷으로 저장한다. Remove는 지정한 Source가 경로의 맨 앞 또는 맨 뒤에 있을 때 한 View를 제거한다. 양쪽 모두 같은 Source이면 앞쪽을 먼저 제거한다. 경로 길이는 각 View의 길이를 합산하고, 같은 Source가 반복되어도 하나의 구독을 유지하여 한 번의 원본 갱신으로 다시 계산한다.
 
@@ -47,6 +57,8 @@ IRoute는 `bool TryConnectNode(ConnectionSide side, INavNode node)`를 제공한
 | 생성자 | 탐색기 선택 |
 | --- | --- |
 | RouteSystem.Route() | DijkstraPathfinder |
+| `RouteSystem.Route<P, R>()` | PathfinderAdapter로 감싼 DijkstraPathfinder |
+| `RouteSystem.Route<P, R>(IPathfinder<P>)` | 지정한 위치 타입 탐색기 |
 | RouteSystem.Planar.Route() | AStarPathfinder&lt;Vector2&gt;(Vector2.Distance) |
 | RouteSystem.Route(IPathfinder) | Navigation 탐색기 |
 | RouteSystem.Planar.Route(IPathfinder&lt;Vector2&gt;) | 위치 타입이 지정된 탐색기 또는 PathfinderAdapter&lt;Vector2&gt; |
@@ -103,5 +115,13 @@ Rolling에서 Wheel은 접점에서 나갈 수 있는 구간을 연결 순서대
 Route는 사용 중인 Source 구간을 구독하고, Views 없이 끝점만 보관하는 동안에는 해당 노드의 폐기를 구독한다. 끝점을 비우거나 View 경로로 교체하면 이전 단독 끝점 구독을 해제한다. 의존 순환 검사는 공통 Geometry에서 수행하며 View 없는 Route의 저장된 끝점도 포함한다.
 
 Pin·Hold·Clip은 기반 클래스의 객체별 Property를 사용하고 Route도 독립 저장소를 지연 생성한다. 원본과 공유하지 않으며 Property 편집은 자동 알림을 발행하지 않는다. 원본 폐기로 연쇄 Dispose되더라도 각 Property의 내용과 페이로드는 유지된다. 폐기 후 저장소 접근과 정리는 사용자 책임이다.
+
+## 위치에서 구간 내 거리 조회
+
+제네릭 Clip·Route의 TryGetLocation은 호출 대상 자체의 Location을 반환한다. Clip은 자신의 From Pin에서부터, Route는 자신의 From에서부터 거리를 센다. 결과의 isForward·DistanceType 변환은 이 거리를 기준으로 적용한다.
+
+검색 범위를 각 말단 구간의 From 기준 거리로 변환하고, 말단 조회가 반환한 공간 오차의 제곱을 비교한다. 원본 전체에서 고른 단일 후보를 Clip 범위로 거르는 방식은 사용하지 않는다. 따라서 자기 교차하는 원본의 첫 후보가 Clip 밖에 있어도 내부의 다른 후보를 찾는다. 역방향 View·Clip에서는 하위 검색 순서도 반전하여 호출 대상의 검색 순서를 유지한다. 같은 Segment의 반복과 중첩 Route도 각각의 등장 위치로 취급한다.
+
+기본 조회의 동률은 호출 대상의 From 기준 첫 위치이며 반환 방향과 무관하다. 범위 조회는 지정한 startDistance에서 endDistance로 향하는 순서를 사용한다. 호출별 허용 오차가 없으면 Clip·Route 자신의 Epsilon을 사용하고, 선택한 허용 오차를 말단 조회에 전달한다. 연결·형상·Pin 위치 변경 이후에는 갱신된 구간 범위를 조회한다.
 
 [상위 구성](README.md)

@@ -2,66 +2,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using BlackThunder.GeoSystem.Geometry.Planar;
+using BlackThunder.GeoSystem.Geometry;
 using BlackThunder.GeoSystem.Navigation;
+using INode = BlackThunder.GeoSystem.Geometry.Planar.INode;
+using ISegment = BlackThunder.GeoSystem.Geometry.Planar.ISegment;
+using IReadOnlyNode = BlackThunder.GeoSystem.Geometry.Planar.IReadOnlyNode;
 
 namespace BlackThunder.GeoSystem.RouteSystem.Planar
 {
-    public class NodePin : NavNode, INode, INodePin, IPin
+    public class NodePin : RouteSystem.NodePin<Vector2>, INode, IPin
     {
         // Front
-        public Vector2 Position { get; protected set; }
         public new IEnumerable<ISegment> Segments => base.Segments.Cast<ISegment>();
-        public IReadOnlyNode AnchorNode { get; private set; }
-        public bool IsValid => !IsDisposed && AnchorNode != null && !AnchorNode.IsDisposed
-            && (AnchorNode is not RouteSystem.IPin pin || pin.IsValid);
-        Geometry.IReadOnlyNode INodePin.AnchorNode => AnchorNode;
+        public new IReadOnlyNode AnchorNode => (IReadOnlyNode)base.AnchorNode;
 
 
         // Content
         public NodePin() { }
-        public NodePin(IReadOnlyNode anchor) => Connect(anchor);
+        public NodePin(IReadOnlyNode anchor) : base(anchor) { }
 
         protected override void OnSegmentConnecting(INavSegment segment)
         {
             if (segment is not ISegment)
                 throw new ArgumentException("A planar node requires a planar segment.", nameof(segment));
+            base.OnSegmentConnecting(segment);
         }
 
-        public void Connect(IReadOnlyNode anchor)
+        protected override void ValidateAnchor(Geometry.IReadOnlyNode<Vector2> anchor)
         {
-            ThrowIfDisposed();
-            if (anchor == null) throw new ArgumentNullException(nameof(anchor));
-            if (anchor.IsDisposed || ReferenceEquals(anchor, this))
-                throw new ArgumentException("The anchor must be a live, different node.", nameof(anchor));
-            if (ReferenceEquals(anchor, AnchorNode)) return;
-            Geometry.GeoDependency.Validate(this, anchor);
-
-            AnchorNode?.EventHub.Disconnect(this);
-            AnchorNode = anchor;
-            anchor.EventHub.Connect(this)
-                .OnUpdatedWhere(events => (events & (int)GeoEvents.Shape) != 0, UpdatePosition)
-                .OnDisposing(Dispose);
-            UpdatePosition();
+            if (anchor is not IReadOnlyNode)
+                throw new ArgumentException("A planar anchor is required.", nameof(anchor));
+            base.ValidateAnchor(anchor);
         }
-
-        void INodePin.Connect(Geometry.IReadOnlyNode anchor) => Connect(
-            anchor as IReadOnlyNode ?? throw new ArgumentException("A planar anchor is required.", nameof(anchor)));
-
-        public void Disconnect()
-        {
-            if (AnchorNode == null) return;
-            AnchorNode.EventHub.Disconnect(this);
-            AnchorNode = null;
-            OnUpdated((int)GeoEvents.Shape);
-        }
-
-        private void UpdatePosition()
-        {
-            Position = AnchorNode.Position;
-            OnUpdated((int)GeoEvents.Shape);
-        }
-
-        protected override void OnDisposing() => Disconnect();
     }
 }

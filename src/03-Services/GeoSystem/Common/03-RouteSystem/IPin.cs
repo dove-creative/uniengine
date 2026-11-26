@@ -8,6 +8,8 @@ namespace BlackThunder.GeoSystem.RouteSystem
         bool IsValid { get; }
     }
 
+    public interface IPin<TPosition> : IPin, IPositioned<TPosition> { }
+
     public interface INodePin : IPin, INode
     {
         IReadOnlyNode AnchorNode { get; }
